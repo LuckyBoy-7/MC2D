@@ -165,7 +165,7 @@ public class PlayerRun : IState
             manager.TransitionState(StateType.Idle);
         else if (manager.jumpTrigger && manager.isOnGround)
             manager.TransitionState(StateType.Jump);
-        else if (p.rigidbody.velocity.y < 0)
+        else if (p.rigidbody.velocity.y < -1e-5)
             manager.TransitionState(StateType.Fall);
     }
 
@@ -223,7 +223,7 @@ public class PlayerJump : IState
             p.rigidbody.AddForce(p.firstJumpAdditionalForce * Vector2.up);
 
         p.rigidbody.velocity = new Vector2(p.moveSpeed * p.keyDownDirection.x, p.rigidbody.velocity.y);
-        if (p.rigidbody.velocity.y < 0)
+        if (p.rigidbody.velocity.y < -1e-5)
             manager.TransitionState(StateType.Fall);
         else if (manager.jumpTrigger && p.canDoubleJump)
             manager.TransitionState(StateType.DoubleJump);
@@ -390,7 +390,7 @@ public class PlayerDoubleJump : IState
             p.rigidbody.AddForce(p.doubleJumpAdditionalForce * Vector2.up);
 
         p.rigidbody.velocity = new Vector2(p.moveSpeed * p.keyDownDirection.x, p.rigidbody.velocity.y);
-        if (p.rigidbody.velocity.y < 0)
+        if (p.rigidbody.velocity.y < -1e-5)
             manager.TransitionState(StateType.Fall);
     }
 
