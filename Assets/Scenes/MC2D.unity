@@ -5244,7 +5244,7 @@ Rigidbody2D:
   m_UseAutoMass: 0
   m_Mass: 1
   m_LinearDrag: 0
-  m_AngularDrag: 0.05
+  m_AngularDrag: 0
   m_GravityScale: 8
   m_Material: {fileID: 6200000, guid: bcb63c94a6cc4f24f9e52941cb2e2ced, type: 2}
   m_Interpolate: 1
@@ -5340,20 +5340,22 @@ MonoBehaviour:
     canDoubleJump: 1
     firstJumpForce: 15
     firstJumpAdditionalForce: 5
-    doubleJumpForce: 15
+    doubleJumpForce: 20
     doubleJumpAdditionalForce: 4
     jumpBufferTime: 0.1
     jumpBufferExpireTime: -1
     maxFallingSpeed: 15
-    canDash: 0
+    canDash: 1
     dashSpeed: 20
     dashDuration: 0.15
     dashBufferTime: 0.1
     dashBufferExpireTime: -1
+    dashCoolDown: 0.2
+    dashCoolDownExpireTime: 0
     wallSlideSpeed: 5
-    wallJumpForce: {x: 5, y: 20}
-    wallJumpAdditionalForce: 2
-    moveChangeSpeed: 0.05
+    wallJumpForce: {x: 20, y: 22}
+    wallJumpAdditionalForce: 3
+    moveChangeSpeed: 0.4
     hitBoxCollider: {fileID: 1383788128}
     boxLeftRightCastDist: 0.05
     boxDownCastDist: 0.1
