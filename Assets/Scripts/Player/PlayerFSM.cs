@@ -27,6 +27,10 @@ public class PlayerParameter
     public float dashDuration;
     public float dashBufferTime;
     public float dashBufferExpireTime;
+    [Header("WallSlide")] public float wallSlideSpeed;
+    [Header("WallJump")] public Vector2 wallJumpForce;
+    public float wallJumpAdditionalForce;
+    public float moveChangeSpeed;
 
 
     [Header("RaycastCheck")] public Collider2D hitBoxCollider;
@@ -97,6 +101,8 @@ public class PlayerFSM : FSM
         Physics2D.OverlapBox(transform.position + Vector3.left * (0.5f + p.boxLeftRightCastDist / 2),
             new Vector2(p.boxLeftRightCastDist, 0.95f), 0, p.groundLayer);
 
+    public bool isOnWall => isOnLeftWall || isOnRightWall;
+
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.green;
@@ -129,10 +135,19 @@ public class PlayerFSM : FSM
             p.facingDirection.y = y;
     }
 
+    public void ReverseFacingDirection() => p.facingDirection.x *= -1;
+
     public bool jumpTrigger => Time.time <= p.jumpBufferExpireTime;
     public bool dashTrigger => Time.time <= p.dashBufferExpireTime;
     public bool moveTrigger => Input.GetKey(p.leftKey) || Input.GetKey(p.rightKey);
     public bool fallTrigger => p.rigidbody.velocity.y < -1e-5;
+
+    public bool wallSlideTrigger =>
+        isOnLeftWall && Input.GetKey(p.leftKey) && p.rigidbody.velocity.x <= 1e-5 // 不然蹬墙跳一出去就就又变成wallSlide状态了
+        || isOnRightWall && Input.GetKey(p.rightKey) && p.rigidbody.velocity.x >= -1e-5;
+
+
+    public bool offWallTrigger => isOnLeftWall && Input.GetKey(p.rightKey) || isOnRightWall && Input.GetKey(p.leftKey);
 }
 
 public class PlayerIdle : IState
@@ -259,6 +274,8 @@ public class PlayerJump : IState
             manager.TransitionState(StateType.DoubleJump);
         else if (manager.dashTrigger && p.canDash)
             manager.TransitionState(StateType.Dash);
+        else if (manager.wallSlideTrigger)
+            manager.TransitionState(StateType.WallSlide);
     }
 
     public void OnExit()
@@ -271,6 +288,7 @@ public class PlayerWallJump : IState
 {
     private PlayerParameter p;
     private PlayerFSM manager;
+    private bool isKeyReleased;
 
     public PlayerWallJump(PlayerParameter p, PlayerFSM manager)
     {
@@ -280,16 +298,33 @@ public class PlayerWallJump : IState
 
     public void OnEnter()
     {
+        p.rigidbody.velocity = new Vector2(p.facingDirection.x * p.wallJumpForce.x, p.wallJumpForce.y);
+        p.jumpBufferExpireTime = -1; // 重置，否则如果从跳跃到落地的时间<bufferTime，则跳跃会被触发两次 
     }
+
 
     public void OnUpdate()
     {
         manager.UpdateFacingDirection();
+        isKeyReleased = isKeyReleased || Input.GetKeyUp(p.jumpKey);
+        float newX = Mathf.MoveTowards(p.rigidbody.velocity.x, p.moveSpeed * p.keyDownDirection.x, p.moveChangeSpeed);
+        p.rigidbody.velocity = new Vector2(newX, p.rigidbody.velocity.y);
+        if (!isKeyReleased)
+            p.rigidbody.AddForce(p.wallJumpAdditionalForce * Vector2.up);
 
+        if (manager.fallTrigger)
+            manager.TransitionState(StateType.Fall);
+        else if (manager.dashTrigger && p.canDash)
+            manager.TransitionState(StateType.Dash);
+        else if (manager.jumpTrigger && p.canDoubleJump)
+            manager.TransitionState(StateType.DoubleJump);
+        else if (manager.wallSlideTrigger)
+            manager.TransitionState(StateType.WallSlide);
     }
 
     public void OnExit()
     {
+        isKeyReleased = false;
     }
 }
 
@@ -297,6 +332,7 @@ public class PlayerWallSlide : IState
 {
     private PlayerParameter p;
     private PlayerFSM manager;
+    private float gravityScaleBackup;
 
     public PlayerWallSlide(PlayerParameter p, PlayerFSM manager)
     {
@@ -306,15 +342,27 @@ public class PlayerWallSlide : IState
 
     public void OnEnter()
     {
+        gravityScaleBackup = p.rigidbody.gravityScale;
+        p.rigidbody.gravityScale = 0;
+        p.rigidbody.velocity = new Vector2(0, -p.wallSlideSpeed);
+        p.canDash = true;
+        p.canDoubleJump = true;
+        manager.ReverseFacingDirection();
     }
 
     public void OnUpdate()
     {
-        manager.UpdateFacingDirection();
+        if (manager.isOnGround)
+            manager.TransitionState(manager.moveTrigger ? StateType.Run : StateType.Idle);
+        else if (manager.jumpTrigger)
+            manager.TransitionState(StateType.WallJump);
+        else if (manager.offWallTrigger || !manager.isOnWall) // 手动出去或者被动出去
+            manager.TransitionState(StateType.Fall);
     }
 
     public void OnExit()
     {
+        p.rigidbody.gravityScale = gravityScaleBackup;
     }
 }
 
@@ -345,6 +393,8 @@ public class PlayerFall : IState
             manager.TransitionState(StateType.DoubleJump);
         else if (manager.dashTrigger && p.canDash)
             manager.TransitionState(StateType.Dash);
+        else if (manager.wallSlideTrigger)
+            manager.TransitionState(StateType.WallSlide);
     }
 
     public void OnExit()
@@ -367,6 +417,7 @@ public class PlayerDash : IState
 
     public void OnEnter()
     {
+        p.dashBufferExpireTime = -1;
         p.canDash = false;
         p.rigidbody.velocity = new Vector2(p.facingDirection.x * p.dashSpeed, 0);
         gravityScaleBackup = p.rigidbody.gravityScale;
@@ -385,6 +436,8 @@ public class PlayerDash : IState
             manager.TransitionState(manager.moveTrigger ? StateType.Run : StateType.Idle);
         else if (!manager.isOnGround) // 这里的处理要特殊一点，因为player冲刺状态y轴速度恒为0，不这么判断状态就出不去了
             manager.TransitionState(StateType.Fall);
+        else if (manager.wallSlideTrigger)
+            manager.TransitionState(StateType.WallSlide);
     }
 
     public void OnExit()
@@ -451,6 +504,8 @@ public class PlayerDoubleJump : IState
             manager.TransitionState(StateType.Fall);
         else if (manager.dashTrigger && p.canDash)
             manager.TransitionState(StateType.Dash);
+        else if (manager.wallSlideTrigger)
+            manager.TransitionState(StateType.WallSlide);
     }
 
     public void OnExit()
