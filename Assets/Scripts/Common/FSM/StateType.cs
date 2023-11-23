@@ -20,5 +20,8 @@ public enum StateType
     Fall,
     // Enemy
     Chase,
-    Teleport
+    Teleport,
+    Alert,
+    Question,
+    Patrol
 }

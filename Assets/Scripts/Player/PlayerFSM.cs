@@ -53,6 +53,7 @@ public class PlayerParameter
 public class PlayerFSM : FSM
 {
     public PlayerParameter p;
+    public static Vector3 position => GameObject.FindWithTag("Player").transform.position;
 
     void Start()
     {
@@ -85,8 +86,8 @@ public class PlayerFSM : FSM
         currentState.OnUpdate();
 
 
-        Debug.Log($"currentState: {currentState}");
-        Debug.Log($"isOnGround: {isOnGround}");
+        // Debug.Log($"currentState: {currentState}");
+        // Debug.Log($"isOnGround: {isOnGround}");
         // Debug.Log($"isOnLeftWall: {isOnLeftWall}");
         // Debug.Log($"isOnRightWall: {isOnRightWall}");
     }
