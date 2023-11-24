@@ -127,9 +127,9 @@ public class ZombieFSM : FSM
         Gizmos.DrawLine(bottomRight, bottomRight + Vector3.down * p.cliffCheckDownRaycastDist);
         // Wall Box
         Gizmos.DrawWireCube(transform.position + Vector3.right * (0.5f + p.boxLeftRightCastDist / 2),
-            new Vector2(p.boxLeftRightCastDist, 1));
+            new Vector2(p.boxLeftRightCastDist, 0.95f));
         Gizmos.DrawWireCube(transform.position + Vector3.left * (0.5f + p.boxLeftRightCastDist / 2),
-            new Vector2(p.boxLeftRightCastDist, 1));
+            new Vector2(p.boxLeftRightCastDist, 0.95f));
         // Hit Box
         Gizmos.color = Color.red;
         Gizmos.DrawWireCube(transform.position, p.hitBoxCollider.bounds.size);
@@ -247,13 +247,21 @@ public class ZombieChase : IState
 
     public void OnUpdate()
     {
-        if (manager.isPlayerInFrontView)
-            RollTargetPosAndResetOrient();
         p.rigidbody.position =
             Vector3.MoveTowards(p.rigidbody.position, targetPos, p.chaseSpeed * Time.deltaTime);
 
-        if (manager.isHittingWall || manager.isWalkingDownCliff
-                                  || ((p.rigidbody.position - targetPos).magnitude <= 1e-5 && !manager.isPlayerInView))
+        if ((p.rigidbody.position - targetPos).magnitude <= 1e-5)
+        {
+            if (manager.isPlayerInView)
+            {
+                RollTargetPosAndResetOrient();
+                Debug.Log(123);
+            }
+            else
+                manager.TransitionState(StateType.Question);
+            return;
+        }
+        if (manager.isHittingWall || manager.isWalkingDownCliff)
             manager.TransitionState(StateType.Question);
     }
 
@@ -268,8 +276,8 @@ public class ZombieChase : IState
             manager.transform.position.y);
     }
 }
-
-public class ZombieQuestion : IState
+                    
+public class ZombieQuestion : IState        
 {
     private ZombieParameter p;
     private ZombieFSM manager;
