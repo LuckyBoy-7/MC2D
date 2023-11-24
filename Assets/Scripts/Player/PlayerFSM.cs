@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Serialization;
+using Random = UnityEngine.Random;
 
 [Serializable]
 public class PlayerParameter
@@ -40,6 +41,12 @@ public class PlayerParameter
     public float boxDownCastDist;
     public LayerMask groundLayer;
 
+    [Header("Attack")] public Animator attackRight;
+    public Animator attackDown;
+    public Animator attackUp;
+    public float attackCoolDown;
+    public float attackCoolDownExpireTime;
+
     [Header("Key")] public KeyCode leftKey;
     public KeyCode rightKey = KeyCode.L;
     public KeyCode upKey = KeyCode.I;
@@ -67,6 +74,7 @@ public class PlayerFSM : FSM
         states[StateType.Dash] = new PlayerDash(p, this);
         states[StateType.ReleaseArrow] = new PlayerReleaseArrow(p, this);
         states[StateType.DoubleJump] = new PlayerDoubleJump(p, this);
+        states[StateType.Attack] = new PlayerAttack(p, this);
         TransitionState(StateType.Idle);
     }
 
@@ -86,7 +94,7 @@ public class PlayerFSM : FSM
         currentState.OnUpdate();
 
 
-        // Debug.Log($"currentState: {currentState}");
+        Debug.Log($"currentState: {currentState}");
         // Debug.Log($"isOnGround: {isOnGround}");
         // Debug.Log($"isOnLeftWall: {isOnLeftWall}");
         // Debug.Log($"isOnRightWall: {isOnRightWall}");
@@ -136,6 +144,7 @@ public class PlayerFSM : FSM
             p.facingDirection.x = x;
         if (y != 0)
             p.facingDirection.y = y;
+        transform.localScale = new Vector3(p.facingDirection.x, 1, 1);
     }
 
     public void ReverseFacingDirection() => p.facingDirection.x *= -1;
@@ -151,6 +160,7 @@ public class PlayerFSM : FSM
 
 
     public bool offWallTrigger => isOnLeftWall && Input.GetKey(p.rightKey) || isOnRightWall && Input.GetKey(p.leftKey);
+    public bool attackTrigger => Input.GetKeyDown(p.attackKey) && Time.time >= p.attackCoolDownExpireTime;
 }
 
 public class PlayerIdle : IState
@@ -180,6 +190,8 @@ public class PlayerIdle : IState
             manager.TransitionState(StateType.Jump);
         else if (manager.dashTrigger && p.canDash)
             manager.TransitionState(StateType.Dash);
+        else if (manager.attackTrigger)
+            manager.TransitionState(StateType.Attack);
     }
 
     public void OnExit()
@@ -214,6 +226,8 @@ public class PlayerRun : IState
             manager.TransitionState(StateType.Fall);
         else if (manager.dashTrigger && p.canDash)
             manager.TransitionState(StateType.Dash);
+        else if (manager.attackTrigger)
+            manager.TransitionState(StateType.Attack);
     }
 
     public void OnExit()
@@ -277,6 +291,8 @@ public class PlayerJump : IState
             manager.TransitionState(StateType.DoubleJump);
         else if (manager.dashTrigger && p.canDash)
             manager.TransitionState(StateType.Dash);
+        else if (manager.attackTrigger)
+            manager.TransitionState(StateType.Attack);
     }
 
     public void OnExit()
@@ -319,6 +335,8 @@ public class PlayerWallJump : IState
             manager.TransitionState(StateType.Dash);
         else if (manager.jumpTrigger && p.canDoubleJump)
             manager.TransitionState(StateType.DoubleJump);
+        else if (manager.attackTrigger)
+            manager.TransitionState(StateType.Attack);
     }
 
     public void OnExit()
@@ -380,7 +398,6 @@ public class PlayerFall : IState
 
     public void OnEnter()
     {
-        p.rigidbody.velocity = new Vector2(p.rigidbody.velocity.x, 0);
     }
 
     public void OnUpdate()
@@ -396,6 +413,8 @@ public class PlayerFall : IState
             manager.TransitionState(StateType.Dash);
         else if (manager.wallSlideTrigger)
             manager.TransitionState(StateType.WallSlide);
+        else if (manager.attackTrigger)
+            manager.TransitionState(StateType.Attack);
     }
 
     public void OnExit()
@@ -504,10 +523,65 @@ public class PlayerDoubleJump : IState
             manager.TransitionState(StateType.Fall);
         else if (manager.dashTrigger && p.canDash)
             manager.TransitionState(StateType.Dash);
+        else if (manager.attackTrigger)
+            manager.TransitionState(StateType.Attack);
     }
 
     public void OnExit()
     {
         isKeyReleased = false;
+    }
+}
+
+public class PlayerAttack : IState
+{
+    private PlayerParameter p;
+    private PlayerFSM manager;
+    private AnimatorStateInfo info;
+
+    public PlayerAttack(PlayerParameter p, PlayerFSM manager)
+    {
+        this.p = p;
+        this.manager = manager;
+    }
+
+    public void OnEnter()
+    {
+        List<int> direction = new() { -1, 1 };
+        Animator animator;
+        if (Input.GetKey(p.upKey))
+            animator = p.attackUp;
+        else if (Input.GetKey(p.downKey))
+            animator = p.attackDown;
+        else
+            animator = p.attackRight;
+        animator.transform.localScale = new Vector3(1, direction[Random.Range(0, 2)], 1);
+        animator.Play("PlayerAttack");
+        info = animator.GetCurrentAnimatorStateInfo(0);
+    }
+
+
+    public void OnUpdate()
+    {
+        // 我感觉如果要写的更精细的话就要有更多的状态，比如FallAttack，RunAttack之类的
+        if (manager.fallTrigger)
+        {
+            var newY = -Mathf.Min(-p.rigidbody.velocity.y, p.maxFallingSpeed);
+            p.rigidbody.velocity = new Vector2(p.moveSpeed * p.keyDownDirection.x, newY);
+        }
+        else
+            p.rigidbody.velocity = new Vector2(p.moveSpeed * p.keyDownDirection.x, p.rigidbody.velocity.y);
+
+        if (info.IsName("PlayerAttack") && info.normalizedTime < 0.9f)
+            return;
+        if (manager.isOnGround)
+            manager.TransitionState(manager.moveTrigger ? StateType.Run : StateType.Idle);
+        else if (manager.fallTrigger)
+            manager.TransitionState(StateType.Fall);
+    }
+
+    public void OnExit()
+    {
+        p.attackCoolDownExpireTime = Time.time + p.attackCoolDown;
     }
 }

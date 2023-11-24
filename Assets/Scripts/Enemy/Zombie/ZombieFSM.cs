@@ -43,7 +43,7 @@ public class ZombieFSM : FSM
     private void Update()
     {
         currentState.OnUpdate();
-        Debug.Log($"currentState: {currentState}");
+        // Debug.Log($"currentState: {currentState}");
     }
 
     private bool isOverLeftCliff
@@ -255,7 +255,6 @@ public class ZombieChase : IState
             if (manager.isPlayerInView)
             {
                 RollTargetPosAndResetOrient();
-                Debug.Log(123);
             }
             else
                 manager.TransitionState(StateType.Question);
