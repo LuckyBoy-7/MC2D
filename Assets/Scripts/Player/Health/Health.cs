@@ -16,7 +16,7 @@ public class Health : Singleton<Health>
 
     public void TakeDamage(int damage)
     {
-        healthPoint -= 1;
+        healthPoint -= 1;   
         HealthUI.instance.UpdateUI(healthPoint);
         if (healthPoint == 0)
             Kill();

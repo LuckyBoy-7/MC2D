@@ -416,7 +416,7 @@ MonoBehaviour:
   m_Follow: {fileID: 1383788131}
   m_Lens:
     FieldOfView: 34
-    OrthographicSize: 10.02
+    OrthographicSize: 8.07
     NearClipPlane: 0.3
     FarClipPlane: 1000
     Dutch: 0
@@ -440,7 +440,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 57801082}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -16.493896, y: -0.035790205, z: -10}
+  m_LocalPosition: {x: -15.753616, y: 0.274768, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1022,7 +1022,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 10.02
+  orthographic size: 8.07
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -1046,7 +1046,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 519420028}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -16.493896, y: -0.035790205, z: -10}
+  m_LocalPosition: {x: -15.753616, y: 0.274768, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -6281,7 +6281,7 @@ MonoBehaviour:
     attackColliderDown: {fileID: 1503216418}
     attackUp: {fileID: 1299782002}
     attackColliderUp: {fileID: 1299782004}
-    attackCoolDown: 0.25
+    attackCoolDown: 0.2
     attackCoolDownExpireTime: -1
     attackForce: 23
     attackBufferTime: 0.15
