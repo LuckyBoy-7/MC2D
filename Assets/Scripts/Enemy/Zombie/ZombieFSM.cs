@@ -79,6 +79,33 @@ public class ZombieFSM : FSM
     public bool isWalkingDownCliff =>
         isOverLeftCliff && p.facingDirection == -1 || isOverRightCliff && p.facingDirection == 1;
 
+    private bool isOverLeftGround // 就是到悬崖边上后检测下面是否是空地
+    {
+        get
+        {
+            Vector3 bottomCenter = transform.position + Vector3.down * 0.5f;
+            Vector3 bottomLeft = bottomCenter - Vector3.right * 0.5f;
+
+
+            bool overLeftGround = Physics2D.Raycast(bottomLeft, Vector2.down, 6, p.groundLayer);
+            return overLeftGround;
+        }
+    }
+
+    private bool isOverRightGround
+    {
+        get
+        {
+            Vector3 bottomCenter = transform.position + Vector3.down * 0.5f;
+            Vector3 bottomRight = bottomCenter + Vector3.right * 0.5f;
+
+
+            bool overRightGround = Physics2D.Raycast(bottomRight, Vector2.down, 6, p.groundLayer);
+            return overRightGround;
+        }
+    }
+
+    public bool isOverGroundAboveCliff => isOverLeftCliff && isOverLeftGround || isOverRightCliff && isOverRightGround;
 
     private bool isOnLeftWall =>
         Physics2D.OverlapBox(transform.position + Vector3.left * (0.5f + p.boxLeftRightCastDist / 2),
@@ -232,7 +259,7 @@ public class ZombieChase : IState
 {
     private ZombieParameter p;
     private ZombieFSM manager;
-    private Vector2 targetPos;
+    private float targetPosX;
 
     public ZombieChase(ZombieParameter p, ZombieFSM manager)
     {
@@ -247,10 +274,11 @@ public class ZombieChase : IState
 
     public void OnUpdate()
     {
+        var position = p.rigidbody.position;
         p.rigidbody.position =
-            Vector3.MoveTowards(p.rigidbody.position, targetPos, p.chaseSpeed * Time.deltaTime);
+            Vector3.MoveTowards(position, new Vector3(targetPosX, position.y), p.chaseSpeed * Time.deltaTime);
 
-        if ((p.rigidbody.position - targetPos).magnitude <= 1e-5)
+        if (Mathf.Abs(p.rigidbody.position.x - targetPosX) <= 1e-5)
         {
             if (manager.isPlayerInView)
             {
@@ -258,9 +286,13 @@ public class ZombieChase : IState
             }
             else
                 manager.TransitionState(StateType.Question);
+
             return;
         }
-        if (manager.isHittingWall || manager.isWalkingDownCliff)
+
+        if (manager.isHittingWall)
+            manager.TransitionState(StateType.Question);
+        if (manager.isWalkingDownCliff && !manager.isOverGroundAboveCliff)  // 如果下面有空地，zombie会追下去
             manager.TransitionState(StateType.Question);
     }
 
@@ -271,12 +303,11 @@ public class ZombieChase : IState
     private void RollTargetPosAndResetOrient()
     {
         p.facingDirection = PlayerFSM.instance.transform.position.x - manager.transform.position.x < 0 ? -1 : 1;
-        targetPos = new Vector2(PlayerFSM.instance.transform.position.x + p.facingDirection * p.xDeltaBehindPlayer,
-            manager.transform.position.y);
+        targetPosX = PlayerFSM.instance.transform.position.x + p.facingDirection * p.xDeltaBehindPlayer;
     }
 }
-                    
-public class ZombieQuestion : IState        
+
+public class ZombieQuestion : IState
 {
     private ZombieParameter p;
     private ZombieFSM manager;
