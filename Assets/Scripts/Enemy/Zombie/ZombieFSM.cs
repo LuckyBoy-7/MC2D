@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.ExceptionServices;
+using UnityEditor.Rendering;
 using UnityEngine;
 
 [Serializable]
@@ -11,6 +12,7 @@ public class ZombieParameter
     public float patrolRestTime;
     public Rigidbody2D rigidbody;
     public int facingDirection; // x方向
+    public float xVelocityChangeSpeed;
     [Header("PhysicsCheck")] public float cliffCheckDownRaycastDist;
     public float boxLeftRightCastDist;
     public LayerMask groundLayer;
@@ -43,7 +45,7 @@ public class ZombieFSM : FSM
     private void Update()
     {
         currentState.OnUpdate();
-        // Debug.Log($"currentState: {currentState}");
+        Debug.Log($"currentState: {currentState}");
     }
 
     private bool isOverLeftCliff
@@ -209,7 +211,9 @@ public class ZombiePatrol : IState
             return;
         }
 
-        p.rigidbody.velocity = new Vector2(p.facingDirection * p.patrolMoveSpeed, p.rigidbody.velocity.y);
+        var newX = Mathf.MoveTowards(p.rigidbody.velocity.x, p.facingDirection * p.patrolMoveSpeed,
+            p.xVelocityChangeSpeed * Time.deltaTime);
+        p.rigidbody.velocity = new Vector2(newX, p.rigidbody.velocity.y);
         if (manager.isWalkingDownCliff || manager.isHittingWall)
         {
             p.rigidbody.velocity = Vector2.zero;
@@ -243,6 +247,9 @@ public class ZombieAlert : IState
 
     public void OnUpdate()
     {
+        var newX = Mathf.MoveTowards(p.rigidbody.velocity.x, 0,
+            p.xVelocityChangeSpeed * Time.deltaTime);
+        p.rigidbody.velocity = new Vector2(newX, p.rigidbody.velocity.y);
         elapse += Time.deltaTime;
         if (elapse > p.alertTime)
             manager.TransitionState(StateType.Chase);
@@ -274,13 +281,13 @@ public class ZombieChase : IState
 
     public void OnUpdate()
     {
-        var position = p.rigidbody.position;
-        p.rigidbody.position =
-            Vector3.MoveTowards(position, new Vector3(targetPosX, position.y), p.chaseSpeed * Time.deltaTime);
-
-        if (Mathf.Abs(p.rigidbody.position.x - targetPosX) <= 1e-5)
+        var newX = Mathf.MoveTowards(p.rigidbody.velocity.x, p.facingDirection * p.chaseSpeed,
+            p.xVelocityChangeSpeed * Time.deltaTime);
+        p.rigidbody.velocity = new Vector2(newX, p.rigidbody.velocity.y);
+        if (p.rigidbody.position.x > targetPosX && p.facingDirection == 1 ||
+            p.rigidbody.position.x < targetPosX && p.facingDirection == -1)  // 到目的地了
         {
-            if (manager.isPlayerInView)
+            if (manager.isPlayerInView) 
             {
                 RollTargetPosAndResetOrient();
             }
@@ -292,7 +299,7 @@ public class ZombieChase : IState
 
         if (manager.isHittingWall)
             manager.TransitionState(StateType.Question);
-        if (manager.isWalkingDownCliff && !manager.isOverGroundAboveCliff)  // 如果下面有空地，zombie会追下去
+        if (manager.isWalkingDownCliff && !manager.isOverGroundAboveCliff) // 如果下面有空地，zombie会追下去
             manager.TransitionState(StateType.Question);
     }
 
@@ -327,6 +334,10 @@ public class ZombieQuestion : IState
 
     public void OnUpdate()
     {
+        var newX = Mathf.MoveTowards(p.rigidbody.velocity.x, 0,
+            p.xVelocityChangeSpeed * Time.deltaTime);
+        p.rigidbody.velocity = new Vector2(newX, p.rigidbody.velocity.y);
+
         elapse += Time.deltaTime;
         if (elapse <= p.questionTime)
             return;

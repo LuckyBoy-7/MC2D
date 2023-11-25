@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
+using UnityEditor.Rendering;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
@@ -42,10 +43,16 @@ public class PlayerParameter
     public LayerMask groundLayer;
 
     [Header("Attack")] public Animator attackRight;
+    public PolygonCollider2D attackColliderRight;
     public Animator attackDown;
+    public PolygonCollider2D attackColliderDown;
     public Animator attackUp;
+    public PolygonCollider2D attackColliderUp;
     public float attackCoolDown;
     public float attackCoolDownExpireTime;
+    public float attackForce;
+    public float attackBufferTime;
+    public float attackBufferExpireTime;
 
     [Header("Key")] public KeyCode leftKey;
     public KeyCode rightKey = KeyCode.L;
@@ -85,6 +92,8 @@ public class PlayerFSM : SingletonFSM
             p.jumpBufferExpireTime = Time.time + p.jumpBufferTime;
         if (Input.GetKeyDown(p.dashKey))
             p.dashBufferExpireTime = Time.time + p.dashBufferTime;
+        if (Input.GetKeyDown(p.attackKey))
+            p.attackBufferExpireTime = Time.time + p.attackBufferTime;
         if (isOnGround)
         {
             p.canDoubleJump = true;
@@ -94,7 +103,7 @@ public class PlayerFSM : SingletonFSM
         currentState.OnUpdate();
 
 
-        Debug.Log($"currentState: {currentState}");
+        // Debug.Log($"currentState: {currentState}");
         // Debug.Log($"isOnGround: {isOnGround}");
         // Debug.Log($"isOnLeftWall: {isOnLeftWall}");
         // Debug.Log($"isOnRightWall: {isOnRightWall}");
@@ -147,7 +156,11 @@ public class PlayerFSM : SingletonFSM
         transform.localScale = new Vector3(p.facingDirection.x, 1, 1);
     }
 
-    public void ReverseFacingDirection() => p.facingDirection.x *= -1;
+    public void ReverseFacingDirection()
+    {
+        p.facingDirection.x *= -1;
+        transform.localScale = new Vector3(p.facingDirection.x, 1, 1);
+    }
 
     public bool jumpTrigger => Time.time <= p.jumpBufferExpireTime;
     public bool dashTrigger => Time.time <= p.dashBufferExpireTime && Time.time >= p.dashCoolDownExpireTime;
@@ -160,7 +173,7 @@ public class PlayerFSM : SingletonFSM
 
 
     public bool offWallTrigger => isOnLeftWall && Input.GetKey(p.rightKey) || isOnRightWall && Input.GetKey(p.leftKey);
-    public bool attackTrigger => Input.GetKeyDown(p.attackKey) && Time.time >= p.attackCoolDownExpireTime;
+    public bool attackTrigger => Time.time >= p.attackCoolDownExpireTime && Time.time <= p.attackBufferExpireTime;
 }
 
 public class PlayerIdle : IState
@@ -181,7 +194,7 @@ public class PlayerIdle : IState
     public void OnUpdate()
     {
         manager.UpdateFacingDirection();
-        var newX = Mathf.MoveTowards(p.rigidbody.velocity.x, 0, p.dampingSpeed);
+        var newX = Mathf.MoveTowards(p.rigidbody.velocity.x, 0, p.dampingSpeed * Time.deltaTime);
         p.rigidbody.velocity = new Vector2(newX, p.rigidbody.velocity.y);
 
         if (manager.moveTrigger)
@@ -217,7 +230,9 @@ public class PlayerRun : IState
     public void OnUpdate()
     {
         manager.UpdateFacingDirection();
-        p.rigidbody.velocity = new Vector2(p.moveSpeed * p.keyDownDirection.x, p.rigidbody.velocity.y);
+        var newX = Mathf.MoveTowards(p.rigidbody.velocity.x, p.moveSpeed * p.keyDownDirection.x,
+            p.moveChangeSpeed * Time.deltaTime);
+        p.rigidbody.velocity = new Vector2(newX, p.rigidbody.velocity.y);
         if (!manager.moveTrigger)
             manager.TransitionState(StateType.Idle);
         else if (manager.jumpTrigger && manager.isOnGround)
@@ -284,7 +299,9 @@ public class PlayerJump : IState
         if (!isKeyReleased)
             p.rigidbody.AddForce(p.firstJumpAdditionalForce * Vector2.up);
 
-        p.rigidbody.velocity = new Vector2(p.moveSpeed * p.keyDownDirection.x, p.rigidbody.velocity.y);
+        var newX = Mathf.MoveTowards(p.rigidbody.velocity.x, p.moveSpeed * p.keyDownDirection.x,
+            p.moveChangeSpeed * Time.deltaTime);
+        p.rigidbody.velocity = new Vector2(newX, p.rigidbody.velocity.y);
         if (manager.fallTrigger)
             manager.TransitionState(StateType.Fall);
         else if (manager.jumpTrigger && p.canDoubleJump)
@@ -324,7 +341,9 @@ public class PlayerWallJump : IState
     {
         manager.UpdateFacingDirection();
         isKeyReleased = isKeyReleased || Input.GetKeyUp(p.jumpKey);
-        float newX = Mathf.MoveTowards(p.rigidbody.velocity.x, p.moveSpeed * p.keyDownDirection.x, p.moveChangeSpeed);
+
+        float newX = Mathf.MoveTowards(p.rigidbody.velocity.x, p.moveSpeed * p.keyDownDirection.x,
+            p.moveChangeSpeed * Time.deltaTime);
         p.rigidbody.velocity = new Vector2(newX, p.rigidbody.velocity.y);
         if (!isKeyReleased)
             p.rigidbody.AddForce(p.wallJumpAdditionalForce * Vector2.up);
@@ -404,7 +423,9 @@ public class PlayerFall : IState
     {
         manager.UpdateFacingDirection();
         var newY = -Mathf.Min(-p.rigidbody.velocity.y, p.maxFallingSpeed);
-        p.rigidbody.velocity = new Vector2(p.moveSpeed * p.keyDownDirection.x, newY);
+        float newX = Mathf.MoveTowards(p.rigidbody.velocity.x, p.moveSpeed * p.keyDownDirection.x,
+            p.moveChangeSpeed * Time.deltaTime);
+        p.rigidbody.velocity = new Vector2(newX, newY);
         if (manager.isOnGround)
             manager.TransitionState(manager.moveTrigger ? StateType.Run : StateType.Idle);
         else if (manager.jumpTrigger && p.canDoubleJump)
@@ -463,6 +484,7 @@ public class PlayerDash : IState
         p.rigidbody.gravityScale = gravityScaleBackup;
         elapse = 0;
         p.dashCoolDownExpireTime = Time.time + p.dashCoolDown;
+        p.rigidbody.velocity = Vector2.zero;
     }
 }
 
@@ -538,31 +560,53 @@ public class PlayerAttack : IState
     private PlayerParameter p;
     private PlayerFSM manager;
     private AnimatorStateInfo info;
+    private Dictionary<Animator, Vector2> attackDirection;
+    private Dictionary<Animator, PolygonCollider2D> attackCollider;
+    private Animator currentAttack;
 
     public PlayerAttack(PlayerParameter p, PlayerFSM manager)
     {
         this.p = p;
         this.manager = manager;
+        attackDirection = new()
+        {
+            { p.attackRight, new Vector2(1, 0) * p.facingDirection.x },
+            { p.attackUp, new Vector2(0, 1) },
+            { p.attackDown, new Vector2(0, -1) }
+        };
+
+        attackCollider = new()
+        {
+            { p.attackRight, p.attackColliderRight },
+            { p.attackUp, p.attackColliderUp },
+            { p.attackDown, p.attackColliderDown }
+        };
     }
 
     public void OnEnter()
     {
+        p.attackBufferExpireTime = -1;
+
         List<int> direction = new() { -1, 1 };
-        Animator animator;
         if (Input.GetKey(p.upKey))
-            animator = p.attackUp;
+            currentAttack = p.attackUp;
         else if (Input.GetKey(p.downKey))
-            animator = p.attackDown;
+            currentAttack = p.attackDown;
         else
-            animator = p.attackRight;
-        animator.transform.localScale = new Vector3(1, direction[Random.Range(0, 2)], 1);
-        animator.Play("PlayerAttack");
-        info = animator.GetCurrentAnimatorStateInfo(0);
+            currentAttack = p.attackRight;
+        currentAttack.transform.localScale = new Vector3(1, direction[Random.Range(0, 2)], 1);
+        currentAttack.Play("PlayerAttack");
     }
 
 
     public void OnUpdate()
     {
+        // 这段话要不停调用（天坑！！！）
+        info = currentAttack.GetCurrentAnimatorStateInfo(0);
+        // 更新向右攻击的方向
+        attackDirection[p.attackRight] = new Vector2(1, 0) * p.facingDirection.x;
+        UpdateTrigger();
+
         // 我感觉如果要写的更精细的话就要有更多的状态，比如FallAttack，RunAttack之类的
         if (manager.fallTrigger)
         {
@@ -570,18 +614,48 @@ public class PlayerAttack : IState
             p.rigidbody.velocity = new Vector2(p.moveSpeed * p.keyDownDirection.x, newY);
         }
         else
-            p.rigidbody.velocity = new Vector2(p.moveSpeed * p.keyDownDirection.x, p.rigidbody.velocity.y);
+        {
+            var newX = Mathf.MoveTowards(p.rigidbody.velocity.x, p.moveSpeed * p.keyDownDirection.x,
+                p.dampingSpeed * Time.deltaTime);
+            p.rigidbody.velocity = new Vector2(newX, p.rigidbody.velocity.y);
+        }
 
-        if (info.IsName("PlayerAttack") && info.normalizedTime < 0.9f)
+        // The integer part is the number of time a state has been looped. The fractional part is the % (0-1) of progress in the current loop.
+        // 整数部分是循环次数，小数部分是运行进度
+        if (info.IsName("PlayerAttack") && info.normalizedTime - (int)info.normalizedTime < 0.95f)  
             return;
+        Debug.Log(2);
         if (manager.isOnGround)
             manager.TransitionState(manager.moveTrigger ? StateType.Run : StateType.Idle);
         else if (manager.fallTrigger)
             manager.TransitionState(StateType.Fall);
     }
 
+
     public void OnExit()
     {
         p.attackCoolDownExpireTime = Time.time + p.attackCoolDown;
+    }
+
+    public void UpdateTrigger()
+    {
+        List<Collider2D> res = new();
+        Physics2D.OverlapCollider(attackCollider[currentAttack], new ContactFilter2D { useTriggers = true }, res);
+        bool isEnemyAttacked = false; // 击打多个敌人时，只受到一个单位的后坐力
+        foreach (var collider in res)
+        {
+            if (!collider.CompareTag("Enemy"))
+                continue;
+            isEnemyAttacked = true;
+            var state = collider.GetComponent<EnemyState>();
+            if (state.canBeKnockedBack)
+                state.GetComponent<Rigidbody2D>().velocity = attackDirection[currentAttack] * p.attackForce;
+        }
+
+        if (isEnemyAttacked)
+        {
+            p.rigidbody.velocity = -attackDirection[currentAttack] * p.attackForce;
+            p.canDoubleJump = true;
+        }
     }
 }
