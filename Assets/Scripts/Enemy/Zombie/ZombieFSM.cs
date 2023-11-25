@@ -270,8 +270,8 @@ public class ZombieChase : IState
 
     private void RollTargetPosAndResetOrient()
     {
-        p.facingDirection = PlayerFSM.position.x - manager.transform.position.x < 0 ? -1 : 1;
-        targetPos = new Vector2(PlayerFSM.position.x + p.facingDirection * p.xDeltaBehindPlayer,
+        p.facingDirection = PlayerFSM.instance.transform.position.x - manager.transform.position.x < 0 ? -1 : 1;
+        targetPos = new Vector2(PlayerFSM.instance.transform.position.x + p.facingDirection * p.xDeltaBehindPlayer,
             manager.transform.position.y);
     }
 }

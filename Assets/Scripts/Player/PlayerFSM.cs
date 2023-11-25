@@ -57,7 +57,7 @@ public class PlayerParameter
     public KeyCode spellKey = KeyCode.Q;
 }
 
-public class PlayerFSM : FSM
+public class PlayerFSM : SingletonFSM
 {
     public PlayerParameter p;
     public static Vector3 position => GameObject.FindWithTag("Player").transform.position;
