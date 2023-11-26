@@ -15,6 +15,7 @@ public class PlayerParameter
     public Vector2 facingDirection;
     public Vector2 keyDownDirection;
     public float moveSpeed;
+    public float moveChangeSpeed;
     [Header("Idle")] public float dampingSpeed;
     [Header("Jump")] public bool canDoubleJump = true;
     public float firstJumpForce;
@@ -34,7 +35,7 @@ public class PlayerParameter
     [Header("WallSlide")] public float wallSlideSpeed;
     [Header("WallJump")] public Vector2 wallJumpForce;
     public float wallJumpAdditionalForce;
-    public float moveChangeSpeed;
+    public float wallJumpMoveChangeSpeed;
 
 
     [Header("RaycastCheck")] public Collider2D hitBoxCollider;
@@ -57,7 +58,7 @@ public class PlayerParameter
     [Header("Hurt")] public bool isHurt;
     public float showHurtEffectTime;
     public Vector2 hurtDirection;
-    public float hurtDirectionXMultiplier;  // 方向加一个维度的缩放配合force就可以构造出360度任意受力情况
+    public float hurtDirectionXMultiplier; // 方向加一个维度的缩放配合force就可以构造出360度任意受力情况
     public float hurtForce;
     public float invincibleTime;
     public float invincibleExpireTime;
@@ -108,6 +109,11 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         // Debug.Log($"isOnGround: {isOnGround}");
         // Debug.Log($"isOnLeftWall: {isOnLeftWall}");
         // Debug.Log($"isOnRightWall: {isOnRightWall}");
+    }
+
+    private void FixedUpdate()
+    {
+        currentState.OnFixedUpdate();
     }
 
     private void UpdateStates()
@@ -215,9 +221,6 @@ public class PlayerIdle : IState
     public void OnUpdate()
     {
         manager.UpdateFacingDirection();
-        var newX = Mathf.MoveTowards(p.rigidbody.velocity.x, 0, p.dampingSpeed * Time.deltaTime);
-        p.rigidbody.velocity = new Vector2(newX, p.rigidbody.velocity.y);
-
         if (manager.moveTrigger)
             manager.TransitionState(StateType.Run);
         else if (manager.jumpTrigger && manager.isOnGround)
@@ -226,6 +229,12 @@ public class PlayerIdle : IState
             manager.TransitionState(StateType.Dash);
         else if (manager.attackTrigger)
             manager.TransitionState(StateType.Attack);
+    }
+
+    public void OnFixedUpdate()
+    {
+        var newX = Mathf.MoveTowards(p.rigidbody.velocity.x, 0, p.dampingSpeed * Time.deltaTime);
+        p.rigidbody.velocity = new Vector2(newX, p.rigidbody.velocity.y);
     }
 
     public void OnExit()
@@ -251,9 +260,6 @@ public class PlayerRun : IState
     public void OnUpdate()
     {
         manager.UpdateFacingDirection();
-        var newX = Mathf.MoveTowards(p.rigidbody.velocity.x, p.moveSpeed * p.keyDownDirection.x,
-            p.moveChangeSpeed * Time.deltaTime);
-        p.rigidbody.velocity = new Vector2(newX, p.rigidbody.velocity.y);
         if (!manager.moveTrigger)
             manager.TransitionState(StateType.Idle);
         else if (manager.jumpTrigger && manager.isOnGround)
@@ -264,6 +270,13 @@ public class PlayerRun : IState
             manager.TransitionState(StateType.Dash);
         else if (manager.attackTrigger)
             manager.TransitionState(StateType.Attack);
+    }
+
+    public void OnFixedUpdate()
+    {
+        var newX = Mathf.MoveTowards(p.rigidbody.velocity.x, p.moveSpeed * p.keyDownDirection.x,
+            p.moveChangeSpeed * Time.deltaTime);
+        p.rigidbody.velocity = new Vector2(newX, p.rigidbody.velocity.y);
     }
 
     public void OnExit()
@@ -294,6 +307,10 @@ public class PlayerHurt : IState
         manager.TransitionState(StateType.Fall);
     }
 
+    public void OnFixedUpdate()
+    {
+    }
+
     public void OnExit()
     {
     }
@@ -313,7 +330,7 @@ public class PlayerJump : IState
 
     public void OnEnter()
     {
-        p.rigidbody.AddForce(Vector2.up * p.firstJumpForce, ForceMode2D.Impulse);
+        p.rigidbody.velocity = Vector2.up * p.firstJumpForce;
         p.jumpBufferExpireTime = -1; // 重置，否则如果从跳跃到落地的时间<bufferTime，则跳跃会被触发两次 
     }
 
@@ -321,12 +338,7 @@ public class PlayerJump : IState
     {
         manager.UpdateFacingDirection();
         isKeyReleased = isKeyReleased || Input.GetKeyUp(p.jumpKey);
-        if (!isKeyReleased)
-            p.rigidbody.AddForce(p.firstJumpAdditionalForce * Vector2.up);
 
-        var newX = Mathf.MoveTowards(p.rigidbody.velocity.x, p.moveSpeed * p.keyDownDirection.x,
-            p.moveChangeSpeed * Time.deltaTime);
-        p.rigidbody.velocity = new Vector2(newX, p.rigidbody.velocity.y);
         if (manager.fallTrigger)
             manager.TransitionState(StateType.Fall);
         else if (manager.jumpTrigger && p.canDoubleJump)
@@ -335,6 +347,16 @@ public class PlayerJump : IState
             manager.TransitionState(StateType.Dash);
         else if (manager.attackTrigger)
             manager.TransitionState(StateType.Attack);
+    }
+
+    public void OnFixedUpdate()
+    {
+        if (!isKeyReleased)
+            p.rigidbody.AddForce(p.firstJumpAdditionalForce * Vector2.up); // 因为更新速率恒定，所以加不加deltatime都一样
+
+        var newX = Mathf.MoveTowards(p.rigidbody.velocity.x, p.moveSpeed * p.keyDownDirection.x,
+            p.moveChangeSpeed);
+        p.rigidbody.velocity = new Vector2(newX, p.rigidbody.velocity.y);
     }
 
     public void OnExit()
@@ -366,13 +388,7 @@ public class PlayerWallJump : IState
     {
         manager.UpdateFacingDirection();
         isKeyReleased = isKeyReleased || Input.GetKeyUp(p.jumpKey);
-
-        float newX = Mathf.MoveTowards(p.rigidbody.velocity.x, p.moveSpeed * p.keyDownDirection.x,
-            p.moveChangeSpeed * Time.deltaTime);
-        p.rigidbody.velocity = new Vector2(newX, p.rigidbody.velocity.y);
-        if (!isKeyReleased)
-            p.rigidbody.AddForce(p.wallJumpAdditionalForce * Vector2.up);
-
+        
         if (manager.fallTrigger)
             manager.TransitionState(StateType.Fall);
         else if (manager.dashTrigger && p.canDash)
@@ -381,6 +397,16 @@ public class PlayerWallJump : IState
             manager.TransitionState(StateType.DoubleJump);
         else if (manager.attackTrigger)
             manager.TransitionState(StateType.Attack);
+    }
+
+    public void OnFixedUpdate()
+    {
+
+        float newX = Mathf.MoveTowards(p.rigidbody.velocity.x, p.moveSpeed * p.keyDownDirection.x,
+            p.wallJumpMoveChangeSpeed);
+        p.rigidbody.velocity = new Vector2(newX, p.rigidbody.velocity.y);
+        if (!isKeyReleased)
+            p.rigidbody.AddForce(p.wallJumpAdditionalForce * Vector2.up);
     }
 
     public void OnExit()
@@ -423,6 +449,10 @@ public class PlayerWallSlide : IState
             manager.TransitionState(StateType.Dash);
     }
 
+    public void OnFixedUpdate()
+    {
+    }
+
     public void OnExit()
     {
         p.rigidbody.gravityScale = gravityScaleBackup;
@@ -447,10 +477,7 @@ public class PlayerFall : IState
     public void OnUpdate()
     {
         manager.UpdateFacingDirection();
-        var newY = -Mathf.Min(-p.rigidbody.velocity.y, p.maxFallingSpeed);
-        float newX = Mathf.MoveTowards(p.rigidbody.velocity.x, p.moveSpeed * p.keyDownDirection.x,
-            p.moveChangeSpeed * Time.deltaTime);
-        p.rigidbody.velocity = new Vector2(newX, newY);
+
         if (manager.isOnGround)
             manager.TransitionState(manager.moveTrigger ? StateType.Run : StateType.Idle);
         else if (manager.jumpTrigger && p.canDoubleJump)
@@ -461,6 +488,14 @@ public class PlayerFall : IState
             manager.TransitionState(StateType.WallSlide);
         else if (manager.attackTrigger)
             manager.TransitionState(StateType.Attack);
+    }
+
+    public void OnFixedUpdate()
+    {
+        var newY = -Mathf.Min(-p.rigidbody.velocity.y, p.maxFallingSpeed);
+        float newX = Mathf.MoveTowards(p.rigidbody.velocity.x, p.moveSpeed * p.keyDownDirection.x,
+            p.moveChangeSpeed * Time.deltaTime);
+        p.rigidbody.velocity = new Vector2(newX, newY);
     }
 
     public void OnExit()
@@ -504,6 +539,10 @@ public class PlayerDash : IState
             manager.TransitionState(StateType.Fall);
     }
 
+    public void OnFixedUpdate()
+    {
+    }
+
     public void OnExit()
     {
         p.rigidbody.gravityScale = gravityScaleBackup;
@@ -529,6 +568,10 @@ public class PlayerReleaseArrow : IState
     }
 
     public void OnUpdate()
+    {
+    }
+
+    public void OnFixedUpdate()
     {
     }
 
@@ -562,16 +605,21 @@ public class PlayerDoubleJump : IState
     {
         manager.UpdateFacingDirection();
         isKeyReleased = isKeyReleased || Input.GetKeyUp(p.jumpKey);
-        if (!isKeyReleased)
-            p.rigidbody.AddForce(p.doubleJumpAdditionalForce * Vector2.up);
 
-        p.rigidbody.velocity = new Vector2(p.moveSpeed * p.keyDownDirection.x, p.rigidbody.velocity.y);
         if (manager.fallTrigger)
             manager.TransitionState(StateType.Fall);
         else if (manager.dashTrigger && p.canDash)
             manager.TransitionState(StateType.Dash);
         else if (manager.attackTrigger)
             manager.TransitionState(StateType.Attack);
+    }
+
+    public void OnFixedUpdate()
+    {
+        if (!isKeyReleased)
+            p.rigidbody.AddForce(p.doubleJumpAdditionalForce * Vector2.up);
+
+        p.rigidbody.velocity = new Vector2(p.moveSpeed * p.keyDownDirection.x, p.rigidbody.velocity.y);
     }
 
     public void OnExit()
@@ -632,6 +680,18 @@ public class PlayerAttack : IState
         attackDirection[p.attackRight] = new Vector2(1, 0) * p.facingDirection.x;
         UpdateTrigger();
 
+        // The integer part is the number of time a state has been looped. The fractional part is the % (0-1) of progress in the current loop.
+        // 整数部分是循环次数，小数部分是运行进度
+        if (info.IsName("PlayerAttack") && info.normalizedTime - (int)info.normalizedTime < 0.95f)
+            return;
+        if (manager.isOnGround)
+            manager.TransitionState(manager.moveTrigger ? StateType.Run : StateType.Idle);
+        else if (manager.fallTrigger)
+            manager.TransitionState(StateType.Fall);
+    }
+
+    public void OnFixedUpdate()
+    {
         // 我感觉如果要写的更精细的话就要有更多的状态，比如FallAttack，RunAttack之类的
         if (manager.fallTrigger)
         {
@@ -644,16 +704,6 @@ public class PlayerAttack : IState
                 p.dampingSpeed * Time.deltaTime);
             p.rigidbody.velocity = new Vector2(newX, p.rigidbody.velocity.y);
         }
-
-        // The integer part is the number of time a state has been looped. The fractional part is the % (0-1) of progress in the current loop.
-        // 整数部分是循环次数，小数部分是运行进度
-        if (info.IsName("PlayerAttack") && info.normalizedTime - (int)info.normalizedTime < 0.95f)
-            return;
-        Debug.Log(2);
-        if (manager.isOnGround)
-            manager.TransitionState(manager.moveTrigger ? StateType.Run : StateType.Idle);
-        else if (manager.fallTrigger)
-            manager.TransitionState(StateType.Fall);
     }
 
 

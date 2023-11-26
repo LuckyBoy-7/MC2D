@@ -221,6 +221,10 @@ public class ZombiePatrol : IState
         }
     }
 
+    public void OnFixedUpdate()
+    {
+    }
+
     public void OnExit()
     {
         elapse = 0;
@@ -255,6 +259,10 @@ public class ZombieAlert : IState
             manager.TransitionState(StateType.Chase);
     }
 
+    public void OnFixedUpdate()
+    {
+    }
+
     public void OnExit()
     {
         elapse = 0;
@@ -285,9 +293,9 @@ public class ZombieChase : IState
             p.xVelocityChangeSpeed * Time.deltaTime);
         p.rigidbody.velocity = new Vector2(newX, p.rigidbody.velocity.y);
         if (p.rigidbody.position.x > targetPosX && p.facingDirection == 1 ||
-            p.rigidbody.position.x < targetPosX && p.facingDirection == -1)  // 到目的地了
+            p.rigidbody.position.x < targetPosX && p.facingDirection == -1) // 到目的地了
         {
-            if (manager.isPlayerInView) 
+            if (manager.isPlayerInView)
             {
                 RollTargetPosAndResetOrient();
             }
@@ -301,6 +309,10 @@ public class ZombieChase : IState
             manager.TransitionState(StateType.Question);
         if (manager.isWalkingDownCliff && !manager.isOverGroundAboveCliff) // 如果下面有空地，zombie会追下去
             manager.TransitionState(StateType.Question);
+    }
+
+    public void OnFixedUpdate()
+    {
     }
 
     public void OnExit()
@@ -342,6 +354,10 @@ public class ZombieQuestion : IState
         if (elapse <= p.questionTime)
             return;
         manager.TransitionState(StateType.Patrol);
+    }
+
+    public void OnFixedUpdate()
+    {
     }
 
     public void OnExit()
