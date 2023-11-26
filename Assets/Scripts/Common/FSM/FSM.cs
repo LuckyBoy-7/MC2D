@@ -17,11 +17,19 @@ public class FSM : MonoBehaviour
     }
 }
 
-public class SingletonFSM : Singleton<SingletonFSM>
+public class SingletonFSM<T> : MonoBehaviour where T: SingletonFSM<T>
 {
+    public static T instance;
+
+    protected virtual void Awake()
+    {
+        if (instance == null)
+            instance = (T)this;
+        else
+            Destroy(gameObject);
+    }
     public Dictionary<StateType, IState> states = new();
     protected IState currentState;
-
 
     public void TransitionState(StateType stateType)
     {
