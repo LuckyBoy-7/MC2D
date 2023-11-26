@@ -12,7 +12,7 @@ public class HealthUI : Singleton<HealthUI>
 
     private void Start()
     {
-        for (int i = 0; i < Health.instance.maxHealthPoint; i++)
+        for (int i = 0; i < PlayerFSM.instance.maxHealthPoint; i++)
             hearts.Add(Instantiate(heartPrefabs, transform));
     }
 

@@ -1,15 +1,20 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using Unity.VisualScripting;
 using UnityEditor.Rendering;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
 
-[Serializable]
-public class PlayerParameter
+public class PlayerFSM : SingletonFSM<PlayerFSM>
 {
+    [Header("Health")] public int maxHealthPoint;
+    public int healthPoint;
+    public SpriteRenderer spriteRenderer;
+    public BoxCollider2D triggerBox;
+
     [Header("Movement")] public Rigidbody2D rigidbody;
 
     public Vector2 facingDirection;
@@ -58,9 +63,10 @@ public class PlayerParameter
     public float attackForce;
     public float attackBufferTime;
     public float attackBufferExpireTime;
+    public int attackDamage;
 
-    [Header("Hurt")] public bool isHurt;
-    public float showHurtEffectTime;
+
+    [Header("Hurt")] public float showHurtEffectTime;
     public Vector2 hurtDirection;
     public float hurtDirectionXMultiplier; // 方向加一个维度的缩放配合force就可以构造出360度任意受力情况
     public float hurtForce;
@@ -68,7 +74,7 @@ public class PlayerParameter
     public float invincibleExpireTime;
 
 
-    [Header("Key")] public KeyCode leftKey;
+    [Header("Key")] public KeyCode leftKey = KeyCode.J;
     public KeyCode rightKey = KeyCode.L;
     public KeyCode upKey = KeyCode.I;
     public KeyCode downKey = KeyCode.K;
@@ -76,25 +82,21 @@ public class PlayerParameter
     public KeyCode dashKey = KeyCode.S;
     public KeyCode attackKey = KeyCode.A;
     public KeyCode spellKey = KeyCode.Q;
-}
-
-public class PlayerFSM : SingletonFSM<PlayerFSM>
-{
-    public PlayerParameter p;
 
     void Start()
     {
-        states[StateType.Idle] = new PlayerIdle(p, this);
-        states[StateType.Run] = new PlayerRun(p, this);
-        states[StateType.Hurt] = new PlayerHurt(p, this);
-        states[StateType.Jump] = new PlayerJump(p, this);
-        states[StateType.WallJump] = new PlayerWallJump(p, this);
-        states[StateType.WallSlide] = new PlayerWallSlide(p, this);
-        states[StateType.Fall] = new PlayerFall(p, this);
-        states[StateType.Dash] = new PlayerDash(p, this);
-        states[StateType.ReleaseArrow] = new PlayerReleaseArrow(p, this);
-        states[StateType.DoubleJump] = new PlayerDoubleJump(p, this);
-        states[StateType.Attack] = new PlayerAttack(p, this);
+        healthPoint = maxHealthPoint;
+        states[StateType.Idle] = new PlayerIdle(this);
+        states[StateType.Run] = new PlayerRun(this);
+        states[StateType.Hurt] = new PlayerHurt(this);
+        states[StateType.Jump] = new PlayerJump(this);
+        states[StateType.WallJump] = new PlayerWallJump(this);
+        states[StateType.WallSlide] = new PlayerWallSlide(this);
+        states[StateType.Fall] = new PlayerFall(this);
+        states[StateType.Dash] = new PlayerDash(this);
+        states[StateType.ReleaseArrow] = new PlayerReleaseArrow(this);
+        states[StateType.DoubleJump] = new PlayerDoubleJump(this);
+        states[StateType.Attack] = new PlayerAttack(this);
         TransitionState(StateType.Idle);
     }
 
@@ -103,16 +105,35 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         UpdateKeyDownDirection();
         UpdateInputBuffer();
         UpdateStates();
-        if (hurtTrigger) // 所有状态都可以到hurt状态
-            TransitionState(StateType.Hurt);
+        UpdateTriggerBoxOverlap();
 
         currentState.OnUpdate();
 
 
-        Debug.Log($"currentState: {currentState}");
+        // Debug.Log($"currentState: {currentState}");
         // Debug.Log($"isOnGround: {isOnGround}");
         // Debug.Log($"isOnLeftWall: {isOnLeftWall}");
         // Debug.Log($"isOnRightWall: {isOnRightWall}");
+    }
+
+    private void UpdateTriggerBoxOverlap()
+    {
+        if (isInvincible)
+            return;
+        // 这里是triggerBox的碰撞伤害的检测
+        List<Collider2D> res = new();
+        triggerBox.OverlapCollider(new ContactFilter2D { useTriggers = true }, res);
+        foreach (var collider in res)
+        {
+            if (!collider.CompareTag("Enemy"))
+                continue;
+            TakeDamage(1);
+            hurtDirection = collider.transform.position.x > transform.position.x
+                ? new Vector2(-hurtDirectionXMultiplier, 1)
+                : new Vector2(hurtDirectionXMultiplier, 1);
+            TransitionState(StateType.Hurt);
+            return;
+        }
     }
 
     private void FixedUpdate()
@@ -124,116 +145,137 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     {
         if (isOnGround)
         {
-            p.canDoubleJump = true;
-            p.canDash = true; // 虽然你冷却好了，预输入也有，但是不能冲就是不能冲
+            canDoubleJump = true;
+            canDash = true; // 虽然你冷却好了，预输入也有，但是不能冲就是不能冲
         }
     }
 
     private void UpdateInputBuffer()
     {
-        if (Input.GetKeyDown(p.jumpKey))
-            p.jumpBufferExpireTime = Time.time + p.jumpBufferTime;
-        if (Input.GetKeyDown(p.dashKey))
-            p.dashBufferExpireTime = Time.time + p.dashBufferTime;
-        if (Input.GetKeyDown(p.attackKey))
-            p.attackBufferExpireTime = Time.time + p.attackBufferTime;
+        if (Input.GetKeyDown(jumpKey))
+            jumpBufferExpireTime = Time.time + jumpBufferTime;
+        if (Input.GetKeyDown(dashKey))
+            dashBufferExpireTime = Time.time + dashBufferTime;
+        if (Input.GetKeyDown(attackKey))
+            attackBufferExpireTime = Time.time + attackBufferTime;
         if (isOnGround)
         {
-            p.wolfJumpBufferExpireTime = Time.time + p.wallWolfJumpBufferTime;
-            p.wallWolfJumpBufferExpireTime = -1; // 如果在墙上滑倒底但是不跳。其实应该可以不加，因为毕竟0.1s很短
+            wolfJumpBufferExpireTime = Time.time + wolfJumpBufferTime;
+            wallWolfJumpBufferExpireTime = -1; // 如果在墙上滑倒底但是不跳。其实应该可以不加，因为毕竟0.1s很短
         }
 
         if (currentState == states[StateType.WallSlide])
-            p.wallWolfJumpBufferExpireTime = Time.time + p.wallWolfJumpBufferTime;
+            wallWolfJumpBufferExpireTime = Time.time + wallWolfJumpBufferTime;
     }
 
+    #region PhysicsCheck
+
     public bool isOnGround =>
-        Physics2D.OverlapBox(transform.position + Vector3.down * (0.5f + p.boxDownCastDist / 2),
-            new Vector2(0.95f, p.boxDownCastDist), 0, p.groundLayer);
+        Physics2D.OverlapBox(transform.position + Vector3.down * (0.5f + boxDownCastDist / 2),
+            new Vector2(0.95f, boxDownCastDist), 0, groundLayer);
 
     public bool isOnRightWall =>
-        Physics2D.OverlapBox(transform.position + Vector3.right * (0.5f + p.boxLeftRightCastDist / 2),
-            new Vector2(p.boxLeftRightCastDist, 0.95f), 0, p.groundLayer);
+        Physics2D.OverlapBox(transform.position + Vector3.right * (0.5f + boxLeftRightCastDist / 2),
+            new Vector2(boxLeftRightCastDist, 0.95f), 0, groundLayer);
 
     public bool isOnLeftWall =>
-        Physics2D.OverlapBox(transform.position + Vector3.left * (0.5f + p.boxLeftRightCastDist / 2),
-            new Vector2(p.boxLeftRightCastDist, 0.95f), 0, p.groundLayer);
+        Physics2D.OverlapBox(transform.position + Vector3.left * (0.5f + boxLeftRightCastDist / 2),
+            new Vector2(boxLeftRightCastDist, 0.95f), 0, groundLayer);
 
     public bool isOnWall => isOnLeftWall || isOnRightWall;
+
+    #endregion
 
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.green;
         // Ground Box
-        Gizmos.DrawWireCube(transform.position + Vector3.down * (0.5f + p.boxDownCastDist / 2),
-            new Vector2(1, p.boxDownCastDist));
+        Gizmos.DrawWireCube(transform.position + Vector3.down * (0.5f + boxDownCastDist / 2),
+            new Vector2(1, boxDownCastDist));
         // Wall Box
-        Gizmos.DrawWireCube(transform.position + Vector3.right * (0.5f + p.boxLeftRightCastDist / 2),
-            new Vector2(p.boxLeftRightCastDist, 1));
-        Gizmos.DrawWireCube(transform.position + Vector3.left * (0.5f + p.boxLeftRightCastDist / 2),
-            new Vector2(p.boxLeftRightCastDist, 1));
+        Gizmos.DrawWireCube(transform.position + Vector3.right * (0.5f + boxLeftRightCastDist / 2),
+            new Vector2(boxLeftRightCastDist, 1));
+        Gizmos.DrawWireCube(transform.position + Vector3.left * (0.5f + boxLeftRightCastDist / 2),
+            new Vector2(boxLeftRightCastDist, 1));
         // Hit Box
         Gizmos.color = Color.red;
-        Gizmos.DrawWireCube(transform.position, p.hitBoxCollider.bounds.size);
+        Gizmos.DrawWireCube(transform.position, hitBoxCollider.bounds.size);
     }
 
     public void UpdateKeyDownDirection()
     {
-        var x = Input.GetKey(p.leftKey) ? -1 : Input.GetKey(p.rightKey) ? 1 : 0;
-        var y = Input.GetKey(p.downKey) ? -1 : Input.GetKey(p.upKey) ? 1 : 0;
-        p.keyDownDirection = new Vector2(x, y);
+        var x = Input.GetKey(leftKey) ? -1 : Input.GetKey(rightKey) ? 1 : 0;
+        var y = Input.GetKey(downKey) ? -1 : Input.GetKey(upKey) ? 1 : 0;
+        keyDownDirection = new Vector2(x, y);
     }
 
     public void UpdateFacingDirection() // 看起来像是没什么用，但是如果我放黑波的时候改变了方向，下次就算没动键盘放出来的波会向相反方向移动
     {
-        var (x, y) = (p.keyDownDirection.x, p.keyDownDirection.y);
+        var (x, y) = (keyDownDirection.x, keyDownDirection.y);
         if (x != 0)
-            p.facingDirection.x = x;
+            facingDirection.x = x;
         if (y != 0)
-            p.facingDirection.y = y;
-        transform.localScale = new Vector3(p.facingDirection.x, 1, 1);
+            facingDirection.y = y;
+        transform.localScale = new Vector3(facingDirection.x, 1, 1);
     }
 
     public void ReverseFacingDirection()
     {
-        p.facingDirection.x *= -1;
-        transform.localScale = new Vector3(p.facingDirection.x, 1, 1);
+        facingDirection.x *= -1;
+        transform.localScale = new Vector3(facingDirection.x, 1, 1);
     }
 
+    public void TakeDamage(int damage)
+    {
+        healthPoint -= damage;
+        HealthUI.instance.UpdateUI(healthPoint);
+        spriteRenderer.color = Color.red;
+        spriteRenderer.DOColor(Color.white, showHurtEffectTime);
+        TransitionState(StateType.Hurt);
+        if (healthPoint == 0)
+            Kill();
+    }
+
+    private void Kill()
+    {
+        Destroy(gameObject);
+    }
+
+    public bool isInvincible => Time.time <= invincibleExpireTime;
+
+    #region StateTransitionTrigger
+
     public bool wallSlideTrigger =>
-        (isOnLeftWall && Input.GetKey(p.leftKey) && p.rigidbody.velocity.x <= 1e-5 // 不然蹬墙跳一出去就就又变成wallSlide状态了
-         || isOnRightWall && Input.GetKey(p.rightKey) && p.rigidbody.velocity.x >= -1e-5);
+        (isOnLeftWall && Input.GetKey(leftKey) && rigidbody.velocity.x <= 1e-5 // 不然蹬墙跳一出去就就又变成wallSlide状态了
+         || isOnRightWall && Input.GetKey(rightKey) && rigidbody.velocity.x >= -1e-5);
 
     public bool jumpTrigger => // 就是尝试跳跃后，如果在地上或不在地上但是狼跳还在
-        Time.time <= p.jumpBufferExpireTime && (isOnGround || Time.time <= p.wolfJumpBufferExpireTime);
+        Time.time <= jumpBufferExpireTime && (isOnGround || Time.time <= wolfJumpBufferExpireTime);
 
     public bool wallJumpTrigger => // 就是尝试跳跃后，如果在墙上或不在墙上但是狼跳还在
-        Time.time <= p.jumpBufferExpireTime && Time.time <= p.wallWolfJumpBufferExpireTime;
+        Time.time <= jumpBufferExpireTime && Time.time <= wallWolfJumpBufferExpireTime;
 
 
-    public bool doubleJumpTrigger => Time.time <= p.jumpBufferExpireTime && p.canDoubleJump;
+    public bool doubleJumpTrigger => Time.time <= jumpBufferExpireTime && canDoubleJump;
 
     public bool dashTrigger =>
-        Time.time <= p.dashBufferExpireTime && Time.time >= p.dashCoolDownExpireTime && p.canDash;
+        Time.time <= dashBufferExpireTime && Time.time >= dashCoolDownExpireTime && canDash;
 
-    public bool moveTrigger => Input.GetKey(p.leftKey) || Input.GetKey(p.rightKey);
-    public bool fallTrigger => p.rigidbody.velocity.y < -1e-5;
-    public bool offWallTrigger => isOnLeftWall && Input.GetKey(p.rightKey) || isOnRightWall && Input.GetKey(p.leftKey);
-    public bool attackTrigger => Time.time >= p.attackCoolDownExpireTime && Time.time <= p.attackBufferExpireTime;
-    public bool hurtTrigger => p.isHurt;
+    public bool moveTrigger => Input.GetKey(leftKey) || Input.GetKey(rightKey);
+    public bool fallTrigger => rigidbody.velocity.y < -1e-5;
+    public bool offWallTrigger => isOnLeftWall && Input.GetKey(rightKey) || isOnRightWall && Input.GetKey(leftKey);
+    public bool attackTrigger => Time.time >= attackCoolDownExpireTime && Time.time <= attackBufferExpireTime;
 
-    public bool isInvincible => Time.time <= p.invincibleExpireTime;
+    #endregion
 }
 
 public class PlayerIdle : IState
 {
-    private PlayerParameter p;
-    private PlayerFSM manager;
+    private PlayerFSM m;
 
-    public PlayerIdle(PlayerParameter p, PlayerFSM manager)
+    public PlayerIdle(PlayerFSM m)
     {
-        this.p = p;
-        this.manager = manager;
+        this.m = m;
     }
 
     public void OnEnter()
@@ -242,21 +284,21 @@ public class PlayerIdle : IState
 
     public void OnUpdate()
     {
-        manager.UpdateFacingDirection();
-        if (manager.moveTrigger)
-            manager.TransitionState(StateType.Run);
-        else if (manager.jumpTrigger)
-            manager.TransitionState(StateType.Jump);
-        else if (manager.dashTrigger)
-            manager.TransitionState(StateType.Dash);
-        else if (manager.attackTrigger)
-            manager.TransitionState(StateType.Attack);
+        m.UpdateFacingDirection();
+        if (m.moveTrigger)
+            m.TransitionState(StateType.Run);
+        else if (m.jumpTrigger)
+            m.TransitionState(StateType.Jump);
+        else if (m.dashTrigger)
+            m.TransitionState(StateType.Dash);
+        else if (m.attackTrigger)
+            m.TransitionState(StateType.Attack);
     }
 
     public void OnFixedUpdate()
     {
-        var newX = Mathf.MoveTowards(p.rigidbody.velocity.x, 0, p.dampingSpeed * Time.deltaTime);
-        p.rigidbody.velocity = new Vector2(newX, p.rigidbody.velocity.y);
+        var newX = Mathf.MoveTowards(m.rigidbody.velocity.x, 0, m.dampingSpeed * Time.deltaTime);
+        m.rigidbody.velocity = new Vector2(newX, m.rigidbody.velocity.y);
     }
 
     public void OnExit()
@@ -266,13 +308,11 @@ public class PlayerIdle : IState
 
 public class PlayerRun : IState
 {
-    private PlayerParameter p;
-    private PlayerFSM manager;
+    private PlayerFSM m;
 
-    public PlayerRun(PlayerParameter p, PlayerFSM manager)
+    public PlayerRun(PlayerFSM m)
     {
-        this.p = p;
-        this.manager = manager;
+        this.m = m;
     }
 
     public void OnEnter()
@@ -281,24 +321,24 @@ public class PlayerRun : IState
 
     public void OnUpdate()
     {
-        manager.UpdateFacingDirection();
-        if (!manager.moveTrigger)
-            manager.TransitionState(StateType.Idle);
-        else if (manager.jumpTrigger)
-            manager.TransitionState(StateType.Jump);
-        else if (manager.fallTrigger)
-            manager.TransitionState(StateType.Fall);
-        else if (manager.dashTrigger)
-            manager.TransitionState(StateType.Dash);
-        else if (manager.attackTrigger)
-            manager.TransitionState(StateType.Attack);
+        m.UpdateFacingDirection();
+        if (!m.moveTrigger)
+            m.TransitionState(StateType.Idle);
+        else if (m.jumpTrigger)
+            m.TransitionState(StateType.Jump);
+        else if (m.fallTrigger)
+            m.TransitionState(StateType.Fall);
+        else if (m.dashTrigger)
+            m.TransitionState(StateType.Dash);
+        else if (m.attackTrigger)
+            m.TransitionState(StateType.Attack);
     }
 
     public void OnFixedUpdate()
     {
-        var newX = Mathf.MoveTowards(p.rigidbody.velocity.x, p.moveSpeed * p.keyDownDirection.x,
-            p.moveChangeSpeed * Time.deltaTime);
-        p.rigidbody.velocity = new Vector2(newX, p.rigidbody.velocity.y);
+        var newX = Mathf.MoveTowards(m.rigidbody.velocity.x, m.moveSpeed * m.keyDownDirection.x,
+            m.moveChangeSpeed * Time.deltaTime);
+        m.rigidbody.velocity = new Vector2(newX, m.rigidbody.velocity.y);
     }
 
     public void OnExit()
@@ -308,25 +348,22 @@ public class PlayerRun : IState
 
 public class PlayerHurt : IState
 {
-    private PlayerParameter p;
-    private PlayerFSM manager;
+    private PlayerFSM m;
 
-    public PlayerHurt(PlayerParameter p, PlayerFSM manager)
+    public PlayerHurt(PlayerFSM m)
     {
-        this.p = p;
-        this.manager = manager;
+        this.m = m;
     }
 
     public void OnEnter()
     {
-        p.isHurt = false;
-        p.invincibleExpireTime = Time.time + p.invincibleTime;
-        p.rigidbody.velocity = p.hurtDirection * p.hurtForce;
+        m.invincibleExpireTime = Time.time + m.invincibleTime;
+        m.rigidbody.velocity = m.hurtDirection * m.hurtForce;
     }
 
     public void OnUpdate()
     {
-        manager.TransitionState(StateType.Fall);
+        m.TransitionState(StateType.Fall);
     }
 
     public void OnFixedUpdate()
@@ -340,46 +377,44 @@ public class PlayerHurt : IState
 
 public class PlayerJump : IState
 {
-    private PlayerParameter p;
-    private PlayerFSM manager;
+    private PlayerFSM m;
     private bool isKeyReleased;
 
-    public PlayerJump(PlayerParameter p, PlayerFSM manager)
+    public PlayerJump(PlayerFSM m)
     {
-        this.p = p;
-        this.manager = manager;
+        this.m = m;
     }
 
     public void OnEnter()
     {
-        p.rigidbody.velocity = Vector2.up * p.firstJumpForce;
-        p.jumpBufferExpireTime = -1; // 重置，否则如果从跳跃到落地的时间<bufferTime，则跳跃会被触发两次 
-        p.wolfJumpBufferExpireTime = -1;
+        m.rigidbody.velocity = Vector2.up * m.firstJumpForce;
+        m.jumpBufferExpireTime = -1; // 重置，否则如果从跳跃到落地的时间<bufferTime，则跳跃会被触发两次 
+        m.wolfJumpBufferExpireTime = -1;
     }
 
     public void OnUpdate()
     {
-        manager.UpdateFacingDirection();
-        isKeyReleased = isKeyReleased || Input.GetKeyUp(p.jumpKey);
+        m.UpdateFacingDirection();
+        isKeyReleased = isKeyReleased || Input.GetKeyUp(m.jumpKey);
 
-        if (manager.fallTrigger)
-            manager.TransitionState(StateType.Fall);
-        else if (manager.doubleJumpTrigger)
-            manager.TransitionState(StateType.DoubleJump);
-        else if (manager.dashTrigger)
-            manager.TransitionState(StateType.Dash);
-        else if (manager.attackTrigger)
-            manager.TransitionState(StateType.Attack);
+        if (m.fallTrigger)
+            m.TransitionState(StateType.Fall);
+        else if (m.doubleJumpTrigger)
+            m.TransitionState(StateType.DoubleJump);
+        else if (m.dashTrigger)
+            m.TransitionState(StateType.Dash);
+        else if (m.attackTrigger)
+            m.TransitionState(StateType.Attack);
     }
 
     public void OnFixedUpdate()
     {
         if (!isKeyReleased)
-            p.rigidbody.AddForce(p.firstJumpAdditionalForce * Vector2.up); // 因为更新速率恒定，所以加不加deltatime都一样
+            m.rigidbody.AddForce(m.firstJumpAdditionalForce * Vector2.up); // 因为更新速率恒定，所以加不加deltatime都一样
 
-        var newX = Mathf.MoveTowards(p.rigidbody.velocity.x, p.moveSpeed * p.keyDownDirection.x,
-            p.moveChangeSpeed);
-        p.rigidbody.velocity = new Vector2(newX, p.rigidbody.velocity.y);
+        var newX = Mathf.MoveTowards(m.rigidbody.velocity.x, m.moveSpeed * m.keyDownDirection.x,
+            m.moveChangeSpeed);
+        m.rigidbody.velocity = new Vector2(newX, m.rigidbody.velocity.y);
     }
 
     public void OnExit()
@@ -390,46 +425,44 @@ public class PlayerJump : IState
 
 public class PlayerWallJump : IState
 {
-    private PlayerParameter p;
-    private PlayerFSM manager;
+    private PlayerFSM m;
     private bool isKeyReleased;
 
-    public PlayerWallJump(PlayerParameter p, PlayerFSM manager)
+    public PlayerWallJump(PlayerFSM m)
     {
-        this.p = p;
-        this.manager = manager;
+        this.m = m;
     }
 
     public void OnEnter()
     {
-        p.rigidbody.velocity = new Vector2(p.facingDirection.x * p.wallJumpForce.x, p.wallJumpForce.y);
-        p.jumpBufferExpireTime = -1; // 重置，否则如果从跳跃到落地的时间<bufferTime，则跳跃会被触发两次 
-        p.wallWolfJumpBufferExpireTime = -1;
+        m.rigidbody.velocity = new Vector2(m.facingDirection.x * m.wallJumpForce.x, m.wallJumpForce.y);
+        m.jumpBufferExpireTime = -1; // 重置，否则如果从跳跃到落地的时间<bufferTime，则跳跃会被触发两次 
+        m.wallWolfJumpBufferExpireTime = -1;
     }
 
 
     public void OnUpdate()
     {
-        manager.UpdateFacingDirection();
-        isKeyReleased = isKeyReleased || Input.GetKeyUp(p.jumpKey);
+        m.UpdateFacingDirection();
+        isKeyReleased = isKeyReleased || Input.GetKeyUp(m.jumpKey);
 
-        if (manager.fallTrigger)
-            manager.TransitionState(StateType.Fall);
-        else if (manager.dashTrigger)
-            manager.TransitionState(StateType.Dash);
-        else if (manager.doubleJumpTrigger)
-            manager.TransitionState(StateType.DoubleJump);
-        else if (manager.attackTrigger)
-            manager.TransitionState(StateType.Attack);
+        if (m.fallTrigger)
+            m.TransitionState(StateType.Fall);
+        else if (m.dashTrigger)
+            m.TransitionState(StateType.Dash);
+        else if (m.doubleJumpTrigger)
+            m.TransitionState(StateType.DoubleJump);
+        else if (m.attackTrigger)
+            m.TransitionState(StateType.Attack);
     }
 
     public void OnFixedUpdate()
     {
-        float newX = Mathf.MoveTowards(p.rigidbody.velocity.x, p.moveSpeed * p.keyDownDirection.x,
-            p.wallJumpMoveChangeSpeed);
+        float newX = Mathf.MoveTowards(m.rigidbody.velocity.x, m.moveSpeed * m.keyDownDirection.x,
+            m.wallJumpMoveChangeSpeed);
         if (!isKeyReleased)
-            p.rigidbody.AddForce(p.wallJumpAdditionalForce * Vector2.up);
-        p.rigidbody.velocity = new Vector2(newX, p.rigidbody.velocity.y);
+            m.rigidbody.AddForce(m.wallJumpAdditionalForce * Vector2.up);
+        m.rigidbody.velocity = new Vector2(newX, m.rigidbody.velocity.y);
     }
 
     public void OnExit()
@@ -440,36 +473,34 @@ public class PlayerWallJump : IState
 
 public class PlayerWallSlide : IState
 {
-    private PlayerParameter p;
-    private PlayerFSM manager;
+    private PlayerFSM m;
     private float gravityScaleBackup;
 
-    public PlayerWallSlide(PlayerParameter p, PlayerFSM manager)
+    public PlayerWallSlide(PlayerFSM m)
     {
-        this.p = p;
-        this.manager = manager;
+        this.m = m;
     }
 
     public void OnEnter()
     {
-        gravityScaleBackup = p.rigidbody.gravityScale;
-        p.rigidbody.gravityScale = 0;
-        p.rigidbody.velocity = new Vector2(0, -p.wallSlideSpeed);
-        p.canDash = true;
-        p.canDoubleJump = true;
-        manager.ReverseFacingDirection();
+        gravityScaleBackup = m.rigidbody.gravityScale;
+        m.rigidbody.gravityScale = 0;
+        m.rigidbody.velocity = new Vector2(0, -m.wallSlideSpeed);
+        m.canDash = true;
+        m.canDoubleJump = true;
+        m.ReverseFacingDirection();
     }
 
     public void OnUpdate()
     {
-        if (manager.isOnGround)
-            manager.TransitionState(manager.moveTrigger ? StateType.Run : StateType.Idle);
-        else if (manager.wallJumpTrigger)
-            manager.TransitionState(StateType.WallJump);
-        else if (manager.offWallTrigger || !manager.isOnWall) // 手动出去或者被动出去
-            manager.TransitionState(StateType.Fall);
-        else if (manager.dashTrigger)
-            manager.TransitionState(StateType.Dash);
+        if (m.isOnGround)
+            m.TransitionState(m.moveTrigger ? StateType.Run : StateType.Idle);
+        else if (m.wallJumpTrigger)
+            m.TransitionState(StateType.WallJump);
+        else if (m.offWallTrigger || !m.isOnWall) // 手动出去或者被动出去
+            m.TransitionState(StateType.Fall);
+        else if (m.dashTrigger)
+            m.TransitionState(StateType.Dash);
     }
 
     public void OnFixedUpdate()
@@ -478,19 +509,17 @@ public class PlayerWallSlide : IState
 
     public void OnExit()
     {
-        p.rigidbody.gravityScale = gravityScaleBackup;
+        m.rigidbody.gravityScale = gravityScaleBackup;
     }
 }
 
 public class PlayerFall : IState
 {
-    private PlayerParameter p;
-    private PlayerFSM manager;
+    private PlayerFSM m;
 
-    public PlayerFall(PlayerParameter p, PlayerFSM manager)
+    public PlayerFall(PlayerFSM m)
     {
-        this.p = p;
-        this.manager = manager;
+        this.m = m;
     }
 
     public void OnEnter()
@@ -499,30 +528,30 @@ public class PlayerFall : IState
 
     public void OnUpdate()
     {
-        manager.UpdateFacingDirection();
+        m.UpdateFacingDirection();
 
-        if (manager.isOnGround)
-            manager.TransitionState(manager.moveTrigger ? StateType.Run : StateType.Idle);
-        else if (manager.wallJumpTrigger) // 墙上的狼跳
-            manager.TransitionState(StateType.WallJump);
-        else if (manager.jumpTrigger) // 狼跳
-            manager.TransitionState(StateType.Jump);
-        else if (manager.doubleJumpTrigger)
-            manager.TransitionState(StateType.DoubleJump);
-        else if (manager.dashTrigger)
-            manager.TransitionState(StateType.Dash);
-        else if (manager.wallSlideTrigger)
-            manager.TransitionState(StateType.WallSlide);
-        else if (manager.attackTrigger)
-            manager.TransitionState(StateType.Attack);
+        if (m.isOnGround)
+            m.TransitionState(m.moveTrigger ? StateType.Run : StateType.Idle);
+        else if (m.wallJumpTrigger) // 墙上的狼跳
+            m.TransitionState(StateType.WallJump);
+        else if (m.jumpTrigger) // 狼跳
+            m.TransitionState(StateType.Jump);
+        else if (m.doubleJumpTrigger)
+            m.TransitionState(StateType.DoubleJump);
+        else if (m.dashTrigger)
+            m.TransitionState(StateType.Dash);
+        else if (m.wallSlideTrigger)
+            m.TransitionState(StateType.WallSlide);
+        else if (m.attackTrigger)
+            m.TransitionState(StateType.Attack);
     }
 
     public void OnFixedUpdate()
     {
-        var newY = -Mathf.Min(-p.rigidbody.velocity.y, p.maxFallingSpeed);
-        float newX = Mathf.MoveTowards(p.rigidbody.velocity.x, p.moveSpeed * p.keyDownDirection.x,
-            p.moveChangeSpeed * Time.deltaTime);
-        p.rigidbody.velocity = new Vector2(newX, newY);
+        var newY = -Mathf.Min(-m.rigidbody.velocity.y, m.maxFallingSpeed);
+        float newX = Mathf.MoveTowards(m.rigidbody.velocity.x, m.moveSpeed * m.keyDownDirection.x,
+            m.moveChangeSpeed * Time.deltaTime);
+        m.rigidbody.velocity = new Vector2(newX, newY);
     }
 
     public void OnExit()
@@ -532,38 +561,36 @@ public class PlayerFall : IState
 
 public class PlayerDash : IState
 {
-    private PlayerParameter p;
-    private PlayerFSM manager;
+    private PlayerFSM m;
     private float gravityScaleBackup;
     private float elapse;
 
-    public PlayerDash(PlayerParameter p, PlayerFSM manager)
+    public PlayerDash(PlayerFSM m)
     {
-        this.p = p;
-        this.manager = manager;
+        this.m = m;
     }
 
     public void OnEnter()
     {
-        p.dashBufferExpireTime = -1;
-        p.canDash = false;
-        p.rigidbody.velocity = new Vector2(p.facingDirection.x * p.dashSpeed, 0);
-        gravityScaleBackup = p.rigidbody.gravityScale;
-        p.rigidbody.gravityScale = 0;
+        m.dashBufferExpireTime = -1;
+        m.canDash = false;
+        m.rigidbody.velocity = new Vector2(m.facingDirection.x * m.dashSpeed, 0);
+        gravityScaleBackup = m.rigidbody.gravityScale;
+        m.rigidbody.gravityScale = 0;
     }
 
     public void OnUpdate()
     {
         elapse += Time.deltaTime;
-        if (elapse <= p.dashDuration)
+        if (elapse <= m.dashDuration)
             return;
 
-        if (manager.jumpTrigger)
-            manager.TransitionState(manager.isOnGround ? StateType.Jump : StateType.DoubleJump);
-        else if (manager.isOnGround)
-            manager.TransitionState(manager.moveTrigger ? StateType.Run : StateType.Idle);
-        else if (!manager.isOnGround) // 这里的处理要特殊一点，因为player冲刺状态y轴速度恒为0，不这么判断状态就出不去了
-            manager.TransitionState(StateType.Fall);
+        if (m.jumpTrigger)
+            m.TransitionState(m.isOnGround ? StateType.Jump : StateType.DoubleJump);
+        else if (m.isOnGround)
+            m.TransitionState(m.moveTrigger ? StateType.Run : StateType.Idle);
+        else if (!m.isOnGround) // 这里的处理要特殊一点，因为player冲刺状态y轴速度恒为0，不这么判断状态就出不去了
+            m.TransitionState(StateType.Fall);
     }
 
     public void OnFixedUpdate()
@@ -572,22 +599,20 @@ public class PlayerDash : IState
 
     public void OnExit()
     {
-        p.rigidbody.gravityScale = gravityScaleBackup;
+        m.rigidbody.gravityScale = gravityScaleBackup;
         elapse = 0;
-        p.dashCoolDownExpireTime = Time.time + p.dashCoolDown;
-        p.rigidbody.velocity = Vector2.zero;
+        m.dashCoolDownExpireTime = Time.time + m.dashCoolDown;
+        m.rigidbody.velocity = Vector2.zero;
     }
 }
 
 public class PlayerReleaseArrow : IState
 {
-    private PlayerParameter p;
-    private PlayerFSM manager;
+    private PlayerFSM m;
 
-    public PlayerReleaseArrow(PlayerParameter p, PlayerFSM manager)
+    public PlayerReleaseArrow(PlayerFSM m)
     {
-        this.p = p;
-        this.manager = manager;
+        this.m = m;
     }
 
     public void OnEnter()
@@ -609,44 +634,42 @@ public class PlayerReleaseArrow : IState
 
 public class PlayerDoubleJump : IState
 {
-    private PlayerParameter p;
-    private PlayerFSM manager;
+    private PlayerFSM m;
     private bool isKeyReleased;
 
-    public PlayerDoubleJump(PlayerParameter p, PlayerFSM manager)
+    public PlayerDoubleJump(PlayerFSM m)
     {
-        this.p = p;
-        this.manager = manager;
+        this.m = m;
     }
 
     public void OnEnter()
     {
-        p.rigidbody.velocity = new Vector2(p.rigidbody.velocity.x, p.doubleJumpForce);
-        // p.rigidbody.AddForce(Vector2.up * p.doubleJumpForce, ForceMode2D.Impulse);
-        p.jumpBufferExpireTime = -1; // 重置，否则如果从跳跃到落地的时间<bufferTime，则跳跃会被触发两次 
-        p.canDoubleJump = false;
+        m.rigidbody.velocity = new Vector2(m.rigidbody.velocity.x, m.doubleJumpForce);
+        // m.rigidbody.AddForce(Vector2.up * doubleJumpForce, ForceMode2D.Impulse);
+        m.jumpBufferExpireTime = -1; // 重置，否则如果从跳跃到落地的时间<bufferTime，则跳跃会被触发两次 
+        m.canDoubleJump = false;
     }
 
 
     public void OnUpdate()
     {
-        manager.UpdateFacingDirection();
-        isKeyReleased = isKeyReleased || Input.GetKeyUp(p.jumpKey);
+        m.UpdateFacingDirection();
+        isKeyReleased = isKeyReleased || Input.GetKeyUp(m.jumpKey);
 
-        if (manager.fallTrigger)
-            manager.TransitionState(StateType.Fall);
-        else if (manager.dashTrigger)
-            manager.TransitionState(StateType.Dash);
-        else if (manager.attackTrigger)
-            manager.TransitionState(StateType.Attack);
+        if (m.fallTrigger)
+            m.TransitionState(StateType.Fall);
+        else if (m.dashTrigger)
+            m.TransitionState(StateType.Dash);
+        else if (m.attackTrigger)
+            m.TransitionState(StateType.Attack);
     }
 
     public void OnFixedUpdate()
     {
         if (!isKeyReleased)
-            p.rigidbody.AddForce(p.doubleJumpAdditionalForce * Vector2.up);
+            m.rigidbody.AddForce(m.doubleJumpAdditionalForce * Vector2.up);
 
-        p.rigidbody.velocity = new Vector2(p.moveSpeed * p.keyDownDirection.x, p.rigidbody.velocity.y);
+        m.rigidbody.velocity = new Vector2(m.moveSpeed * m.keyDownDirection.x, m.rigidbody.velocity.y);
     }
 
     public void OnExit()
@@ -657,43 +680,41 @@ public class PlayerDoubleJump : IState
 
 public class PlayerAttack : IState
 {
-    private PlayerParameter p;
-    private PlayerFSM manager;
+    private PlayerFSM m;
     private AnimatorStateInfo info;
     private Dictionary<Animator, Vector2> attackDirection;
     private Dictionary<Animator, PolygonCollider2D> attackCollider;
     private Animator currentAttack;
 
-    public PlayerAttack(PlayerParameter p, PlayerFSM manager)
+    public PlayerAttack(PlayerFSM m)
     {
-        this.p = p;
-        this.manager = manager;
+        this.m = m;
         attackDirection = new()
         {
-            { p.attackRight, new Vector2(1, 0) * p.facingDirection.x },
-            { p.attackUp, new Vector2(0, 1) },
-            { p.attackDown, new Vector2(0, -1) }
+            { m.attackRight, new Vector2(1, 0) * m.facingDirection.x },
+            { m.attackUp, new Vector2(0, 1) },
+            { m.attackDown, new Vector2(0, -1) }
         };
 
         attackCollider = new()
         {
-            { p.attackRight, p.attackColliderRight },
-            { p.attackUp, p.attackColliderUp },
-            { p.attackDown, p.attackColliderDown }
+            { m.attackRight, m.attackColliderRight },
+            { m.attackUp, m.attackColliderUp },
+            { m.attackDown, m.attackColliderDown }
         };
     }
 
     public void OnEnter()
     {
-        p.attackBufferExpireTime = -1;
+        m.attackBufferExpireTime = -1;
 
         List<int> direction = new() { -1, 1 };
-        if (Input.GetKey(p.upKey))
-            currentAttack = p.attackUp;
-        else if (Input.GetKey(p.downKey))
-            currentAttack = p.attackDown;
+        if (Input.GetKey(m.upKey))
+            currentAttack = m.attackUp;
+        else if (Input.GetKey(m.downKey))
+            currentAttack = m.attackDown;
         else
-            currentAttack = p.attackRight;
+            currentAttack = m.attackRight;
         currentAttack.transform.localScale = new Vector3(1, direction[Random.Range(0, 2)], 1);
         currentAttack.Play("PlayerAttack");
     }
@@ -704,60 +725,70 @@ public class PlayerAttack : IState
         // 这段话要不停调用（天坑！！！）
         info = currentAttack.GetCurrentAnimatorStateInfo(0);
         // 更新向右攻击的方向
-        attackDirection[p.attackRight] = new Vector2(1, 0) * p.facingDirection.x;
+        attackDirection[m.attackRight] = new Vector2(1, 0) * m.facingDirection.x;
         UpdateTrigger();
 
         // The integer part is the number of time a state has been looped. The fractional part is the % (0-1) of progress in the current loop.
         // 整数部分是循环次数，小数部分是运行进度
         if (info.IsName("PlayerAttack") && info.normalizedTime - (int)info.normalizedTime < 0.95f)
             return;
-        if (manager.isOnGround)
-            manager.TransitionState(manager.moveTrigger ? StateType.Run : StateType.Idle);
-        else if (manager.fallTrigger)
-            manager.TransitionState(StateType.Fall);
+        if (m.isOnGround)
+            m.TransitionState(m.moveTrigger ? StateType.Run : StateType.Idle);
+        else if (m.fallTrigger)
+            m.TransitionState(StateType.Fall);
     }
 
     public void OnFixedUpdate()
     {
         // 我感觉如果要写的更精细的话就要有更多的状态，比如FallAttack，RunAttack之类的
-        if (manager.fallTrigger)
+        if (m.fallTrigger)
         {
-            var newY = -Mathf.Min(-p.rigidbody.velocity.y, p.maxFallingSpeed);
-            p.rigidbody.velocity = new Vector2(p.moveSpeed * p.keyDownDirection.x, newY);
+            var newY = -Mathf.Min(-m.rigidbody.velocity.y, m.maxFallingSpeed);
+            m.rigidbody.velocity = new Vector2(m.moveSpeed * m.keyDownDirection.x, newY);
         }
         else
         {
-            var newX = Mathf.MoveTowards(p.rigidbody.velocity.x, p.moveSpeed * p.keyDownDirection.x,
-                p.dampingSpeed * Time.deltaTime);
-            p.rigidbody.velocity = new Vector2(newX, p.rigidbody.velocity.y);
+            var newX = Mathf.MoveTowards(m.rigidbody.velocity.x, m.moveSpeed * m.keyDownDirection.x,
+                m.dampingSpeed * Time.deltaTime);
+            m.rigidbody.velocity = new Vector2(newX, m.rigidbody.velocity.y);
         }
     }
 
-
     public void OnExit()
     {
-        p.attackCoolDownExpireTime = Time.time + p.attackCoolDown;
+        m.attackCoolDownExpireTime = Time.time + m.attackCoolDown;
     }
 
     public void UpdateTrigger()
     {
-        List<Collider2D> res = new();
-        Physics2D.OverlapCollider(attackCollider[currentAttack], new ContactFilter2D { useTriggers = true }, res);
         bool isEnemyAttacked = false; // 击打多个敌人时，只受到一个单位的后坐力
-        foreach (var collider in res)
+        foreach (Collider2D collider in GetTriggeredEnemyBox())
         {
-            if (!collider.CompareTag("Enemy"))
-                continue;
             isEnemyAttacked = true;
-            var state = collider.GetComponent<EnemyState>();
-            if (state.canBeKnockedBack)
-                state.GetComponent<Rigidbody2D>().velocity = attackDirection[currentAttack] * p.attackForce;
+            collider.GetComponent<EnemyFSM>().Attacked(m.attackDamage, attackDirection[currentAttack] * m.attackForce);
         }
 
         if (isEnemyAttacked)
         {
-            p.rigidbody.velocity = -attackDirection[currentAttack] * p.attackForce;
-            p.canDoubleJump = true;
+            m.rigidbody.velocity = -attackDirection[currentAttack] * m.attackForce;
+            m.canDoubleJump = true;
+        }
+    }
+
+    /// <summary>
+    /// 获得所有跟剑碰撞的trigger的，tag为enemy的box。
+    /// </summary>
+    /// <returns></returns>
+    private IEnumerable GetTriggeredEnemyBox()
+    {
+        // 可能是因为yield return什么数据类型都有，所以有装箱和拆箱的过程
+        List<Collider2D> res = new();
+        Physics2D.OverlapCollider(attackCollider[currentAttack], new ContactFilter2D { useTriggers = true }, res);
+        foreach (var collider in res)
+        {
+            if (!collider.CompareTag("Enemy") || !collider.isTrigger)
+                continue;
+            yield return collider;
         }
     }
 }
