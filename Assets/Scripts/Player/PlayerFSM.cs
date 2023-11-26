@@ -711,7 +711,7 @@ public class PlayerAttack : IState
         List<int> direction = new() { -1, 1 };
         if (Input.GetKey(m.upKey))
             currentAttack = m.attackUp;
-        else if (Input.GetKey(m.downKey))
+        else if (Input.GetKey(m.downKey) && !m.isOnGround)
             currentAttack = m.attackDown;
         else
             currentAttack = m.attackRight;

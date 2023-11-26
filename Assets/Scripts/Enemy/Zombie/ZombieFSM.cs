@@ -15,11 +15,10 @@ public class ZombieFSM : EnemyFSM
     [Header("Alert")] public LayerMask viewLayer;
     public float frontViewLength;
     public float behindViewLength;
-    public GameObject alertIcon;
     public float alertTime;
     [Header("Chase")] public float chaseSpeed;
     public float xDeltaBehindPlayer;
-    [Header("Question")] public GameObject questionIcon;
+    [Header("Question")] 
     public float questionTime;
 
     void Start()
@@ -37,7 +36,6 @@ public class ZombieFSM : EnemyFSM
 
     private void Update()
     {
-        Debug.Log(maxHealthPoint);
         currentState.OnUpdate();
         // Debug.Log($"currentState: {currentState}");
     }
@@ -170,7 +168,6 @@ public class ZombieAlert : IState
 
     public void OnEnter()
     {
-        m.alertIcon.SetActive(true);
         m.rigidbody.velocity = new Vector2(0, m.rigidbody.velocity.y);
     }
 
@@ -191,7 +188,6 @@ public class ZombieAlert : IState
     public void OnExit()
     {
         elapse = 0;
-        m.alertIcon.SetActive(false);
     }
 }
 
@@ -259,7 +255,6 @@ public class ZombieQuestion : IState
     public void OnEnter()
     {
         m.rigidbody.velocity = new Vector2(0, m.rigidbody.velocity.y);
-        m.questionIcon.SetActive(true);
     }
 
     public void OnUpdate()
@@ -279,7 +274,6 @@ public class ZombieQuestion : IState
 
     public void OnExit()
     {
-        m.questionIcon.SetActive(false);
         elapse = 0;
     }
 }

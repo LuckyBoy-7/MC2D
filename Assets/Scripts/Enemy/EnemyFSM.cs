@@ -2,38 +2,43 @@ using DG.Tweening;
 using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class EnemyFSM : FSM
 {
-    public bool canBeKnockedBack;
-    [Header("Health")] public int maxHealthPoint;
-    public int healthPoint;
-    public SpriteRenderer spriteRenderer;
+    public bool canBeKnockedBack = true;
+    [Header("Health")] public int maxHealthPoint = 5;
+    public int healthPoint = 5;
+    public SpriteRenderer hurtMask;
 
-    [Header("PhysicsCheck")] public float cliffCheckDownRaycastDist;
-    public float boxLeftRightCastDist;
-    public LayerMask groundLayer;
+    [Header("PhysicsCheck")] public float cliffCheckDownRaycastDist = 0.3f;
+    public float boxLeftRightCastDist = 0.1f;
+    public LayerMask groundLayer ;
     public BoxCollider2D hitBoxCollider;
 
     [Header("Movement")] public Rigidbody2D rigidbody;
     public int facingDirection; // x方向
-    public float xVelocityChangeSpeed; // 如果敌人在移动的时候被击飞，此时的移动速度需要lerp
+    public float xVelocityChangeSpeed = 100; // 如果敌人在移动的时候被击飞，此时的移动速度需要lerp
     public float yVelocityChangeSpeed; // 如果敌人在移动的时候被击飞，此时的移动速度需要lerp
 
-    [Header("Hurt")] public float showHurtEffectTime;
-    public float invincibleTime;
-    public float invincibleExpireTime;
+    [Header("Hurt")] public float showHurtEffectTime = 0.3F;
+    public float invincibleTime = 0.3F;
+    public float invincibleExpireTime = -1;
 
     public bool TryTakeDamage(int damage)
     {
         if (isInvincible)
             return false;
-        Debug.Log(maxHealthPoint);
         healthPoint -= damage;
-        spriteRenderer.color = spriteRenderer.color.WithAlpha(1);
-        spriteRenderer.DOFade(0, PlayerFSM.instance.showHurtEffectTime);
+
         if (healthPoint == 0)
             Kill();
+        else
+        {
+            hurtMask.color = hurtMask.color.WithAlpha(1);
+            hurtMask.DOFade(0, showHurtEffectTime);
+        }
+
         return true;
     }
 
@@ -41,8 +46,8 @@ public class EnemyFSM : FSM
     {
         if (!TryTakeDamage(damage))
             return;
-        
-        invincibleExpireTime = Time.time + invincibleTime;  // 只有收到伤害后才有资格说是否无敌和击退的事
+
+        invincibleExpireTime = Time.time + invincibleTime; // 只有收到伤害后才有资格说是否无敌和击退的事
         if (canBeKnockedBack)
             rigidbody.velocity = attackForceVec;
     }
