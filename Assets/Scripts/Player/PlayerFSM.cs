@@ -73,6 +73,8 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public float invincibleTime;
     public float invincibleExpireTime;
 
+    [Header("Effect")] public SwordAttackEffect attackEffect;
+
 
     [Header("Key")] public KeyCode leftKey = KeyCode.J;
     public KeyCode rightKey = KeyCode.L;
@@ -685,6 +687,7 @@ public class PlayerAttack : IState
     private Dictionary<Animator, Vector2> attackDirection;
     private Dictionary<Animator, PolygonCollider2D> attackCollider;
     private Animator currentAttack;
+    private bool hasCausedDamage;
 
     public PlayerAttack(PlayerFSM m)
     {
@@ -757,21 +760,27 @@ public class PlayerAttack : IState
     public void OnExit()
     {
         m.attackCoolDownExpireTime = Time.time + m.attackCoolDown;
+        hasCausedDamage = false;
     }
 
     public void UpdateTrigger()
     {
-        bool isEnemyAttacked = false; // 击打多个敌人时，只受到一个单位的后坐力
-        foreach (Collider2D collider in GetTriggeredEnemyBox())
-        {
-            isEnemyAttacked = true;
+        if (hasCausedDamage)
+            return;
+        List<Collider2D> triggeredEnemyBoxes = GetTriggeredEnemyBox();
+        foreach (var collider in triggeredEnemyBoxes)
             collider.GetComponent<EnemyFSM>().Attacked(m.attackDamage, attackDirection[currentAttack] * m.attackForce);
-        }
 
+        bool isEnemyAttacked = triggeredEnemyBoxes.Count > 0; // 击打多个敌人时，只受到一个单位的后坐力
         if (isEnemyAttacked)
         {
+            hasCausedDamage = true;
             m.rigidbody.velocity = -attackDirection[currentAttack] * m.attackForce;
             m.canDoubleJump = true;
+
+            Collider2D choiceBox = triggeredEnemyBoxes[Random.Range(0, triggeredEnemyBoxes.Count)];
+            m.attackEffect.transform.position = choiceBox.bounds.ClosestPoint(currentAttack.transform.position);;
+            m.attackEffect.Play();
         }
     }
 
@@ -779,16 +788,19 @@ public class PlayerAttack : IState
     /// 获得所有跟剑碰撞的trigger的，tag为enemy的box。
     /// </summary>
     /// <returns></returns>
-    private IEnumerable GetTriggeredEnemyBox()
+    private List<Collider2D> GetTriggeredEnemyBox()
     {
         // 可能是因为yield return什么数据类型都有，所以有装箱和拆箱的过程
+        List<Collider2D> ans = new();
         List<Collider2D> res = new();
         Physics2D.OverlapCollider(attackCollider[currentAttack], new ContactFilter2D { useTriggers = true }, res);
         foreach (var collider in res)
         {
             if (!collider.CompareTag("Enemy") || !collider.isTrigger)
                 continue;
-            yield return collider;
+            ans.Add(collider);
         }
+
+        return ans;
     }
 }
