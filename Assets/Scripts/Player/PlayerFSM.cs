@@ -54,6 +54,15 @@ public class PlayerParameter
     public float attackBufferTime;
     public float attackBufferExpireTime;
 
+    [Header("Hurt")] public bool isHurt;
+    public float showHurtEffectTime;
+    public Vector2 hurtDirection;
+    public float hurtDirectionXMultiplier;  // 方向加一个维度的缩放配合force就可以构造出360度任意受力情况
+    public float hurtForce;
+    public float invincibleTime;
+    public float invincibleExpireTime;
+
+
     [Header("Key")] public KeyCode leftKey;
     public KeyCode rightKey = KeyCode.L;
     public KeyCode upKey = KeyCode.I;
@@ -64,10 +73,9 @@ public class PlayerParameter
     public KeyCode spellKey = KeyCode.Q;
 }
 
-public class PlayerFSM : SingletonFSM
+public class PlayerFSM : SingletonFSM<PlayerFSM>
 {
     public PlayerParameter p;
-    public static Vector3 position => GameObject.FindWithTag("Player").transform.position;
 
     void Start()
     {
@@ -88,25 +96,37 @@ public class PlayerFSM : SingletonFSM
     private void Update()
     {
         UpdateKeyDownDirection();
+        UpdateInputBuffer();
+        UpdateStates();
+        if (hurtTrigger) // 所有状态都可以到hurt状态
+            TransitionState(StateType.Hurt);
+
+        currentState.OnUpdate();
+
+
+        Debug.Log($"currentState: {currentState}");
+        // Debug.Log($"isOnGround: {isOnGround}");
+        // Debug.Log($"isOnLeftWall: {isOnLeftWall}");
+        // Debug.Log($"isOnRightWall: {isOnRightWall}");
+    }
+
+    private void UpdateStates()
+    {
+        if (isOnGround)
+        {
+            p.canDoubleJump = true;
+            p.canDash = true;
+        }
+    }
+
+    private void UpdateInputBuffer()
+    {
         if (Input.GetKeyDown(p.jumpKey))
             p.jumpBufferExpireTime = Time.time + p.jumpBufferTime;
         if (Input.GetKeyDown(p.dashKey))
             p.dashBufferExpireTime = Time.time + p.dashBufferTime;
         if (Input.GetKeyDown(p.attackKey))
             p.attackBufferExpireTime = Time.time + p.attackBufferTime;
-        if (isOnGround)
-        {
-            p.canDoubleJump = true;
-            p.canDash = true;
-        }
-
-        currentState.OnUpdate();
-
-
-        // Debug.Log($"currentState: {currentState}");
-        // Debug.Log($"isOnGround: {isOnGround}");
-        // Debug.Log($"isOnLeftWall: {isOnLeftWall}");
-        // Debug.Log($"isOnRightWall: {isOnRightWall}");
     }
 
     public bool isOnGround =>
@@ -162,18 +182,19 @@ public class PlayerFSM : SingletonFSM
         transform.localScale = new Vector3(p.facingDirection.x, 1, 1);
     }
 
-    public bool jumpTrigger => Time.time <= p.jumpBufferExpireTime;
-    public bool dashTrigger => Time.time <= p.dashBufferExpireTime && Time.time >= p.dashCoolDownExpireTime;
-    public bool moveTrigger => Input.GetKey(p.leftKey) || Input.GetKey(p.rightKey);
-    public bool fallTrigger => p.rigidbody.velocity.y < -1e-5;
-
     public bool wallSlideTrigger =>
         (isOnLeftWall && Input.GetKey(p.leftKey) && p.rigidbody.velocity.x <= 1e-5 // 不然蹬墙跳一出去就就又变成wallSlide状态了
          || isOnRightWall && Input.GetKey(p.rightKey) && p.rigidbody.velocity.x >= -1e-5);
 
-
+    public bool jumpTrigger => Time.time <= p.jumpBufferExpireTime;
+    public bool dashTrigger => Time.time <= p.dashBufferExpireTime && Time.time >= p.dashCoolDownExpireTime;
+    public bool moveTrigger => Input.GetKey(p.leftKey) || Input.GetKey(p.rightKey);
+    public bool fallTrigger => p.rigidbody.velocity.y < -1e-5;
     public bool offWallTrigger => isOnLeftWall && Input.GetKey(p.rightKey) || isOnRightWall && Input.GetKey(p.leftKey);
     public bool attackTrigger => Time.time >= p.attackCoolDownExpireTime && Time.time <= p.attackBufferExpireTime;
+    public bool hurtTrigger => p.isHurt;
+
+    public bool isInvincible => Time.time <= p.invincibleExpireTime;
 }
 
 public class PlayerIdle : IState
@@ -263,10 +284,14 @@ public class PlayerHurt : IState
 
     public void OnEnter()
     {
+        p.isHurt = false;
+        p.invincibleExpireTime = Time.time + p.invincibleTime;
+        p.rigidbody.velocity = p.hurtDirection * p.hurtForce;
     }
 
     public void OnUpdate()
     {
+        manager.TransitionState(StateType.Fall);
     }
 
     public void OnExit()
@@ -622,7 +647,7 @@ public class PlayerAttack : IState
 
         // The integer part is the number of time a state has been looped. The fractional part is the % (0-1) of progress in the current loop.
         // 整数部分是循环次数，小数部分是运行进度
-        if (info.IsName("PlayerAttack") && info.normalizedTime - (int)info.normalizedTime < 0.95f)  
+        if (info.IsName("PlayerAttack") && info.normalizedTime - (int)info.normalizedTime < 0.95f)
             return;
         Debug.Log(2);
         if (manager.isOnGround)

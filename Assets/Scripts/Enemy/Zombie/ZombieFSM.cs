@@ -45,7 +45,7 @@ public class ZombieFSM : FSM
     private void Update()
     {
         currentState.OnUpdate();
-        Debug.Log($"currentState: {currentState}");
+        // Debug.Log($"currentState: {currentState}");
     }
 
     private bool isOverLeftCliff
