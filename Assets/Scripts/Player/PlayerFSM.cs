@@ -38,6 +38,8 @@ public class PlayerParameter
     [Header("WallJump")] public Vector2 wallJumpForce;
     public float wallJumpAdditionalForce;
     public float wallJumpMoveChangeSpeed;
+    public float wallWolfJumpBufferTime;
+    public float wallWolfJumpBufferExpireTime;
 
 
     [Header("RaycastCheck")] public Collider2D hitBoxCollider;
@@ -136,7 +138,13 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         if (Input.GetKeyDown(p.attackKey))
             p.attackBufferExpireTime = Time.time + p.attackBufferTime;
         if (isOnGround)
-            p.wolfJumpBufferExpireTime = Time.time + p.wolfJumpBufferTime;
+        {
+            p.wolfJumpBufferExpireTime = Time.time + p.wallWolfJumpBufferTime;
+            p.wallWolfJumpBufferExpireTime = -1; // 如果在墙上滑倒底但是不跳。其实应该可以不加，因为毕竟0.1s很短
+        }
+
+        if (currentState == states[StateType.WallSlide])
+            p.wallWolfJumpBufferExpireTime = Time.time + p.wallWolfJumpBufferTime;
     }
 
     public bool isOnGround =>
@@ -196,8 +204,12 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         (isOnLeftWall && Input.GetKey(p.leftKey) && p.rigidbody.velocity.x <= 1e-5 // 不然蹬墙跳一出去就就又变成wallSlide状态了
          || isOnRightWall && Input.GetKey(p.rightKey) && p.rigidbody.velocity.x >= -1e-5);
 
-    public bool jumpTrigger =>  // 就是尝试跳跃后，如果在地上或不在地上但是狼跳还在
+    public bool jumpTrigger => // 就是尝试跳跃后，如果在地上或不在地上但是狼跳还在
         Time.time <= p.jumpBufferExpireTime && (isOnGround || Time.time <= p.wolfJumpBufferExpireTime);
+
+    public bool wallJumpTrigger => // 就是尝试跳跃后，如果在墙上或不在墙上但是狼跳还在
+        Time.time <= p.jumpBufferExpireTime && Time.time <= p.wallWolfJumpBufferExpireTime;
+
 
     public bool doubleJumpTrigger => Time.time <= p.jumpBufferExpireTime && p.canDoubleJump;
 
@@ -392,6 +404,7 @@ public class PlayerWallJump : IState
     {
         p.rigidbody.velocity = new Vector2(p.facingDirection.x * p.wallJumpForce.x, p.wallJumpForce.y);
         p.jumpBufferExpireTime = -1; // 重置，否则如果从跳跃到落地的时间<bufferTime，则跳跃会被触发两次 
+        p.wallWolfJumpBufferExpireTime = -1;
     }
 
 
@@ -414,9 +427,9 @@ public class PlayerWallJump : IState
     {
         float newX = Mathf.MoveTowards(p.rigidbody.velocity.x, p.moveSpeed * p.keyDownDirection.x,
             p.wallJumpMoveChangeSpeed);
-        p.rigidbody.velocity = new Vector2(newX, p.rigidbody.velocity.y);
         if (!isKeyReleased)
             p.rigidbody.AddForce(p.wallJumpAdditionalForce * Vector2.up);
+        p.rigidbody.velocity = new Vector2(newX, p.rigidbody.velocity.y);
     }
 
     public void OnExit()
@@ -451,7 +464,7 @@ public class PlayerWallSlide : IState
     {
         if (manager.isOnGround)
             manager.TransitionState(manager.moveTrigger ? StateType.Run : StateType.Idle);
-        else if (manager.jumpTrigger)
+        else if (manager.wallJumpTrigger)
             manager.TransitionState(StateType.WallJump);
         else if (manager.offWallTrigger || !manager.isOnWall) // 手动出去或者被动出去
             manager.TransitionState(StateType.Fall);
@@ -490,7 +503,9 @@ public class PlayerFall : IState
 
         if (manager.isOnGround)
             manager.TransitionState(manager.moveTrigger ? StateType.Run : StateType.Idle);
-        else if (manager.jumpTrigger)  // 狼跳
+        else if (manager.wallJumpTrigger) // 墙上的狼跳
+            manager.TransitionState(StateType.WallJump);
+        else if (manager.jumpTrigger) // 狼跳
             manager.TransitionState(StateType.Jump);
         else if (manager.doubleJumpTrigger)
             manager.TransitionState(StateType.DoubleJump);

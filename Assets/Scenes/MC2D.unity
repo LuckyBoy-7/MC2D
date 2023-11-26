@@ -7211,9 +7211,11 @@ MonoBehaviour:
     dashCoolDown: 0.3
     dashCoolDownExpireTime: -1
     wallSlideSpeed: 5
-    wallJumpForce: {x: 25.7, y: 25}
-    wallJumpAdditionalForce: 35
-    wallJumpMoveChangeSpeed: 5.5
+    wallJumpForce: {x: 28, y: 21}
+    wallJumpAdditionalForce: 25
+    wallJumpMoveChangeSpeed: 5
+    wallWolfJumpBufferTime: 0.1
+    wallWolfJumpBufferExpireTime: -1
     hitBoxCollider: {fileID: 1383788128}
     boxLeftRightCastDist: 0.05
     boxDownCastDist: 0.1
