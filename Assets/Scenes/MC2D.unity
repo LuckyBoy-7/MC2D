@@ -7200,6 +7200,8 @@ MonoBehaviour:
     doubleJumpAdditionalForce: 45
     jumpBufferTime: 0.1
     jumpBufferExpireTime: -1
+    wolfJumpBufferTime: 0.1
+    wolfJumpBufferExpireTime: -1
     maxFallingSpeed: 12
     canDash: 1
     dashSpeed: 20

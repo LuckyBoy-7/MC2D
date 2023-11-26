@@ -24,6 +24,8 @@ public class PlayerParameter
     public float doubleJumpAdditionalForce;
     public float jumpBufferTime;
     public float jumpBufferExpireTime = -1;
+    public float wolfJumpBufferTime;
+    public float wolfJumpBufferExpireTime;
     [Header("Fall")] public float maxFallingSpeed;
     [Header("Dash")] public bool canDash;
     public float dashSpeed;
@@ -121,7 +123,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         if (isOnGround)
         {
             p.canDoubleJump = true;
-            p.canDash = true;
+            p.canDash = true; // 虽然你冷却好了，预输入也有，但是不能冲就是不能冲
         }
     }
 
@@ -133,6 +135,8 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
             p.dashBufferExpireTime = Time.time + p.dashBufferTime;
         if (Input.GetKeyDown(p.attackKey))
             p.attackBufferExpireTime = Time.time + p.attackBufferTime;
+        if (isOnGround)
+            p.wolfJumpBufferExpireTime = Time.time + p.wolfJumpBufferTime;
     }
 
     public bool isOnGround =>
@@ -192,8 +196,14 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         (isOnLeftWall && Input.GetKey(p.leftKey) && p.rigidbody.velocity.x <= 1e-5 // 不然蹬墙跳一出去就就又变成wallSlide状态了
          || isOnRightWall && Input.GetKey(p.rightKey) && p.rigidbody.velocity.x >= -1e-5);
 
-    public bool jumpTrigger => Time.time <= p.jumpBufferExpireTime;
-    public bool dashTrigger => Time.time <= p.dashBufferExpireTime && Time.time >= p.dashCoolDownExpireTime;
+    public bool jumpTrigger =>  // 就是尝试跳跃后，如果在地上或不在地上但是狼跳还在
+        Time.time <= p.jumpBufferExpireTime && (isOnGround || Time.time <= p.wolfJumpBufferExpireTime);
+
+    public bool doubleJumpTrigger => Time.time <= p.jumpBufferExpireTime && p.canDoubleJump;
+
+    public bool dashTrigger =>
+        Time.time <= p.dashBufferExpireTime && Time.time >= p.dashCoolDownExpireTime && p.canDash;
+
     public bool moveTrigger => Input.GetKey(p.leftKey) || Input.GetKey(p.rightKey);
     public bool fallTrigger => p.rigidbody.velocity.y < -1e-5;
     public bool offWallTrigger => isOnLeftWall && Input.GetKey(p.rightKey) || isOnRightWall && Input.GetKey(p.leftKey);
@@ -223,9 +233,9 @@ public class PlayerIdle : IState
         manager.UpdateFacingDirection();
         if (manager.moveTrigger)
             manager.TransitionState(StateType.Run);
-        else if (manager.jumpTrigger && manager.isOnGround)
+        else if (manager.jumpTrigger)
             manager.TransitionState(StateType.Jump);
-        else if (manager.dashTrigger && p.canDash)
+        else if (manager.dashTrigger)
             manager.TransitionState(StateType.Dash);
         else if (manager.attackTrigger)
             manager.TransitionState(StateType.Attack);
@@ -262,11 +272,11 @@ public class PlayerRun : IState
         manager.UpdateFacingDirection();
         if (!manager.moveTrigger)
             manager.TransitionState(StateType.Idle);
-        else if (manager.jumpTrigger && manager.isOnGround)
+        else if (manager.jumpTrigger)
             manager.TransitionState(StateType.Jump);
         else if (manager.fallTrigger)
             manager.TransitionState(StateType.Fall);
-        else if (manager.dashTrigger && p.canDash)
+        else if (manager.dashTrigger)
             manager.TransitionState(StateType.Dash);
         else if (manager.attackTrigger)
             manager.TransitionState(StateType.Attack);
@@ -332,6 +342,7 @@ public class PlayerJump : IState
     {
         p.rigidbody.velocity = Vector2.up * p.firstJumpForce;
         p.jumpBufferExpireTime = -1; // 重置，否则如果从跳跃到落地的时间<bufferTime，则跳跃会被触发两次 
+        p.wolfJumpBufferExpireTime = -1;
     }
 
     public void OnUpdate()
@@ -341,9 +352,9 @@ public class PlayerJump : IState
 
         if (manager.fallTrigger)
             manager.TransitionState(StateType.Fall);
-        else if (manager.jumpTrigger && p.canDoubleJump)
+        else if (manager.doubleJumpTrigger)
             manager.TransitionState(StateType.DoubleJump);
-        else if (manager.dashTrigger && p.canDash)
+        else if (manager.dashTrigger)
             manager.TransitionState(StateType.Dash);
         else if (manager.attackTrigger)
             manager.TransitionState(StateType.Attack);
@@ -388,12 +399,12 @@ public class PlayerWallJump : IState
     {
         manager.UpdateFacingDirection();
         isKeyReleased = isKeyReleased || Input.GetKeyUp(p.jumpKey);
-        
+
         if (manager.fallTrigger)
             manager.TransitionState(StateType.Fall);
-        else if (manager.dashTrigger && p.canDash)
+        else if (manager.dashTrigger)
             manager.TransitionState(StateType.Dash);
-        else if (manager.jumpTrigger && p.canDoubleJump)
+        else if (manager.doubleJumpTrigger)
             manager.TransitionState(StateType.DoubleJump);
         else if (manager.attackTrigger)
             manager.TransitionState(StateType.Attack);
@@ -401,7 +412,6 @@ public class PlayerWallJump : IState
 
     public void OnFixedUpdate()
     {
-
         float newX = Mathf.MoveTowards(p.rigidbody.velocity.x, p.moveSpeed * p.keyDownDirection.x,
             p.wallJumpMoveChangeSpeed);
         p.rigidbody.velocity = new Vector2(newX, p.rigidbody.velocity.y);
@@ -445,7 +455,7 @@ public class PlayerWallSlide : IState
             manager.TransitionState(StateType.WallJump);
         else if (manager.offWallTrigger || !manager.isOnWall) // 手动出去或者被动出去
             manager.TransitionState(StateType.Fall);
-        else if (manager.dashTrigger && p.canDash)
+        else if (manager.dashTrigger)
             manager.TransitionState(StateType.Dash);
     }
 
@@ -480,9 +490,11 @@ public class PlayerFall : IState
 
         if (manager.isOnGround)
             manager.TransitionState(manager.moveTrigger ? StateType.Run : StateType.Idle);
-        else if (manager.jumpTrigger && p.canDoubleJump)
+        else if (manager.jumpTrigger)  // 狼跳
+            manager.TransitionState(StateType.Jump);
+        else if (manager.doubleJumpTrigger)
             manager.TransitionState(StateType.DoubleJump);
-        else if (manager.dashTrigger && p.canDash)
+        else if (manager.dashTrigger)
             manager.TransitionState(StateType.Dash);
         else if (manager.wallSlideTrigger)
             manager.TransitionState(StateType.WallSlide);
@@ -608,7 +620,7 @@ public class PlayerDoubleJump : IState
 
         if (manager.fallTrigger)
             manager.TransitionState(StateType.Fall);
-        else if (manager.dashTrigger && p.canDash)
+        else if (manager.dashTrigger)
             manager.TransitionState(StateType.Dash);
         else if (manager.attackTrigger)
             manager.TransitionState(StateType.Attack);
