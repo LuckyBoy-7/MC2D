@@ -781,13 +781,15 @@ public class PlayerAttack : IState
         UpdateTrigger();
 
         // The integer part is the number of time a state has been looped. The fractional part is the % (0-1) of progress in the current loop.
-        // 整数部分是循环次数，小数部分是运行进度
+        // 整数部分是循环次数，小数部分是运行进度, 主要是为了防止攻击的时候转向
         if (info.IsName("PlayerAttack") && info.normalizedTime - (int)info.normalizedTime < 0.95f)
             return;
         if (m.isOnGround)
             m.TransitionState(m.moveTrigger ? StateType.Run : StateType.Idle);
         else if (m.fallTrigger)
             m.TransitionState(StateType.Fall);
+        else if (m.dashTrigger)
+            m.TransitionState(StateType.Dash);
     }
 
     public void OnFixedUpdate()

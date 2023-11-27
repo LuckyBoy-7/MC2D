@@ -7284,7 +7284,7 @@ MonoBehaviour:
   attackColliderDown: {fileID: 1503216418}
   attackUp: {fileID: 1299782002}
   attackColliderUp: {fileID: 1299782004}
-  attackCoolDown: 0.2
+  attackCoolDown: 0.3
   attackCoolDownExpireTime: -1
   attackForce: 24.3
   attackMoveChangeSpeed: 4.5
