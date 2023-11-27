@@ -24,6 +24,7 @@ public class EnemyFSM : FSM
 
     [Header("Hurt")] public float showHurtEffectTime = 0.3F;
     public float roarHurtElapse;
+    public float dropHurtElapse;
 
     public void TakeDamage(int damage)
     {
@@ -130,14 +131,25 @@ public class EnemyFSM : FSM
 
     private void OnTriggerStay2D(Collider2D other)
     {
-        if (!other.CompareTag("PlayerRoar"))
-            return;
-        PlayerFSM player = PlayerFSM.instance;
-        roarHurtElapse += Time.deltaTime;
-        if (roarHurtElapse >= player.roarDamageTimeGap)
+        if (other.CompareTag("PlayerRoar"))
         {
-            roarHurtElapse = 0;
-            TakeDamage(player.roarDamage);
+            PlayerFSM player = PlayerFSM.instance;
+            roarHurtElapse += Time.deltaTime;
+            if (roarHurtElapse >= player.roarDamageTimeGap)
+            {
+                roarHurtElapse = 0;
+                TakeDamage(player.roarDamage);
+            }
+        }
+        else if (other.CompareTag("PlayerDrop"))
+        {
+            PlayerFSM player = PlayerFSM.instance;
+            dropHurtElapse += Time.deltaTime;
+            if (dropHurtElapse >= player.dropDamageTimeGap)
+            {
+                dropHurtElapse = 0;
+                TakeDamage(player.dropDamage);
+            }
         }
     }
 }

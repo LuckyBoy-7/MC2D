@@ -355,6 +355,7 @@ MonoBehaviour:
   yVelocityChangeSpeed: 100
   showHurtEffectTime: 0.3
   roarHurtElapse: 0
+  dropHurtElapse: 0
   patrolMoveSpeed: 5
   patrolRestTime: 0.5
   viewLayer:
@@ -7307,11 +7308,13 @@ MonoBehaviour:
   dropWindupTime: 0.1
   windupForce: 10
   dropSpeed: 40
-  dropInvincibleTime: 0.5
+  dropInvincibleTime: 0.8
+  dropPrefab: {fileID: 1714805226561379747, guid: 90cfe40487394a04f9ebebdbc9ce1d38, type: 3}
+  dropDamage: 3
+  dropDamageTimeGap: 0.2
   roarPrefab: {fileID: 6655523132286190624, guid: 7ab1f0f243ca98941b6cb546cf02bdd6, type: 3}
   roarDamage: 3
-  roarDamageTimeGap: 0.2
-  initialSpeedAfterRoar: 1
+  roarDamageTimeGap: 0.18
   leftKey: 106
   rightKey: 108
   upKey: 105
@@ -7601,6 +7604,7 @@ MonoBehaviour:
   yVelocityChangeSpeed: 100
   showHurtEffectTime: 0.3
   roarHurtElapse: 0
+  dropHurtElapse: 0
   patrolMoveSpeed: 0
   patrolRestTime: 0.5
   viewLayer:

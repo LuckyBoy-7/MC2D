@@ -89,10 +89,13 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public float dropSpeed;
     public float dropInvincibleTime;
 
+    public PlayerDropPrefab dropPrefab;
+    public int dropDamage;
+    public float dropDamageTimeGap;
+
     [Header("Roar")] public PlayerRoarPrefab roarPrefab;
     public int roarDamage;
     public float roarDamageTimeGap;
-    public float initialSpeedAfterRoar;
 
     [Header("Key")] public KeyCode leftKey = KeyCode.J;
     public KeyCode rightKey = KeyCode.L;
@@ -699,8 +702,6 @@ public class PlayerRoar : IState
     {
         if (roarPrefab != null) // 还没结束
             return;
-        m.rigidbody.velocity = Vector2.down * m.initialSpeedAfterRoar;
-
         if (m.isOnGround)
             m.TransitionState(m.moveTrigger ? StateType.Run : StateType.Idle);
         else
@@ -725,6 +726,8 @@ public class PlayerDrop : IState
     private PlayerFSM m;
     private float elapse;
     private float gravityBackup;
+    private bool isFirstOnGround;
+    private PlayerDropPrefab dropPrefab;
 
     public PlayerDrop(PlayerFSM m)
     {
@@ -742,6 +745,13 @@ public class PlayerDrop : IState
 
     public void OnUpdate()
     {
+        if (isFirstOnGround)
+        {
+            if (dropPrefab == null)
+                m.TransitionState(StateType.Idle);
+            return;
+        }
+
         elapse += Time.deltaTime;
         if (elapse < m.dropWindupTime)
             return;
@@ -749,8 +759,10 @@ public class PlayerDrop : IState
 
         if (m.isOnGround)
         {
+            isFirstOnGround = true;
+            dropPrefab = PlayerFSM.Instantiate(m.dropPrefab, m.transform);
+            dropPrefab.transform.position += Vector3.down * 0.5f;
             m.invincibleExpireTime = Time.time + m.dropInvincibleTime;
-            m.TransitionState(StateType.Idle);
         }
     }
 
@@ -762,6 +774,7 @@ public class PlayerDrop : IState
     {
         elapse = 0;
         m.rigidbody.gravityScale = gravityBackup;
+        isFirstOnGround = false;
     }
 }
 
