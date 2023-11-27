@@ -7311,7 +7311,7 @@ MonoBehaviour:
   dropInvincibleTime: 0.8
   dropPrefab: {fileID: 1714805226561379747, guid: 90cfe40487394a04f9ebebdbc9ce1d38, type: 3}
   dropDamage: 3
-  dropDamageTimeGap: 0.2
+  dropDamageTimeGap: 0.25
   roarPrefab: {fileID: 6655523132286190624, guid: 7ab1f0f243ca98941b6cb546cf02bdd6, type: 3}
   roarDamage: 3
   roarDamageTimeGap: 0.18
