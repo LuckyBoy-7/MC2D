@@ -10,9 +10,9 @@ using Random = UnityEngine.Random;
 
 public class PlayerFSM : SingletonFSM<PlayerFSM>
 {
+    public SpriteRenderer spriteRenderer;
     [Header("Health")] public int maxHealthPoint;
     public int healthPoint;
-    public SpriteRenderer spriteRenderer;
     public BoxCollider2D triggerBox;
 
     [Header("Movement")] public Rigidbody2D rigidbody;
@@ -83,6 +83,12 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public float spellArrowMoveChangeSpeed;
     public float frozeFrameTime;
 
+    [Header("Drop")] 
+    public float windupDeltaCompensation;
+    public float windupTime;
+    public float windupForce;
+    public float dropSpeed;
+    public float dropInvincibleTime;
 
     [Header("Key")] public KeyCode leftKey = KeyCode.J;
     public KeyCode rightKey = KeyCode.L;
@@ -91,7 +97,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public KeyCode jumpKey = KeyCode.D;
     public KeyCode dashKey = KeyCode.S;
     public KeyCode attackKey = KeyCode.A;
-    public KeyCode spellArrowKey = KeyCode.Q;
+    public KeyCode spellKey = KeyCode.Q;
 
     void Start()
     {
@@ -104,9 +110,12 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         states[StateType.WallSlide] = new PlayerWallSlide(this);
         states[StateType.Fall] = new PlayerFall(this);
         states[StateType.Dash] = new PlayerDash(this);
-        states[StateType.ReleaseArrow] = new PlayerReleaseArrow(this);
         states[StateType.DoubleJump] = new PlayerDoubleJump(this);
         states[StateType.Attack] = new PlayerAttack(this);
+        states[StateType.Spell] = new PlayerSpell(this);
+        states[StateType.ReleaseArrow] = new PlayerReleaseArrow(this);
+        states[StateType.Roar] = new PlayerRoar(this);
+        states[StateType.Drop] = new PlayerDrop(this);
         TransitionState(StateType.Idle);
     }
 
@@ -276,7 +285,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public bool offWallTrigger => isOnLeftWall && Input.GetKey(rightKey) || isOnRightWall && Input.GetKey(leftKey);
     public bool attackTrigger => Time.time >= attackCoolDownExpireTime && Time.time <= attackBufferExpireTime;
 
-    public bool spellArrowTrigger => Input.GetKeyDown(spellArrowKey); // 因为放波大部分时候是不需要预输入的
+    public bool spellTrigger => Input.GetKeyDown(spellKey); // 因为放波大部分时候是不需要预输入的
 
     #endregion
 }
@@ -305,8 +314,8 @@ public class PlayerIdle : IState
             m.TransitionState(StateType.Dash);
         else if (m.attackTrigger)
             m.TransitionState(StateType.Attack);
-        else if (m.spellArrowTrigger)
-            m.TransitionState(StateType.ReleaseArrow);
+        else if (m.spellTrigger)
+            m.TransitionState(StateType.Spell);
     }
 
     public void OnFixedUpdate()
@@ -346,8 +355,8 @@ public class PlayerRun : IState
             m.TransitionState(StateType.Dash);
         else if (m.attackTrigger)
             m.TransitionState(StateType.Attack);
-        else if (m.spellArrowTrigger)
-            m.TransitionState(StateType.ReleaseArrow);
+        else if (m.spellTrigger)
+            m.TransitionState(StateType.Spell);
     }
 
     public void OnFixedUpdate()
@@ -421,8 +430,8 @@ public class PlayerJump : IState
             m.TransitionState(StateType.Dash);
         else if (m.attackTrigger)
             m.TransitionState(StateType.Attack);
-        else if (m.spellArrowTrigger)
-            m.TransitionState(StateType.ReleaseArrow);
+        else if (m.spellTrigger)
+            m.TransitionState(StateType.Spell);
     }
 
     public void OnFixedUpdate()
@@ -472,8 +481,8 @@ public class PlayerWallJump : IState
             m.TransitionState(StateType.DoubleJump);
         else if (m.attackTrigger)
             m.TransitionState(StateType.Attack);
-        else if (m.spellArrowTrigger)
-            m.TransitionState(StateType.ReleaseArrow);
+        else if (m.spellTrigger)
+            m.TransitionState(StateType.Spell);
     }
 
     public void OnFixedUpdate()
@@ -521,8 +530,8 @@ public class PlayerWallSlide : IState
             m.TransitionState(StateType.Fall);
         else if (m.dashTrigger)
             m.TransitionState(StateType.Dash);
-        else if (m.spellArrowTrigger)
-            m.TransitionState(StateType.ReleaseArrow);
+        else if (m.spellTrigger)
+            m.TransitionState(StateType.Spell);
     }
 
     public void OnFixedUpdate()
@@ -566,8 +575,8 @@ public class PlayerFall : IState
             m.TransitionState(StateType.WallSlide);
         else if (m.attackTrigger)
             m.TransitionState(StateType.Attack);
-        else if (m.spellArrowTrigger)
-            m.TransitionState(StateType.ReleaseArrow);
+        else if (m.spellTrigger)
+            m.TransitionState(StateType.Spell);
     }
 
     public void OnFixedUpdate()
@@ -627,6 +636,115 @@ public class PlayerDash : IState
         elapse = 0;
         m.dashCoolDownExpireTime = Time.time + m.dashCoolDown;
         m.rigidbody.velocity = Vector2.zero;
+    }
+}
+
+public class PlayerSpell : IState
+{
+    private PlayerFSM m;
+
+    public PlayerSpell(PlayerFSM m)
+    {
+        this.m = m;
+    }
+
+    public void OnEnter()
+    {
+        if (Input.GetKey(m.downKey))
+            m.TransitionState(StateType.Drop);
+        else if (Input.GetKeyDown(m.upKey))
+            m.TransitionState(StateType.Roar);
+        else
+            m.TransitionState(StateType.ReleaseArrow);
+    }
+
+    public void OnUpdate()
+    {
+    }
+
+    public void OnFixedUpdate()
+    {
+    }
+
+    public void OnExit()
+    {
+    }
+}
+
+public class PlayerRoar : IState
+{
+    private PlayerFSM m;
+
+    public PlayerRoar(PlayerFSM m)
+    {
+        this.m = m;
+    }
+
+    public void OnEnter()
+    {
+    }
+
+    public void OnUpdate()
+    {
+    }
+
+    public void OnFixedUpdate()
+    {
+    }
+
+    public void OnExit()
+    {
+    }
+}
+
+/// <summary>
+/// 既然本来表现力就不佳了，那干脆就不造成伤害，单纯作为躲避和打开隐藏通路
+/// </summary>
+public class PlayerDrop : IState
+{
+    private PlayerFSM m;
+    private Sprite playerSpriteBackup;
+    private float elapse;
+    private float gravityBackup;
+
+    public PlayerDrop(PlayerFSM m)
+    {
+        this.m = m;
+    }
+
+    public void OnEnter()
+    {
+        playerSpriteBackup = m.spriteRenderer.sprite;
+        m.rigidbody.velocity = Vector2.up * m.windupForce;
+        gravityBackup = m.rigidbody.gravityScale;
+        m.rigidbody.gravityScale = 0;
+        if (m.isOnGround)
+            elapse += m.windupDeltaCompensation;
+    }
+
+    public void OnUpdate()
+    {
+        elapse += Time.deltaTime;
+        if (elapse < m.windupTime)
+            return;
+        m.rigidbody.velocity = Vector2.down * m.dropSpeed;
+
+        if (m.isOnGround)
+        {
+            m.invincibleExpireTime = Time.time + m.dropInvincibleTime;
+            m.TransitionState(StateType.Idle);
+        }
+    }
+
+    public void OnFixedUpdate()
+    {
+    }
+
+    public void OnExit()
+    {
+        elapse = 0;
+        m.rigidbody.gravityScale = gravityBackup;
+        m.spriteRenderer.sprite = playerSpriteBackup;
     }
 }
 
@@ -711,8 +829,8 @@ public class PlayerDoubleJump : IState
             m.TransitionState(StateType.Dash);
         else if (m.attackTrigger)
             m.TransitionState(StateType.Attack);
-        else if (m.spellArrowTrigger)
-            m.TransitionState(StateType.ReleaseArrow);
+        else if (m.spellTrigger)
+            m.TransitionState(StateType.Spell);
     }
 
     public void OnFixedUpdate()
@@ -744,7 +862,7 @@ public class PlayerAttack : IState
         attackDirection = new()
         {
             { m.attackRight, new Vector2(1, 0) * m.facingDirection.x },
-            { m.attackUp, new Vector2(0, 1) },
+            { m.attackUp, new Vector2(0, 0) },
             { m.attackDown, new Vector2(0, -1) }
         };
 

@@ -18,6 +18,9 @@ public enum StateType
     ReleaseArrow,
     DoubleJump,
     Fall,
+    Spell,
+    Drop,
+    Roar,
     // Enemy
     Chase,
     Teleport,
