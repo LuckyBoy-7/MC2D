@@ -83,12 +83,16 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public float spellArrowMoveChangeSpeed;
     public float frozeFrameTime;
 
-    [Header("Drop")] 
-    public float windupDeltaCompensation;
-    public float windupTime;
+    [Header("Drop")] public float dropWindupDeltaCompensation;
+    public float dropWindupTime;
     public float windupForce;
     public float dropSpeed;
     public float dropInvincibleTime;
+
+    [Header("Roar")] public PlayerRoarPrefab roarPrefab;
+    public int roarDamage;
+    public float roarDamageTimeGap;
+    public float initialSpeedAfterRoar;
 
     [Header("Key")] public KeyCode leftKey = KeyCode.J;
     public KeyCode rightKey = KeyCode.L;
@@ -652,7 +656,7 @@ public class PlayerSpell : IState
     {
         if (Input.GetKey(m.downKey))
             m.TransitionState(StateType.Drop);
-        else if (Input.GetKeyDown(m.upKey))
+        else if (Input.GetKey(m.upKey))
             m.TransitionState(StateType.Roar);
         else
             m.TransitionState(StateType.ReleaseArrow);
@@ -674,6 +678,8 @@ public class PlayerSpell : IState
 public class PlayerRoar : IState
 {
     private PlayerFSM m;
+    private float gravityBackup;
+    private PlayerRoarPrefab roarPrefab;
 
     public PlayerRoar(PlayerFSM m)
     {
@@ -682,10 +688,23 @@ public class PlayerRoar : IState
 
     public void OnEnter()
     {
+        gravityBackup = m.rigidbody.gravityScale;
+        m.rigidbody.gravityScale = 0;
+        m.rigidbody.velocity = Vector2.zero;
+        roarPrefab = PlayerFSM.Instantiate(m.roarPrefab, PlayerFSM.instance.transform);
+        roarPrefab.transform.localPosition += Vector3.up * 0.5f;
     }
 
     public void OnUpdate()
     {
+        if (roarPrefab != null) // 还没结束
+            return;
+        m.rigidbody.velocity = Vector2.down * m.initialSpeedAfterRoar;
+
+        if (m.isOnGround)
+            m.TransitionState(m.moveTrigger ? StateType.Run : StateType.Idle);
+        else
+            m.TransitionState(StateType.Fall);
     }
 
     public void OnFixedUpdate()
@@ -694,6 +713,7 @@ public class PlayerRoar : IState
 
     public void OnExit()
     {
+        m.rigidbody.gravityScale = gravityBackup;
     }
 }
 
@@ -703,7 +723,6 @@ public class PlayerRoar : IState
 public class PlayerDrop : IState
 {
     private PlayerFSM m;
-    private Sprite playerSpriteBackup;
     private float elapse;
     private float gravityBackup;
 
@@ -714,18 +733,17 @@ public class PlayerDrop : IState
 
     public void OnEnter()
     {
-        playerSpriteBackup = m.spriteRenderer.sprite;
         m.rigidbody.velocity = Vector2.up * m.windupForce;
         gravityBackup = m.rigidbody.gravityScale;
         m.rigidbody.gravityScale = 0;
         if (m.isOnGround)
-            elapse += m.windupDeltaCompensation;
+            elapse += m.dropWindupDeltaCompensation;
     }
 
     public void OnUpdate()
     {
         elapse += Time.deltaTime;
-        if (elapse < m.windupTime)
+        if (elapse < m.dropWindupTime)
             return;
         m.rigidbody.velocity = Vector2.down * m.dropSpeed;
 
@@ -744,7 +762,6 @@ public class PlayerDrop : IState
     {
         elapse = 0;
         m.rigidbody.gravityScale = gravityBackup;
-        m.spriteRenderer.sprite = playerSpriteBackup;
     }
 }
 
@@ -902,6 +919,7 @@ public class PlayerAttack : IState
         // 整数部分是循环次数，小数部分是运行进度, 主要是为了防止攻击的时候转向
         if (info.IsName("PlayerAttack") && info.normalizedTime - (int)info.normalizedTime < 0.95f)
             return;
+        m.UpdateFacingDirection();
         if (m.isOnGround)
             m.TransitionState(m.moveTrigger ? StateType.Run : StateType.Idle);
         else if (m.fallTrigger)

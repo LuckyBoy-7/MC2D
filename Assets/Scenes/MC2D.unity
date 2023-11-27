@@ -354,8 +354,7 @@ MonoBehaviour:
   xVelocityChangeSpeed: 200
   yVelocityChangeSpeed: 100
   showHurtEffectTime: 0.3
-  invincibleTime: 0.3
-  invincibleExpireTime: -1
+  roarHurtElapse: 0
   patrolMoveSpeed: 5
   patrolRestTime: 0.5
   viewLayer:
@@ -7304,11 +7303,15 @@ MonoBehaviour:
   spellArrowKnockBackForce: 15
   spellArrowMoveChangeSpeed: 2
   frozeFrameTime: 0.1
-  windupDeltaCompensation: 0
-  windupTime: 0.2
+  dropWindupDeltaCompensation: -0.1
+  dropWindupTime: 0.1
   windupForce: 10
   dropSpeed: 40
   dropInvincibleTime: 0.5
+  roarPrefab: {fileID: 6655523132286190624, guid: 7ab1f0f243ca98941b6cb546cf02bdd6, type: 3}
+  roarDamage: 3
+  roarDamageTimeGap: 0.2
+  initialSpeedAfterRoar: 1
   leftKey: 106
   rightKey: 108
   upKey: 105
@@ -7597,8 +7600,7 @@ MonoBehaviour:
   xVelocityChangeSpeed: 200
   yVelocityChangeSpeed: 100
   showHurtEffectTime: 0.3
-  invincibleTime: 0.3
-  invincibleExpireTime: -1
+  roarHurtElapse: 0
   patrolMoveSpeed: 0
   patrolRestTime: 0.5
   viewLayer:

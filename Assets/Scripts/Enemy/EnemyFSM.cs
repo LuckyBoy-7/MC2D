@@ -1,3 +1,4 @@
+using System;
 using DG.Tweening;
 using Unity.VisualScripting;
 using UnityEditor;
@@ -22,14 +23,10 @@ public class EnemyFSM : FSM
     public float yVelocityChangeSpeed; // 如果敌人在移动的时候被击飞，此时的移动速度需要lerp
 
     [Header("Hurt")] public float showHurtEffectTime = 0.3F;
-    public float invincibleTime = 0.3F;
-    public float invincibleExpireTime = -1;
-    private bool isInvincible => Time.time <= invincibleExpireTime;
+    public float roarHurtElapse;
 
-    public bool TryTakeDamage(int damage)
+    public void TakeDamage(int damage)
     {
-        if (isInvincible)
-            return false;
         healthPoint -= damage;
 
         if (healthPoint <= 0) // 伤害可能会溢出
@@ -40,16 +37,13 @@ public class EnemyFSM : FSM
             DOTween.Kill("MaskFadeOut");
             hurtMask.DOFade(0, showHurtEffectTime).SetId("MaskFadeOut");
         }
-
-        return true;
     }
+
 
     public void Attacked(int damage, Vector2 attackForceVec = default) // 被击打的方向加力度
     {
-        if (!TryTakeDamage(damage))
-            return;
+        TakeDamage(damage);
 
-        invincibleExpireTime = Time.time + invincibleTime; // 只有收到伤害后才有资格说是否无敌和击退的事
         if (canBeKnockedBack)
             rigidbody.velocity = attackForceVec;
     }
@@ -133,4 +127,17 @@ public class EnemyFSM : FSM
     #endregion
 
     public void ReverseFacingDirection() => facingDirection *= -1;
+
+    private void OnTriggerStay2D(Collider2D other)
+    {
+        if (!other.CompareTag("PlayerRoar"))
+            return;
+        PlayerFSM player = PlayerFSM.instance;
+        roarHurtElapse += Time.deltaTime;
+        if (roarHurtElapse >= player.roarDamageTimeGap)
+        {
+            roarHurtElapse = 0;
+            TakeDamage(player.roarDamage);
+        }
+    }
 }
