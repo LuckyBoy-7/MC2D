@@ -13,7 +13,7 @@ public class EnemyFSM : FSM
 
     [Header("PhysicsCheck")] public float cliffCheckDownRaycastDist = 0.3f;
     public float boxLeftRightCastDist = 0.1f;
-    public LayerMask groundLayer ;
+    public LayerMask groundLayer;
     public BoxCollider2D hitBoxCollider;
 
     [Header("Movement")] public Rigidbody2D rigidbody;
@@ -24,6 +24,7 @@ public class EnemyFSM : FSM
     [Header("Hurt")] public float showHurtEffectTime = 0.3F;
     public float invincibleTime = 0.3F;
     public float invincibleExpireTime = -1;
+    private bool isInvincible => Time.time <= invincibleExpireTime;
 
     public bool TryTakeDamage(int damage)
     {
@@ -31,18 +32,19 @@ public class EnemyFSM : FSM
             return false;
         healthPoint -= damage;
 
-        if (healthPoint == 0)
+        if (healthPoint <= 0) // 伤害可能会溢出
             Kill();
         else
         {
             hurtMask.color = hurtMask.color.WithAlpha(1);
-            hurtMask.DOFade(0, showHurtEffectTime);
+            DOTween.Kill("MaskFadeOut");
+            hurtMask.DOFade(0, showHurtEffectTime).SetId("MaskFadeOut");
         }
 
         return true;
     }
 
-    public void Attacked(int damage, Vector2 attackForceVec) // 被击打的方向加力度
+    public void Attacked(int damage, Vector2 attackForceVec = default) // 被击打的方向加力度
     {
         if (!TryTakeDamage(damage))
             return;
@@ -54,7 +56,6 @@ public class EnemyFSM : FSM
 
     private void Kill() => Destroy(gameObject);
 
-    private bool isInvincible => Time.time <= invincibleExpireTime;
 
     #region PhysicsCheck
 

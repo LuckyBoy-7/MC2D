@@ -61,6 +61,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public float attackCoolDown;
     public float attackCoolDownExpireTime;
     public float attackForce;
+    public float attackMoveChangeSpeed;
     public float attackBufferTime;
     public float attackBufferExpireTime;
     public int attackDamage;
@@ -75,6 +76,13 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 
     [Header("Effect")] public SwordAttackEffect attackEffect;
 
+    [Header("ReleaseArrow")] public PlayerArrow arrowPrefab;
+    public int arrowDamage;
+    public float arrowSpeed;
+    public float spellArrowKnockBackForce;
+    public float spellArrowMoveChangeSpeed;
+    public float frozeFrameTime;
+
 
     [Header("Key")] public KeyCode leftKey = KeyCode.J;
     public KeyCode rightKey = KeyCode.L;
@@ -83,7 +91,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public KeyCode jumpKey = KeyCode.D;
     public KeyCode dashKey = KeyCode.S;
     public KeyCode attackKey = KeyCode.A;
-    public KeyCode spellKey = KeyCode.Q;
+    public KeyCode spellArrowKey = KeyCode.Q;
 
     void Start()
     {
@@ -264,9 +272,11 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         Time.time <= dashBufferExpireTime && Time.time >= dashCoolDownExpireTime && canDash;
 
     public bool moveTrigger => Input.GetKey(leftKey) || Input.GetKey(rightKey);
-    public bool fallTrigger => rigidbody.velocity.y < -1e-5;
+    public bool fallTrigger => rigidbody.velocity.y < -1e-3;
     public bool offWallTrigger => isOnLeftWall && Input.GetKey(rightKey) || isOnRightWall && Input.GetKey(leftKey);
     public bool attackTrigger => Time.time >= attackCoolDownExpireTime && Time.time <= attackBufferExpireTime;
+
+    public bool spellArrowTrigger => Input.GetKeyDown(spellArrowKey); // 因为放波大部分时候是不需要预输入的
 
     #endregion
 }
@@ -295,6 +305,8 @@ public class PlayerIdle : IState
             m.TransitionState(StateType.Dash);
         else if (m.attackTrigger)
             m.TransitionState(StateType.Attack);
+        else if (m.spellArrowTrigger)
+            m.TransitionState(StateType.ReleaseArrow);
     }
 
     public void OnFixedUpdate()
@@ -334,6 +346,8 @@ public class PlayerRun : IState
             m.TransitionState(StateType.Dash);
         else if (m.attackTrigger)
             m.TransitionState(StateType.Attack);
+        else if (m.spellArrowTrigger)
+            m.TransitionState(StateType.ReleaseArrow);
     }
 
     public void OnFixedUpdate()
@@ -407,6 +421,8 @@ public class PlayerJump : IState
             m.TransitionState(StateType.Dash);
         else if (m.attackTrigger)
             m.TransitionState(StateType.Attack);
+        else if (m.spellArrowTrigger)
+            m.TransitionState(StateType.ReleaseArrow);
     }
 
     public void OnFixedUpdate()
@@ -456,6 +472,8 @@ public class PlayerWallJump : IState
             m.TransitionState(StateType.DoubleJump);
         else if (m.attackTrigger)
             m.TransitionState(StateType.Attack);
+        else if (m.spellArrowTrigger)
+            m.TransitionState(StateType.ReleaseArrow);
     }
 
     public void OnFixedUpdate()
@@ -503,6 +521,8 @@ public class PlayerWallSlide : IState
             m.TransitionState(StateType.Fall);
         else if (m.dashTrigger)
             m.TransitionState(StateType.Dash);
+        else if (m.spellArrowTrigger)
+            m.TransitionState(StateType.ReleaseArrow);
     }
 
     public void OnFixedUpdate()
@@ -546,6 +566,8 @@ public class PlayerFall : IState
             m.TransitionState(StateType.WallSlide);
         else if (m.attackTrigger)
             m.TransitionState(StateType.Attack);
+        else if (m.spellArrowTrigger)
+            m.TransitionState(StateType.ReleaseArrow);
     }
 
     public void OnFixedUpdate()
@@ -611,6 +633,8 @@ public class PlayerDash : IState
 public class PlayerReleaseArrow : IState
 {
     private PlayerFSM m;
+    private float gravityBackup;
+    private float elapse;
 
     public PlayerReleaseArrow(PlayerFSM m)
     {
@@ -619,18 +643,41 @@ public class PlayerReleaseArrow : IState
 
     public void OnEnter()
     {
+        var arrow = PlayerFSM.Instantiate(m.arrowPrefab, PlayerFSM.instance.transform.position, Quaternion.identity);
+        arrow.SetMove(m.facingDirection.x, m.arrowSpeed);
+
+        gravityBackup = m.rigidbody.gravityScale;
+        m.rigidbody.gravityScale = 0;
+
+        m.rigidbody.velocity = new Vector2(-m.facingDirection.x * m.spellArrowKnockBackForce, 0);
+        Time.timeScale = 0.1f;
     }
 
     public void OnUpdate()
     {
+        elapse += Time.deltaTime / Time.timeScale;
+        if (elapse < m.frozeFrameTime)
+            return;
+        Time.timeScale = 1;
+
+        if (Mathf.Abs(m.rigidbody.velocity.x) > 1e-5) // 后摇还没结束
+            return;
+        if (m.isOnGround)
+            m.TransitionState(m.moveTrigger ? StateType.Run : StateType.Idle);
+        else
+            m.TransitionState(StateType.Fall);
     }
 
     public void OnFixedUpdate()
     {
+        var newX = Mathf.MoveTowards(m.rigidbody.velocity.x, 0, m.spellArrowMoveChangeSpeed);
+        m.rigidbody.velocity = new Vector2(newX, m.rigidbody.velocity.y);
     }
 
     public void OnExit()
     {
+        m.rigidbody.gravityScale = gravityBackup;
+        elapse = 0;
     }
 }
 
@@ -664,6 +711,8 @@ public class PlayerDoubleJump : IState
             m.TransitionState(StateType.Dash);
         else if (m.attackTrigger)
             m.TransitionState(StateType.Attack);
+        else if (m.spellArrowTrigger)
+            m.TransitionState(StateType.ReleaseArrow);
     }
 
     public void OnFixedUpdate()
@@ -743,18 +792,16 @@ public class PlayerAttack : IState
 
     public void OnFixedUpdate()
     {
+        var newX = Mathf.MoveTowards(m.rigidbody.velocity.x, m.moveSpeed * m.keyDownDirection.x,
+            m.attackMoveChangeSpeed);
         // 我感觉如果要写的更精细的话就要有更多的状态，比如FallAttack，RunAttack之类的
         if (m.fallTrigger)
         {
             var newY = -Mathf.Min(-m.rigidbody.velocity.y, m.maxFallingSpeed);
-            m.rigidbody.velocity = new Vector2(m.moveSpeed * m.keyDownDirection.x, newY);
+            m.rigidbody.velocity = new Vector2(newX, newY);
         }
         else
-        {
-            var newX = Mathf.MoveTowards(m.rigidbody.velocity.x, m.moveSpeed * m.keyDownDirection.x,
-                m.dampingSpeed * Time.deltaTime);
             m.rigidbody.velocity = new Vector2(newX, m.rigidbody.velocity.y);
-        }
     }
 
     public void OnExit()
@@ -779,7 +826,8 @@ public class PlayerAttack : IState
             m.canDoubleJump = true;
 
             Collider2D choiceBox = triggeredEnemyBoxes[Random.Range(0, triggeredEnemyBoxes.Count)];
-            m.attackEffect.transform.position = choiceBox.bounds.ClosestPoint(currentAttack.transform.position);;
+            m.attackEffect.transform.position = choiceBox.bounds.ClosestPoint(currentAttack.transform.position);
+            ;
             m.attackEffect.Play();
         }
     }
