@@ -823,11 +823,14 @@ public class PlayerAttack : IState
         {
             hasCausedDamage = true;
             m.rigidbody.velocity = -attackDirection[currentAttack] * m.attackForce;
-            m.canDoubleJump = true;
+            if (currentAttack == m.attackDown) // 只有下劈才刷新
+            {
+                m.canDoubleJump = true;
+                m.canDash = true;
+            }
 
             Collider2D choiceBox = triggeredEnemyBoxes[Random.Range(0, triggeredEnemyBoxes.Count)];
             m.attackEffect.transform.position = choiceBox.bounds.ClosestPoint(currentAttack.transform.position);
-            ;
             m.attackEffect.Play();
         }
     }
