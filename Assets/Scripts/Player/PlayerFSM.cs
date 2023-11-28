@@ -78,8 +78,14 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public float invincibleTime;
     public float invincibleExpireTime;
 
+    [Header("Recover")] public float recoverSpeed;
+    public Animator recoverProcessAnim;
+    public Animator recoverBurstAnim;
+
     [Header("Effect")] public SwordAttackEffect attackEffect;
 
+    [Header("Spell")] public float spellPreparationTime; // 就是如果要施放法术，按键至少要摁这么久，否则就是聚集回血
+    public float spellPreparationExpireTime = Single.PositiveInfinity; // 只在地上的时候有用，空中都是秒放的，地上才要判断
     [Header("ReleaseArrow")] public PlayerArrow arrowPrefab;
     public int arrowDamage;
     public float arrowSpeed;
@@ -128,6 +134,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         states[StateType.ReleaseArrow] = new PlayerReleaseArrow(this);
         states[StateType.Roar] = new PlayerRoar(this);
         states[StateType.Drop] = new PlayerDrop(this);
+        states[StateType.Recover] = new PlayerRecover(this);
         TransitionState(StateType.Idle);
     }
 
@@ -146,6 +153,11 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         // Debug.Log($"isOnGround: {isOnGround}");
         // Debug.Log($"isOnLeftWall: {isOnLeftWall}");
         // Debug.Log($"isOnRightWall: {isOnRightWall}");
+    }
+
+    private void LateUpdate()
+    {
+        LateUpdateInputBuffer();
     }
 
     private void TryUpdateDebug()
@@ -198,6 +210,8 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
             dashBufferExpireTime = Time.time + dashBufferTime;
         if (Input.GetKeyDown(attackKey))
             attackBufferExpireTime = Time.time + attackBufferTime;
+        if (Input.GetKeyDown(spellKey))
+            spellPreparationExpireTime = Time.time + spellPreparationTime;
         if (isOnGround)
         {
             wolfJumpBufferExpireTime = Time.time + wolfJumpBufferTime;
@@ -206,6 +220,12 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 
         if (currentState == states[StateType.WallSlide])
             wallWolfJumpBufferExpireTime = Time.time + wallWolfJumpBufferTime;
+    }
+
+    private void LateUpdateInputBuffer()
+    {
+        if (Input.GetKeyUp(spellKey)) // 防止这个更新的比trigger更快，所以放到lateUpdate里了
+            spellPreparationExpireTime = Single.PositiveInfinity;
     }
 
     #region PhysicsCheck
@@ -268,7 +288,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public void TakeDamage(int damage)
     {
         healthPoint -= damage;
-        HealthUI.instance.UpdateUI(healthPoint);
+        HealthUI.instance.UpdateUI();
         spriteRenderer.color = Color.red;
         spriteRenderer.DOColor(Color.white, showHurtEffectTime);
         TransitionState(StateType.Hurt);
@@ -305,7 +325,12 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public bool offWallTrigger => isOnLeftWall && Input.GetKey(rightKey) || isOnRightWall && Input.GetKey(leftKey);
     public bool attackTrigger => Time.time >= attackCoolDownExpireTime && Time.time <= attackBufferExpireTime;
 
-    public bool spellTrigger => Input.GetKeyDown(spellKey) && curExp >= 3; // 因为放波大部分时候是不需要预输入的
+    public bool spellTrigger => curExp >= 3
+                                && (isOnGround && Input.GetKeyUp(spellKey) && Time.time <= spellPreparationExpireTime
+                                    || !isOnGround && Input.GetKeyDown(spellKey));
+
+    public bool recoverTrigger => curExp >= 3
+                                  && isOnGround && Input.GetKey(spellKey) && Time.time > spellPreparationExpireTime;
 
     #endregion
 }
@@ -336,6 +361,8 @@ public class PlayerIdle : IState
             m.TransitionState(StateType.Attack);
         else if (m.spellTrigger)
             m.TransitionState(StateType.Spell);
+        else if (m.recoverTrigger)
+            m.TransitionState(StateType.Recover);
     }
 
     public void OnFixedUpdate()
@@ -377,6 +404,8 @@ public class PlayerRun : IState
             m.TransitionState(StateType.Attack);
         else if (m.spellTrigger)
             m.TransitionState(StateType.Spell);
+        else if (m.recoverTrigger)
+            m.TransitionState(StateType.Recover);
     }
 
     public void OnFixedUpdate()
@@ -1035,5 +1064,59 @@ public class PlayerAttack : IState
         }
 
         return ans;
+    }
+}
+
+public class PlayerRecover : IState
+{
+    private PlayerFSM m;
+    private AnimatorStateInfo info;
+
+    public PlayerRecover(PlayerFSM m)
+    {
+        this.m = m;
+    }
+
+    public void OnEnter()
+    {
+        m.recoverProcessAnim.speed = m.recoverSpeed;
+        m.recoverBurstAnim.speed = m.recoverSpeed;
+        m.recoverProcessAnim.Play("RecoverProcess");
+        m.rigidbody.velocity = Vector2.zero;
+    }
+
+
+    public void OnUpdate()
+    {
+        info = m.recoverProcessAnim.GetCurrentAnimatorStateInfo(0);
+        if (info.IsName("RecoverProcess") && info.normalizedTime <= 0.9f)
+        {
+            if (Input.GetKeyUp(m.spellKey))
+            {
+                m.recoverProcessAnim.Play("Empty");
+                m.TransitionState(StateType.Idle);
+            }
+            return;
+        }
+
+        m.recoverBurstAnim.Play("RecoverBurst");
+        m.curExp -= 3;
+        PlayerExpUI.instance.UpdatePlayerExpUI();
+
+        m.healthPoint = Mathf.Min(m.healthPoint + 1, m.maxHealthPoint);
+        HealthUI.instance.UpdateUI();
+        m.TransitionState(StateType.Idle);
+    }
+
+    public void OnFixedUpdate()
+    {
+    }
+
+    public void OnExit()
+    {
+    }
+
+    public void UpdateTrigger()
+    {
     }
 }

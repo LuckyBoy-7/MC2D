@@ -16,8 +16,9 @@ public class HealthUI : Singleton<HealthUI>
             hearts.Add(Instantiate(heartPrefabs, transform));
     }
 
-    public void UpdateUI(int healthPoint)
+    public void UpdateUI()
     {
+        int healthPoint = PlayerFSM.instance.healthPoint;
         for (int i = 0; i < healthPoint; i++)
             hearts[i].TryFulfill();
         for (int i = healthPoint; i < hearts.Count; i++)

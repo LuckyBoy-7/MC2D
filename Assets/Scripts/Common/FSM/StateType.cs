@@ -21,6 +21,7 @@ public enum StateType
     Spell,
     Drop,
     Roar,
+    Recover,
     // Enemy
     Chase,
     Teleport,
