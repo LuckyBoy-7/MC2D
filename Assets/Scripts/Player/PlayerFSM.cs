@@ -65,7 +65,10 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public float attackBufferTime;
     public float attackBufferExpireTime;
     public int attackDamage;
+    public int expAmountExtractedByAttack = 1;
 
+    [Header("Exp")] public int maxExp = 9;
+    public int curExp = 0;
 
     [Header("Hurt")] public float showHurtEffectTime;
     public Vector2 hurtDirection;
@@ -292,7 +295,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public bool offWallTrigger => isOnLeftWall && Input.GetKey(rightKey) || isOnRightWall && Input.GetKey(leftKey);
     public bool attackTrigger => Time.time >= attackCoolDownExpireTime && Time.time <= attackBufferExpireTime;
 
-    public bool spellTrigger => Input.GetKeyDown(spellKey); // 因为放波大部分时候是不需要预输入的
+    public bool spellTrigger => Input.GetKeyDown(spellKey) && curExp >= 3; // 因为放波大部分时候是不需要预输入的
 
     #endregion
 }
@@ -657,6 +660,9 @@ public class PlayerSpell : IState
 
     public void OnEnter()
     {
+        m.curExp -= 3;
+        PlayerExpUI.instance.UpdatePlayerExpUI();
+
         if (Input.GetKey(m.downKey))
             m.TransitionState(StateType.Drop);
         else if (Input.GetKey(m.upKey))
@@ -983,6 +989,9 @@ public class PlayerAttack : IState
             Collider2D choiceBox = triggeredEnemyBoxes[Random.Range(0, triggeredEnemyBoxes.Count)];
             m.attackEffect.transform.position = choiceBox.bounds.ClosestPoint(currentAttack.transform.position);
             m.attackEffect.Play();
+
+            m.curExp = Mathf.Min(m.curExp + m.expAmountExtractedByAttack, m.maxExp);
+            PlayerExpUI.instance.UpdatePlayerExpUI();
         }
     }
 
