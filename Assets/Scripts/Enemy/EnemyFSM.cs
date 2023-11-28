@@ -30,12 +30,12 @@ public class EnemyFSM : FSM
     {
         healthPoint -= damage;
 
+        DOTween.Kill("MaskFadeOut");  // 因为两次击打时间可能很接近，所以可能还在淡出enemy就已经死了
         if (healthPoint <= 0) // 伤害可能会溢出
             Kill();
         else
         {
             hurtMask.color = hurtMask.color.WithAlpha(1);
-            DOTween.Kill("MaskFadeOut");
             hurtMask.DOFade(0, showHurtEffectTime).SetId("MaskFadeOut");
         }
     }
