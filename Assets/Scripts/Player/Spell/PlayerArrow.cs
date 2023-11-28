@@ -21,7 +21,11 @@ public class PlayerArrow : MonoBehaviour
     public void SetMove(float directX, float speed)
     {
         if (directX < 0)
-            transform.localScale = new Vector3(-1, 1, 1);
+        {
+            var scale=transform.localScale;
+            transform.localScale = new Vector3(-scale.x, scale.y, scale.z);
+        }
+
         rigidbody.velocity = new Vector2(directX * speed, 0);
     }
 

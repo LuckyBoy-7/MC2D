@@ -11,6 +11,7 @@ using Random = UnityEngine.Random;
 public class PlayerFSM : SingletonFSM<PlayerFSM>
 {
     public SpriteRenderer spriteRenderer;
+    [Header("Debug")] public bool isDebug;
     [Header("Health")] public int maxHealthPoint;
     public int healthPoint;
     public BoxCollider2D triggerBox;
@@ -99,6 +100,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     [Header("Roar")] public PlayerRoarPrefab roarPrefab;
     public int roarDamage;
     public float roarDamageTimeGap;
+    public float roarOverTimePercent = 0.8f;
 
     [Header("Key")] public KeyCode leftKey = KeyCode.J;
     public KeyCode rightKey = KeyCode.L;
@@ -135,6 +137,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         UpdateInputBuffer();
         UpdateStates();
         UpdateTriggerBoxOverlap();
+        TryUpdateDebug();
 
         currentState.OnUpdate();
 
@@ -143,6 +146,14 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         // Debug.Log($"isOnGround: {isOnGround}");
         // Debug.Log($"isOnLeftWall: {isOnLeftWall}");
         // Debug.Log($"isOnRightWall: {isOnRightWall}");
+    }
+
+    private void TryUpdateDebug()
+    {
+        if (!isDebug)
+            return;
+        curExp = maxExp;
+        PlayerExpUI.instance.UpdatePlayerExpUI();
     }
 
     private void UpdateTriggerBoxOverlap()
@@ -283,7 +294,6 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 
     public bool wallJumpTrigger => // 就是尝试跳跃后，如果在墙上或不在墙上但是狼跳还在
         Time.time <= jumpBufferExpireTime && Time.time <= wallWolfJumpBufferExpireTime;
-
 
     public bool doubleJumpTrigger => Time.time <= jumpBufferExpireTime && canDoubleJump;
 
@@ -689,6 +699,8 @@ public class PlayerRoar : IState
     private PlayerFSM m;
     private float gravityBackup;
     private PlayerRoarPrefab roarPrefab;
+    private Animator anim;
+    private AnimatorStateInfo info;
 
     public PlayerRoar(PlayerFSM m)
     {
@@ -700,13 +712,15 @@ public class PlayerRoar : IState
         gravityBackup = m.rigidbody.gravityScale;
         m.rigidbody.gravityScale = 0;
         m.rigidbody.velocity = Vector2.zero;
-        roarPrefab = PlayerFSM.Instantiate(m.roarPrefab, PlayerFSM.instance.transform);
-        roarPrefab.transform.localPosition += Vector3.up * 0.5f;
+        roarPrefab = PlayerFSM.Instantiate(m.roarPrefab, PlayerFSM.instance.transform.position, Quaternion.identity);
+        roarPrefab.transform.position += Vector3.up * 0.5f;
+        anim = roarPrefab.GetComponent<Animator>();
     }
 
     public void OnUpdate()
     {
-        if (roarPrefab != null) // 还没结束
+        info = anim.GetCurrentAnimatorStateInfo(0);
+        if (info.IsName("Roar") && info.normalizedTime <= m.roarOverTimePercent) // 因为提早出来了，所以也没有null的风险
             return;
         if (m.isOnGround)
             m.TransitionState(m.moveTrigger ? StateType.Run : StateType.Idle);
@@ -979,17 +993,25 @@ public class PlayerAttack : IState
         if (isEnemyAttacked)
         {
             hasCausedDamage = true;
-            m.rigidbody.velocity = -attackDirection[currentAttack] * m.attackForce;
+            if (currentAttack == m.attackRight)
+                m.rigidbody.velocity = new Vector2(-attackDirection[currentAttack].x * m.attackForce,
+                    m.rigidbody.velocity.y);
+            else
+                m.rigidbody.velocity =
+                    -attackDirection[currentAttack] * m.attackForce;
+            // 更新属性
             if (currentAttack == m.attackDown) // 只有下劈才刷新
             {
                 m.canDoubleJump = true;
                 m.canDash = true;
             }
 
+            // 播放特效
             Collider2D choiceBox = triggeredEnemyBoxes[Random.Range(0, triggeredEnemyBoxes.Count)];
             m.attackEffect.transform.position = choiceBox.bounds.ClosestPoint(currentAttack.transform.position);
             m.attackEffect.Play();
 
+            // 更新exp
             m.curExp = Mathf.Min(m.curExp + m.expAmountExtractedByAttack, m.maxExp);
             PlayerExpUI.instance.UpdatePlayerExpUI();
         }
