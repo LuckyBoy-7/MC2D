@@ -985,6 +985,7 @@ public class PlayerAttack : IState
     private Animator currentAttack;
     private bool hasCausedDamage;
     private bool hasAttackSpike;
+    private bool hasLootEmeraldPile; 
 
     public PlayerAttack(PlayerFSM m)
     {
@@ -1063,6 +1064,7 @@ public class PlayerAttack : IState
         m.attackCoolDownExpireTime = Time.time + m.attackCoolDown;
         hasCausedDamage = false;
         hasAttackSpike = false;
+        hasLootEmeraldPile = false;
     }
 
     public void UpdateTrigger()
@@ -1073,7 +1075,18 @@ public class PlayerAttack : IState
         {
             UpdateAttackEnemyTrigger(other);
             UpdateAttackSpikeTrigger(other);
+            UpdateAttackEmeraldPileTrigger(other);
         }
+    }
+
+    private void UpdateAttackEmeraldPileTrigger(Collider2D other)
+    {
+        if (hasLootEmeraldPile || !other.CompareTag("EmeraldPile"))
+            return;
+        other.GetComponent<EmeraldPile>().Looted();
+        Pushed();
+        hasLootEmeraldPile = true;
+        PlayerFSM.instance.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
     }
 
     private void UpdateAttackSpikeTrigger(Collider2D other)
