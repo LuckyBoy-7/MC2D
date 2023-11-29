@@ -354,8 +354,8 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     #region StateTransitionTrigger
 
     public bool wallSlideTrigger =>
-        (isOnLeftWall && Input.GetKey(leftKey) && rigidbody.velocity.x <= 1e-5 // 不然蹬墙跳一出去就就又变成wallSlide状态了
-         || isOnRightWall && Input.GetKey(rightKey) && rigidbody.velocity.x >= -1e-5);
+        (isOnLeftWall && Input.GetKey(leftKey) && rigidbody.velocity.x <= 1e-3 // 不然蹬墙跳一出去就就又变成wallSlide状态了
+         || isOnRightWall && Input.GetKey(rightKey) && rigidbody.velocity.x >= -1e-3);
 
     public bool jumpTrigger => // 就是尝试跳跃后，如果在地上或不在地上但是狼跳还在
         Time.time <= jumpBufferExpireTime && (isOnGround || Time.time <= wolfJumpBufferExpireTime);
@@ -960,6 +960,8 @@ public class PlayerDoubleJump : IState
             m.TransitionState(StateType.Attack);
         else if (m.spellTrigger)
             m.TransitionState(StateType.Spell);
+        else if (m.wallSlideTrigger)
+            m.TransitionState(StateType.WallSlide);
     }
 
     public void OnFixedUpdate()
