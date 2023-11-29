@@ -999,17 +999,20 @@ public class PlayerAttack : IState
         attackDirection[m.attackRight] = new Vector2(1, 0) * m.facingDirection.x;
         UpdateTrigger();
 
-        // The integer part is the number of time a state has been looped. The fractional part is the % (0-1) of progress in the current loop.
-        // 整数部分是循环次数，小数部分是运行进度, 主要是为了防止攻击的时候转向
-        if (info.IsName("PlayerAttack") && info.normalizedTime - (int)info.normalizedTime < 0.8f)
-            return;
-        m.UpdateFacingDirection();
         if (m.isOnGround)
             m.TransitionState(m.moveTrigger ? StateType.Run : StateType.Idle);
         else if (m.fallTrigger)
             m.TransitionState(StateType.Fall);
         else if (m.dashTrigger)
             m.TransitionState(StateType.Dash);
+        else if (m.doubleJumpTrigger)
+            m.TransitionState(StateType.DoubleJump);
+        
+        // The integer part is the number of time a state has been looped. The fractional part is the % (0-1) of progress in the current loop.
+        // 整数部分是循环次数，小数部分是运行进度, 主要是为了防止攻击的时候转向
+        if (info.IsName("PlayerAttack") && info.normalizedTime - (int)info.normalizedTime < 0.95f)
+            return;
+        m.UpdateFacingDirection();
     }
 
     public void OnFixedUpdate()
@@ -1093,13 +1096,15 @@ public class PlayerAttack : IState
                 m.rigidbody.velocity.y);
         else if (currentAttack == m.attackUp)
         {
-            m.rigidbody.velocity =
-                -attackDirection[currentAttack] * m.attackForce;
+            m.rigidbody.velocity = new Vector2(m.rigidbody.velocity.x,
+                -attackDirection[currentAttack].y * m.attackForce);
         }
         else
         {
-            m.rigidbody.velocity =
-                -attackDirection[currentAttack] * (m.attackForce * m.attackDownForceMultiplier);
+            m.rigidbody.velocity = new Vector2(m.rigidbody.velocity.x,
+                -attackDirection[currentAttack].y * (m.attackForce * m.attackDownForceMultiplier));
+            m.dashCoolDownExpireTime = -1;  // 下劈立即刷新dash
+
         }
     }
 }

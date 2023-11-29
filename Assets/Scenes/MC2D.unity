@@ -8264,7 +8264,7 @@ MonoBehaviour:
   attackCoolDown: 0.25
   attackCoolDownExpireTime: -1
   attackForce: 25
-  attackDownForceMultiplier: 0.9
+  attackDownForceMultiplier: 0.85
   attackMoveChangeSpeed: 6
   attackBufferTime: 0.15
   attackBufferExpireTime: -1
