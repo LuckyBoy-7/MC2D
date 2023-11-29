@@ -19,6 +19,7 @@ public class ZombieFSM : EnemyFSM
     [Header("Chase")] public float chaseSpeed;
     public float xDeltaBehindPlayer;
     [Header("Question")] public float questionTime;
+    
 
     void Start()
     {

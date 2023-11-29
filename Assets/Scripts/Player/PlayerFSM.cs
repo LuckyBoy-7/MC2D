@@ -12,6 +12,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 {
     public SpriteRenderer spriteRenderer;
     [Header("Debug")] public bool isDebug;
+    [Header("Currency")] public int curEmeraldNumber;
     [Header("Health")] public int maxHealthPoint;
     public int healthPoint;
     public BoxCollider2D triggerBox;
@@ -170,21 +171,36 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 
     private void UpdateTriggerBoxOverlap()
     {
-        if (isInvincible)
-            return;
-        // 这里是triggerBox的碰撞伤害的检测
         List<Collider2D> res = new();
         triggerBox.OverlapCollider(new ContactFilter2D { useTriggers = true }, res);
-        foreach (var collider in res)
         {
-            if (!collider.CompareTag("Enemy"))
-                continue;
+            foreach (Collider2D other in res)
+            {
+                UpdateCollisionHurt(other);
+                UpdateEmeraldSuck(other);
+            }
+        }
+    }
+
+    private void UpdateEmeraldSuck(Collider2D other)
+    {
+        if (other.CompareTag("Emerald"))
+        {
+            curEmeraldNumber += 1;
+            EmeraldUI.instance.UpdatePlayerEmeraldUI();
+            Destroy(other.gameObject);
+        }
+    }
+
+    private void UpdateCollisionHurt(Collider2D other)
+    {
+        if (other.CompareTag("Enemy") && !isInvincible)
+        {
             TakeDamage(1);
-            hurtDirection = collider.transform.position.x > transform.position.x
+            hurtDirection = other.transform.position.x > transform.position.x
                 ? new Vector2(-hurtDirectionXMultiplier, 1)
                 : new Vector2(hurtDirectionXMultiplier, 1);
             TransitionState(StateType.Hurt);
-            return;
         }
     }
 
@@ -1096,6 +1112,7 @@ public class PlayerRecover : IState
                 m.recoverProcessAnim.Play("Empty");
                 m.TransitionState(StateType.Idle);
             }
+
             return;
         }
 

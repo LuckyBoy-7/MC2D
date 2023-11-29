@@ -7,7 +7,11 @@ using UnityEngine.Serialization;
 
 public class EnemyFSM : FSM
 {
+    public bool canBeLooted = true;
     public bool canBeKnockedBack = true;
+    [Header("Currency")] public EmeraldEmitter emeraldEmitterPrefab;
+    public int ownEmeraldNumber;
+
     [Header("Health")] public int maxHealthPoint = 5;
     public int healthPoint = 5;
     public SpriteRenderer hurtMask;
@@ -26,11 +30,12 @@ public class EnemyFSM : FSM
     public float roarHurtElapse;
     public float dropHurtElapse;
 
+
     public void TakeDamage(int damage)
     {
         healthPoint -= damage;
 
-        DOTween.Kill("MaskFadeOut");  // 因为两次击打时间可能很接近，所以可能还在淡出enemy就已经死了
+        DOTween.Kill("MaskFadeOut"); // 因为两次击打时间可能很接近，所以可能还在淡出enemy就已经死了
         if (healthPoint <= 0) // 伤害可能会溢出
             Kill();
         else
@@ -49,7 +54,12 @@ public class EnemyFSM : FSM
             rigidbody.velocity = attackForceVec;
     }
 
-    private void Kill() => Destroy(gameObject);
+    private void Kill()
+    {
+        if (canBeLooted)
+            Instantiate(emeraldEmitterPrefab, transform.position, Quaternion.identity).num = ownEmeraldNumber;
+        Destroy(gameObject);
+    }
 
 
     #region PhysicsCheck
