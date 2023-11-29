@@ -9,6 +9,7 @@ TagManager:
   - PlayerDrop
   - Emerald
   - Spike
+  - Bound
   layers:
   - Default
   - TransparentFX

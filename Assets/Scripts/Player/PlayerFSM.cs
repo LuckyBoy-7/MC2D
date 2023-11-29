@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Cinemachine;
 using DG.Tweening;
 using Unity.VisualScripting;
 using UnityEditor.Rendering;
@@ -16,6 +17,9 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     [Header("Health")] public int maxHealthPoint;
     public int healthPoint;
     public BoxCollider2D triggerBox;
+
+    [Header("CameraConfiner")] public CinemachineConfiner2D cinemachineConfiner2D;
+
 
     [Header("Movement")] public Rigidbody2D rigidbody;
 
@@ -168,6 +172,9 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
             return;
         curExp = maxExp;
         PlayerExpUI.instance.UpdatePlayerExpUI();
+        canDoubleJump = true;
+        canDash = true;
+        // attackDamage = 10;
     }
 
     private void UpdateTriggerBoxOverlap()
@@ -179,8 +186,17 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
             {
                 UpdateCollisionHurt(other);
                 UpdateEmeraldSuck(other);
+                UpdateBoundSwitch(other);
             }
         }
+    }
+
+    private void UpdateBoundSwitch(Collider2D other)
+    {
+        if (!other.CompareTag("Bound"))
+            return;
+        if (other.OverlapPoint(transform.position))
+            cinemachineConfiner2D.m_BoundingShape2D = other;
     }
 
     private void UpdateEmeraldSuck(Collider2D other)
@@ -1007,7 +1023,7 @@ public class PlayerAttack : IState
             m.TransitionState(StateType.Dash);
         else if (m.doubleJumpTrigger)
             m.TransitionState(StateType.DoubleJump);
-        
+
         // The integer part is the number of time a state has been looped. The fractional part is the % (0-1) of progress in the current loop.
         // 整数部分是循环次数，小数部分是运行进度, 主要是为了防止攻击的时候转向
         if (info.IsName("PlayerAttack") && info.normalizedTime - (int)info.normalizedTime < 0.95f)
@@ -1103,8 +1119,7 @@ public class PlayerAttack : IState
         {
             m.rigidbody.velocity = new Vector2(m.rigidbody.velocity.x,
                 -attackDirection[currentAttack].y * (m.attackForce * m.attackDownForceMultiplier));
-            m.dashCoolDownExpireTime = -1;  // 下劈立即刷新dash
-
+            m.dashCoolDownExpireTime = -1; // 下劈立即刷新dash，怪不得下劈完冲不出去，我还以为是动画播的太慢了
         }
     }
 }
