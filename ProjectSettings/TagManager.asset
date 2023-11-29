@@ -10,6 +10,7 @@ TagManager:
   - Emerald
   - Spike
   - Bound
+  - HiddenChannel
   layers:
   - Default
   - TransparentFX

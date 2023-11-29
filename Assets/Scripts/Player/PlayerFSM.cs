@@ -3,10 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Cinemachine;
 using DG.Tweening;
-using Unity.VisualScripting;
-using UnityEditor.Rendering;
 using UnityEngine;
-using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
 
 public class PlayerFSM : SingletonFSM<PlayerFSM>
@@ -16,10 +13,8 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     [Header("Currency")] public int curEmeraldNumber;
     [Header("Health")] public int maxHealthPoint;
     public int healthPoint;
-    public BoxCollider2D triggerBox;
 
     [Header("CameraConfiner")] public CinemachineConfiner2D cinemachineConfiner2D;
-
 
     [Header("Movement")] public Rigidbody2D rigidbody;
 
@@ -149,7 +144,6 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         UpdateKeyDownDirection();
         UpdateInputBuffer();
         UpdateStates();
-        UpdateTriggerBoxOverlap();
         TryUpdateDebug();
 
         currentState.OnUpdate();
@@ -177,19 +171,38 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         // attackDamage = 10;
     }
 
-    private void UpdateTriggerBoxOverlap()
+    public void UpdateTriggerEnter2D(Collider2D other)
     {
-        List<Collider2D> res = new();
-        triggerBox.OverlapCollider(new ContactFilter2D { useTriggers = true }, res);
-        {
-            foreach (Collider2D other in res)
-            {
-                UpdateCollisionHurt(other);
-                UpdateEmeraldSuck(other);
-                UpdateBoundSwitch(other);
-            }
-        }
+        UpdateCollisionHurt(other);
+        UpdateEmeraldSuck(other);
+        UpdateHiddenChannelShowUp(other);
     }
+    
+    public void UpdateTriggerExit2D(Collider2D other)
+    {
+        UpdateHiddenChannelHide(other);
+    }
+    
+    public void UpdateTriggerStay2D(Collider2D other)
+    {
+        UpdateBoundSwitch(other);
+    }
+
+    private void UpdateHiddenChannelShowUp(Collider2D other)
+    {
+        if (!other.CompareTag("HiddenChannel"))
+            return;
+        HiddenChannel.instance.FadeTo(0);
+    }
+    
+    private void UpdateHiddenChannelHide(Collider2D other)
+    {
+        if (!other.CompareTag("HiddenChannel"))
+            return;
+        HiddenChannel.instance.FadeTo(1);
+    }
+
+
 
     private void UpdateBoundSwitch(Collider2D other)
     {
