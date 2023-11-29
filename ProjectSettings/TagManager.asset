@@ -8,6 +8,7 @@ TagManager:
   - PlayerRoar
   - PlayerDrop
   - Emerald
+  - Spike
   layers:
   - Default
   - TransparentFX

@@ -19,9 +19,8 @@ public class SwordAttackEffect : MonoBehaviour
     public SpriteRenderer spriteRenderer1, spriteRenderer2;
     private int idx1, idx2, i1, i2; // idx指向对应动画片段，i指向对应帧
 
-    public void Play()
+    public void Start()
     {
-        i1 = i2 = 0;
         idx1 = Random.Range(0, clips1.Count);
         idx2 = Random.Range(0, clips2.Count);
         StopAllCoroutines();
@@ -38,9 +37,9 @@ public class SwordAttackEffect : MonoBehaviour
             if (i2 < clips2[idx2].sprites.Count)
                 spriteRenderer2.sprite = clips2[idx2].sprites[i2++];
             if (i1 >= clips1[idx1].sprites.Count && i2 >= clips2[idx2].sprites.Count)
-                yield break;
+                break;
             yield return new WaitForSeconds(eachFrameTime);
         }
-        
+        Destroy(gameObject);
     }
 }

@@ -161,5 +161,10 @@ public class EnemyFSM : FSM
                 TakeDamage(player.dropDamage);
             }
         }
+        
+        else if (other.CompareTag("Spike"))
+        {
+            Attacked(1000000);
+        }
     }
 }

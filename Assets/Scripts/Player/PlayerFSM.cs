@@ -63,6 +63,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public float attackCoolDown;
     public float attackCoolDownExpireTime;
     public float attackForce;
+    public float attackDownForceMultiplier;
     public float attackMoveChangeSpeed;
     public float attackBufferTime;
     public float attackBufferExpireTime;
@@ -194,7 +195,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 
     private void UpdateCollisionHurt(Collider2D other)
     {
-        if (other.CompareTag("Enemy") && !isInvincible)
+        if (!isInvincible && (other.CompareTag("Enemy") || other.CompareTag("Spike")))
         {
             TakeDamage(1);
             hurtDirection = other.transform.position.x > transform.position.x
@@ -318,6 +319,8 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     }
 
     public bool isInvincible => Time.time <= invincibleExpireTime;
+
+    public void PlayAttackEffect(Vector3 position) => Instantiate(attackEffect, position, Quaternion.identity);
 
     #region StateTransitionTrigger
 
@@ -597,6 +600,8 @@ public class PlayerWallSlide : IState
             m.TransitionState(StateType.Dash);
         else if (m.spellTrigger)
             m.TransitionState(StateType.Spell);
+        else if (m.attackTrigger)
+            m.TransitionState(StateType.Attack);
     }
 
     public void OnFixedUpdate()
@@ -950,6 +955,7 @@ public class PlayerAttack : IState
     private Dictionary<Animator, PolygonCollider2D> attackCollider;
     private Animator currentAttack;
     private bool hasCausedDamage;
+    private bool hasAttackSpike;
 
     public PlayerAttack(PlayerFSM m)
     {
@@ -995,7 +1001,7 @@ public class PlayerAttack : IState
 
         // The integer part is the number of time a state has been looped. The fractional part is the % (0-1) of progress in the current loop.
         // 整数部分是循环次数，小数部分是运行进度, 主要是为了防止攻击的时候转向
-        if (info.IsName("PlayerAttack") && info.normalizedTime - (int)info.normalizedTime < 0.95f)
+        if (info.IsName("PlayerAttack") && info.normalizedTime - (int)info.normalizedTime < 0.8f)
             return;
         m.UpdateFacingDirection();
         if (m.isOnGround)
@@ -1024,62 +1030,77 @@ public class PlayerAttack : IState
     {
         m.attackCoolDownExpireTime = Time.time + m.attackCoolDown;
         hasCausedDamage = false;
+        hasAttackSpike = false;
     }
 
     public void UpdateTrigger()
     {
-        if (hasCausedDamage)
-            return;
-        List<Collider2D> triggeredEnemyBoxes = GetTriggeredEnemyBox();
-        foreach (var collider in triggeredEnemyBoxes)
-            collider.GetComponent<EnemyFSM>().Attacked(m.attackDamage, attackDirection[currentAttack] * m.attackForce);
-
-        bool isEnemyAttacked = triggeredEnemyBoxes.Count > 0; // 击打多个敌人时，只受到一个单位的后坐力
-        if (isEnemyAttacked)
+        List<Collider2D> colliders = new();
+        Physics2D.OverlapCollider(attackCollider[currentAttack], new ContactFilter2D { useTriggers = true }, colliders);
+        foreach (var other in colliders)
         {
-            hasCausedDamage = true;
-            if (currentAttack == m.attackRight)
-                m.rigidbody.velocity = new Vector2(-attackDirection[currentAttack].x * m.attackForce,
-                    m.rigidbody.velocity.y);
-            else
-                m.rigidbody.velocity =
-                    -attackDirection[currentAttack] * m.attackForce;
-            // 更新属性
-            if (currentAttack == m.attackDown) // 只有下劈才刷新
-            {
-                m.canDoubleJump = true;
-                m.canDash = true;
-            }
-
-            // 播放特效
-            Collider2D choiceBox = triggeredEnemyBoxes[Random.Range(0, triggeredEnemyBoxes.Count)];
-            m.attackEffect.transform.position = choiceBox.bounds.ClosestPoint(currentAttack.transform.position);
-            m.attackEffect.Play();
-
-            // 更新exp
-            m.curExp = Mathf.Min(m.curExp + m.expAmountExtractedByAttack, m.maxExp);
-            PlayerExpUI.instance.UpdatePlayerExpUI();
+            UpdateAttackEnemyTrigger(other);
+            UpdateAttackSpikeTrigger(other);
         }
     }
 
-    /// <summary>
-    /// 获得所有跟剑碰撞的trigger的，tag为enemy的box。
-    /// </summary>
-    /// <returns></returns>
-    private List<Collider2D> GetTriggeredEnemyBox()
+    private void UpdateAttackSpikeTrigger(Collider2D other)
     {
-        // 可能是因为yield return什么数据类型都有，所以有装箱和拆箱的过程
-        List<Collider2D> ans = new();
-        List<Collider2D> res = new();
-        Physics2D.OverlapCollider(attackCollider[currentAttack], new ContactFilter2D { useTriggers = true }, res);
-        foreach (var collider in res)
+        if (hasAttackSpike || !other.CompareTag("Spike"))
+            return;
+
+        hasAttackSpike = true;
+        Pushed();
+        // 更新属性
+        if (currentAttack == m.attackDown) // 只有下劈才刷新
         {
-            if (!collider.CompareTag("Enemy") || !collider.isTrigger)
-                continue;
-            ans.Add(collider);
+            m.canDoubleJump = true;
+            m.canDash = true;
         }
 
-        return ans;
+        // 播放特效
+        PlayerFSM.instance.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
+    }
+
+    private void UpdateAttackEnemyTrigger(Collider2D other)
+    {
+        if (hasCausedDamage || !other.CompareTag("Enemy"))
+            return;
+        hasCausedDamage = true;
+
+        Pushed();
+        // 更新属性
+        if (currentAttack == m.attackDown) // 只有下劈才刷新
+        {
+            m.canDoubleJump = true;
+            m.canDash = true;
+        }
+
+        // 播放特效
+        m.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
+
+        // 更新exp
+        m.curExp = Mathf.Min(m.curExp + m.expAmountExtractedByAttack, m.maxExp);
+        PlayerExpUI.instance.UpdatePlayerExpUI();
+        // 放最后，万一enemy死了，前面就拿不到数据了
+        other.GetComponent<EnemyFSM>().Attacked(m.attackDamage, attackDirection[currentAttack] * m.attackForce);
+    }
+
+    private void Pushed()
+    {
+        if (currentAttack == m.attackRight)
+            m.rigidbody.velocity = new Vector2(-attackDirection[currentAttack].x * m.attackForce,
+                m.rigidbody.velocity.y);
+        else if (currentAttack == m.attackUp)
+        {
+            m.rigidbody.velocity =
+                -attackDirection[currentAttack] * m.attackForce;
+        }
+        else
+        {
+            m.rigidbody.velocity =
+                -attackDirection[currentAttack] * (m.attackForce * m.attackDownForceMultiplier);
+        }
     }
 }
 
