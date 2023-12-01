@@ -27,5 +27,6 @@ public enum StateType
     Teleport,
     Alert,
     Question,
-    Patrol
+    Patrol,
+    Move
 }

@@ -82,7 +82,7 @@ public class EnemyFSM : FSM
                 TakeDamage(player.dropDamage);
             }
         }
-        
+
         else if (other.CompareTag("Spike"))
         {
             Attacked(1000000);
@@ -99,12 +99,20 @@ public class GroundEnemyFSM : EnemyFSM
 
     #region PhysicsCheck
 
+    
+
     private bool isOverLeftCliff
     {
         get
         {
-            Vector3 bottomCenter = transform.position + Vector3.down * 0.5f;
-            Vector3 bottomLeft = bottomCenter - Vector3.right * 0.5f;
+            var box = hitBoxCollider;
+            var position = (Vector3)box.offset + transform.position;
+            var (width, height) = (box.bounds.max.x - box.bounds.min.x, box.bounds.max.y - box.bounds.min.y);
+            var (w, h) = (width / 2, height / 2);
+
+
+            Vector3 bottomCenter = position + Vector3.down * h;
+            Vector3 bottomLeft = bottomCenter - Vector3.right * w;
 
 
             bool overLeftCliff = !Physics2D.Linecast(bottomLeft,
@@ -118,8 +126,12 @@ public class GroundEnemyFSM : EnemyFSM
     {
         get
         {
-            Vector3 bottomCenter = transform.position + Vector3.down * 0.5f;
-            Vector3 bottomRight = bottomCenter + Vector3.right * 0.5f;
+            var box = hitBoxCollider;
+            var position = (Vector3)box.offset + transform.position;
+            var (width, height) = (box.bounds.max.x - box.bounds.min.x, box.bounds.max.y - box.bounds.min.y);
+            var (w, h) = (width / 2, height / 2);
+            Vector3 bottomCenter = position + Vector3.down * h;
+            Vector3 bottomRight = bottomCenter + Vector3.right * w;
 
 
             bool overRightCliff = !Physics2D.Linecast(bottomRight,
@@ -136,8 +148,12 @@ public class GroundEnemyFSM : EnemyFSM
     {
         get
         {
-            Vector3 bottomCenter = transform.position + Vector3.down * 0.5f;
-            Vector3 bottomLeft = bottomCenter - Vector3.right * 0.5f;
+            var box = hitBoxCollider;
+            var position = (Vector3)box.offset + transform.position;
+            var (width, height) = (box.bounds.max.x - box.bounds.min.x, box.bounds.max.y - box.bounds.min.y);
+            var (w, h) = (width / 2, height / 2);
+            Vector3 bottomCenter = position + Vector3.down * h;
+            Vector3 bottomLeft = bottomCenter - Vector3.right * w;
 
 
             bool overLeftGround = Physics2D.Raycast(bottomLeft, Vector2.down, 6, groundLayer);
@@ -149,8 +165,12 @@ public class GroundEnemyFSM : EnemyFSM
     {
         get
         {
-            Vector3 bottomCenter = transform.position + Vector3.down * 0.5f;
-            Vector3 bottomRight = bottomCenter + Vector3.right * 0.5f;
+            var box = hitBoxCollider;
+            var position = (Vector3)box.offset + transform.position;
+            var (width, height) = (box.bounds.max.x - box.bounds.min.x, box.bounds.max.y - box.bounds.min.y);
+            var (w, h) = (width / 2, height / 2);
+            Vector3 bottomCenter = position + Vector3.down * h;
+            Vector3 bottomRight = bottomCenter + Vector3.right * w;
 
 
             bool overRightGround = Physics2D.Raycast(bottomRight, Vector2.down, 6, groundLayer);
@@ -160,17 +180,34 @@ public class GroundEnemyFSM : EnemyFSM
 
     public bool isOverGroundAboveCliff => isOverLeftCliff && isOverLeftGround || isOverRightCliff && isOverRightGround;
 
-    private bool isOnLeftWall =>
-        Physics2D.OverlapBox(transform.position + Vector3.left * (0.5f + boxLeftRightCastDist / 2),
-            new Vector2(boxLeftRightCastDist, 0.95f), 0, groundLayer);
+    private bool isOnLeftWall
+    {
+        get
+        {
+            var box = hitBoxCollider;
+            var position = (Vector3)box.offset + transform.position;
+            var (width, height) = (box.bounds.max.x - box.bounds.min.x, box.bounds.max.y - box.bounds.min.y);
+            var (w, h) = (width / 2, height / 2);
+            return Physics2D.OverlapBox(position + Vector3.left * (w + boxLeftRightCastDist / 2),
+                new Vector2(boxLeftRightCastDist, height * 0.95f), 0, groundLayer);
+        }
+    }
 
-    private bool isOnRightWall =>
-        Physics2D.OverlapBox(transform.position + Vector3.right * (0.5f + boxLeftRightCastDist / 2),
-            new Vector2(boxLeftRightCastDist, 0.95f), 0, groundLayer);
+
+    private bool isOnRightWall
+    {
+        get
+        {
+            var box = hitBoxCollider;
+            var position = (Vector3)box.offset + transform.position;
+            var (width, height) = (box.bounds.max.x - box.bounds.min.x, box.bounds.max.y - box.bounds.min.y);
+            var (w, h) = (width / 2, height / 2);
+            return Physics2D.OverlapBox(position + Vector3.right * (w + boxLeftRightCastDist / 2),
+                new Vector2(boxLeftRightCastDist, height * 0.95f), 0, groundLayer);
+        }
+    }
 
     public bool isHittingWall => isOnLeftWall && facingDirection == -1 || isOnRightWall && facingDirection == 1;
 
     #endregion
-
-
 }

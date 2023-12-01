@@ -23,8 +23,6 @@ public class ZombieFSM : GroundEnemyFSM
 
     void Start()
     {
-        // p = (ZombieParameter)base.p;
-
         healthPoint = maxHealthPoint;
         // Patrol, Alert, Chase, Question
         states[StateType.Patrol] = new ZombiePatrol(this);
@@ -75,9 +73,6 @@ public class ZombieFSM : GroundEnemyFSM
         Gizmos.color = Color.green;
         // Cliff Raycast check
         var position = transform.position;
-        var scale = transform.localScale;
-        var box = hitBoxCollider;
-        var (width, height) = (box.bounds.max.x - box.bounds.min.x, box.bounds.max.y - box.bounds.min.y);
         Vector3 bottomCenter = position + Vector3.down * 0.5f;
         Vector3 bottomLeft = bottomCenter - Vector3.right * 0.5f;
         Vector3 bottomRight = bottomCenter + Vector3.right * 0.5f;
