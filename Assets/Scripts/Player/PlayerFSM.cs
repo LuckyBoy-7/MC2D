@@ -177,15 +177,16 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         UpdateEmeraldSuck(other);
     }
 
+    public void UpdateTriggerStay2D(Collider2D other)
+    {
+        UpdateCollisionHurt(other);
+        UpdateBoundSwitch(other);
+        UpdateHiddenChannelShowUp(other);
+    }
+
     public void UpdateTriggerExit2D(Collider2D other)
     {
         UpdateHiddenChannelHide(other);
-    }
-
-    public void UpdateTriggerStay2D(Collider2D other)
-    {
-        UpdateBoundSwitch(other);
-        UpdateHiddenChannelShowUp(other);
     }
 
     private void UpdateHiddenChannelShowUp(Collider2D other)
@@ -223,7 +224,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 
     private void UpdateCollisionHurt(Collider2D other)
     {
-        bool damageable = other.CompareTag("Enemy") 
+        bool damageable = other.CompareTag("Enemy")
                           || other.CompareTag("Spike");
         if (!damageable)
             return;
@@ -240,6 +241,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         TakeDamage(damage);
         TransitionState(StateType.Hurt);
     }
+
     private void FixedUpdate()
     {
         currentState.OnFixedUpdate();

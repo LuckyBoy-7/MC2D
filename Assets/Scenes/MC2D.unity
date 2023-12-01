@@ -94915,7 +94915,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spriteRenderer: {fileID: 1383788130}
-  isDebug: 1
+  isDebug: 0
   curEmeraldNumber: 0
   maxHealthPoint: 20
   healthPoint: 20
