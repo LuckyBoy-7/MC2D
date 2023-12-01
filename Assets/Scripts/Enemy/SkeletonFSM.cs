@@ -16,9 +16,9 @@ public class SkeletonFSM : GroundEnemyFSM
     public SkeletonArrow arrowPrefab;
     public float shootReachTime;
 
-    void Start()
+    protected override void Start()
     {
-        healthPoint = maxHealthPoint;
+        base.Start();
         states[StateType.Wait] = new SkeletonWait(this);
         states[StateType.Attack] = new SkeletonAttack(this);
         TransitionState(StateType.Wait);

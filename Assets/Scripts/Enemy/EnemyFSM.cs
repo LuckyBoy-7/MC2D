@@ -27,6 +27,11 @@ public class EnemyFSM : FSM
     public float dropHurtElapse;
 
 
+    protected virtual void Start()
+    {
+        healthPoint = maxHealthPoint;
+    }
+
     public void TakeDamage(int damage)
     {
         healthPoint -= damage;
@@ -210,4 +215,10 @@ public class GroundEnemyFSM : EnemyFSM
     public bool isHittingWall => isOnLeftWall && facingDirection == -1 || isOnRightWall && facingDirection == 1;
 
     #endregion
+}
+
+public class FlyEnemyFSM : EnemyFSM
+{
+    [Header("PhysicsCheck")] 
+    public BoxCollider2D hitBoxCollider;
 }

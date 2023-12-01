@@ -13,8 +13,9 @@ public class SilvefishFSM : GroundEnemyFSM
     public float turnStateCheckDelay;
     // public List<Vector2> dirLst = new (){ Vector2.right ,Vector2.down,Vector2.left,Vector2.up};
 
-    void Start()
+    protected override void Start()
     {
+        base.Start();
         healthPoint = maxHealthPoint;
         states[StateType.Move] = new SilverfishMove(this);
         TransitionState(StateType.Move);

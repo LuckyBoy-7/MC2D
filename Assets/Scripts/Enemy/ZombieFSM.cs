@@ -21,9 +21,9 @@ public class ZombieFSM : GroundEnemyFSM
     [Header("Question")] public float questionTime;
 
 
-    void Start()
+    protected override void Start()
     {
-        healthPoint = maxHealthPoint;
+        base.Start();
         // Patrol, Alert, Chase, Question
         states[StateType.Patrol] = new ZombiePatrol(this);
         states[StateType.Alert] = new ZombieAlert(this);
