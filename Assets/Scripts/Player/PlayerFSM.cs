@@ -87,7 +87,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 
     [Header("Spell")] public float spellPreparationTime; // 就是如果要施放法术，按键至少要摁这么久，否则就是聚集回血
     public float spellPreparationExpireTime = Single.PositiveInfinity; // 只在地上的时候有用，空中都是秒放的，地上才要判断
-    [Header("ReleaseArrow")] public PlayerArrow arrowPrefab;
+    [Header("ReleaseArrow")] public PlayerArrowPrefab arrowPrefab;
     public int arrowDamage;
     public float arrowSpeed;
     public float spellArrowKnockBackForce;
@@ -167,6 +167,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         PlayerExpUI.instance.UpdatePlayerExpUI();
         canDoubleJump = true;
         canDash = true;
+        invincibleExpireTime = Time.time + invincibleTime;
         // attackDamage = 10;
     }
 
@@ -175,12 +176,12 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         UpdateCollisionHurt(other);
         UpdateEmeraldSuck(other);
     }
-    
+
     public void UpdateTriggerExit2D(Collider2D other)
     {
         UpdateHiddenChannelHide(other);
     }
-    
+
     public void UpdateTriggerStay2D(Collider2D other)
     {
         UpdateBoundSwitch(other);
@@ -193,14 +194,13 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
             return;
         HiddenChannel.instance.FadeTo(0);
     }
-    
+
     private void UpdateHiddenChannelHide(Collider2D other)
     {
         if (!other.CompareTag("HiddenChannel"))
             return;
         HiddenChannel.instance.FadeTo(1);
     }
-
 
 
     private void UpdateBoundSwitch(Collider2D other)
@@ -223,16 +223,23 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 
     private void UpdateCollisionHurt(Collider2D other)
     {
-        if (!isInvincible && (other.CompareTag("Enemy") || other.CompareTag("Spike")))
-        {
-            TakeDamage(1);
-            hurtDirection = other.transform.position.x > transform.position.x
-                ? new Vector2(-hurtDirectionXMultiplier, 1)
-                : new Vector2(hurtDirectionXMultiplier, 1);
-            TransitionState(StateType.Hurt);
-        }
+        bool damageable = other.CompareTag("Enemy") 
+                          || other.CompareTag("Spike");
+        if (!damageable)
+            return;
+        TryTakeDamage(1, other.transform.position);
     }
 
+    public void TryTakeDamage(int damage, Vector2 from)
+    {
+        if (isInvincible)
+            return;
+        hurtDirection = from.x > transform.position.x
+            ? new Vector2(-hurtDirectionXMultiplier, 1)
+            : new Vector2(hurtDirectionXMultiplier, 1);
+        TakeDamage(damage);
+        TransitionState(StateType.Hurt);
+    }
     private void FixedUpdate()
     {
         currentState.OnFixedUpdate();
@@ -986,7 +993,7 @@ public class PlayerAttack : IState
     private Animator currentAttack;
     private bool hasCausedDamage;
     private bool hasAttackSpike;
-    private bool hasLootEmeraldPile; 
+    private bool hasLootEmeraldPile;
 
     public PlayerAttack(PlayerFSM m)
     {
@@ -1076,7 +1083,18 @@ public class PlayerAttack : IState
         {
             UpdateAttackEnemyTrigger(other);
             UpdateAttackSpikeTrigger(other);
+            UpdateAttackArrowTrigger(other);
             UpdateAttackEmeraldPileTrigger(other);
+        }
+    }
+
+    private void UpdateAttackArrowTrigger(Collider2D other)
+    {
+        if (other.CompareTag("EnemyArrow"))
+        {
+            PlayerFSM.Destroy(other.gameObject);
+            Pushed();
+            PlayerFSM.instance.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
         }
     }
 

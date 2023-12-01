@@ -148,7 +148,7 @@ MonoBehaviour:
   hitBoxCollider: {fileID: 499204593053448965}
   moveSpeed: 3
   moveDir: 1
-  rotateTime: 1
+  rotateTime: 0.5
   turnStateCheckDelay: 0.1
 --- !u!50 &499204593053448966
 Rigidbody2D:

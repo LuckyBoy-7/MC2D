@@ -12,6 +12,7 @@ TagManager:
   - Bound
   - HiddenChannel
   - EmeraldPile
+  - EnemyArrow
   layers:
   - Default
   - TransparentFX

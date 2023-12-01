@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerArrow : MonoBehaviour
+public class PlayerArrowPrefab : MonoBehaviour
 {
     public float destroyDelay;
     private Rigidbody2D rigidbody;

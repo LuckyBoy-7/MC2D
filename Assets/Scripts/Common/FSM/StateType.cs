@@ -28,5 +28,6 @@ public enum StateType
     Alert,
     Question,
     Patrol,
-    Move
+    Move,
+    Wait
 }
