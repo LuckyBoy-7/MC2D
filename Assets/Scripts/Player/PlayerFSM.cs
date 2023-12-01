@@ -148,7 +148,6 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 
         currentState.OnUpdate();
 
-
         // Debug.Log($"currentState: {currentState}");
         // Debug.Log($"isOnGround: {isOnGround}");
         // Debug.Log($"isOnLeftWall: {isOnLeftWall}");
@@ -175,7 +174,6 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     {
         UpdateCollisionHurt(other);
         UpdateEmeraldSuck(other);
-        UpdateHiddenChannelShowUp(other);
     }
     
     public void UpdateTriggerExit2D(Collider2D other)
@@ -186,6 +184,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public void UpdateTriggerStay2D(Collider2D other)
     {
         UpdateBoundSwitch(other);
+        UpdateHiddenChannelShowUp(other);
     }
 
     private void UpdateHiddenChannelShowUp(Collider2D other)
@@ -995,7 +994,7 @@ public class PlayerAttack : IState
         attackDirection = new()
         {
             { m.attackRight, new Vector2(1, 0) * m.facingDirection.x },
-            { m.attackUp, new Vector2(0, 0) },
+            { m.attackUp, new Vector2(0, 1) },
             { m.attackDown, new Vector2(0, -1) }
         };
 
@@ -1140,8 +1139,6 @@ public class PlayerAttack : IState
                 m.rigidbody.velocity.y);
         else if (currentAttack == m.attackUp)
         {
-            m.rigidbody.velocity = new Vector2(m.rigidbody.velocity.x,
-                -attackDirection[currentAttack].y * m.attackForce);
         }
         else
         {

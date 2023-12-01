@@ -7,7 +7,7 @@ using Unity.VisualScripting;
 using UnityEditor.Rendering;
 using UnityEngine;
 
-public class ZombieFSM : EnemyFSM
+public class ZombieFSM : GroundEnemyFSM
 {
     [Header("Patrol")] public float patrolMoveSpeed;
     public float patrolRestTime;
@@ -19,7 +19,7 @@ public class ZombieFSM : EnemyFSM
     [Header("Chase")] public float chaseSpeed;
     public float xDeltaBehindPlayer;
     [Header("Question")] public float questionTime;
-    
+
 
     void Start()
     {
@@ -70,12 +70,14 @@ public class ZombieFSM : EnemyFSM
         }
     }
 
-
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.green;
         // Cliff Raycast check
         var position = transform.position;
+        var scale = transform.localScale;
+        var box = hitBoxCollider;
+        var (width, height) = (box.bounds.max.x - box.bounds.min.x, box.bounds.max.y - box.bounds.min.y);
         Vector3 bottomCenter = position + Vector3.down * 0.5f;
         Vector3 bottomLeft = bottomCenter - Vector3.right * 0.5f;
         Vector3 bottomRight = bottomCenter + Vector3.right * 0.5f;

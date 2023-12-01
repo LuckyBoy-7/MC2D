@@ -16,10 +16,6 @@ public class EnemyFSM : FSM
     public int healthPoint = 5;
     public SpriteRenderer hurtMask;
 
-    [Header("PhysicsCheck")] public float cliffCheckDownRaycastDist = 0.3f;
-    public float boxLeftRightCastDist = 0.1f;
-    public LayerMask groundLayer;
-    public BoxCollider2D hitBoxCollider;
 
     [Header("Movement")] public Rigidbody2D rigidbody;
     public int facingDirection; // x方向
@@ -61,6 +57,45 @@ public class EnemyFSM : FSM
         Destroy(gameObject);
     }
 
+
+    public void ReverseFacingDirection() => facingDirection *= -1;
+
+    private void OnTriggerStay2D(Collider2D other)
+    {
+        if (other.CompareTag("PlayerRoar"))
+        {
+            PlayerFSM player = PlayerFSM.instance;
+            roarHurtElapse += Time.deltaTime;
+            if (roarHurtElapse >= player.roarDamageTimeGap)
+            {
+                roarHurtElapse = 0;
+                TakeDamage(player.roarDamage);
+            }
+        }
+        else if (other.CompareTag("PlayerDrop"))
+        {
+            PlayerFSM player = PlayerFSM.instance;
+            dropHurtElapse += Time.deltaTime;
+            if (dropHurtElapse >= player.dropDamageTimeGap)
+            {
+                dropHurtElapse = 0;
+                TakeDamage(player.dropDamage);
+            }
+        }
+        
+        else if (other.CompareTag("Spike"))
+        {
+            Attacked(1000000);
+        }
+    }
+}
+
+public class GroundEnemyFSM : EnemyFSM
+{
+    [Header("PhysicsCheck")] public float cliffCheckDownRaycastDist = 0.3f;
+    public float boxLeftRightCastDist = 0.1f;
+    public LayerMask groundLayer;
+    public BoxCollider2D hitBoxCollider;
 
     #region PhysicsCheck
 
@@ -137,34 +172,5 @@ public class EnemyFSM : FSM
 
     #endregion
 
-    public void ReverseFacingDirection() => facingDirection *= -1;
 
-    private void OnTriggerStay2D(Collider2D other)
-    {
-        if (other.CompareTag("PlayerRoar"))
-        {
-            PlayerFSM player = PlayerFSM.instance;
-            roarHurtElapse += Time.deltaTime;
-            if (roarHurtElapse >= player.roarDamageTimeGap)
-            {
-                roarHurtElapse = 0;
-                TakeDamage(player.roarDamage);
-            }
-        }
-        else if (other.CompareTag("PlayerDrop"))
-        {
-            PlayerFSM player = PlayerFSM.instance;
-            dropHurtElapse += Time.deltaTime;
-            if (dropHurtElapse >= player.dropDamageTimeGap)
-            {
-                dropHurtElapse = 0;
-                TakeDamage(player.dropDamage);
-            }
-        }
-        
-        else if (other.CompareTag("Spike"))
-        {
-            Attacked(1000000);
-        }
-    }
 }
