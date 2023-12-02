@@ -14,7 +14,6 @@ using UnityEngine.UI;
 /// </summary>
 public class SteleUI : Singleton<SteleUI>
 {
-    private List<Vector3> poses;
     public float fadeTime;
     public float showEachCharTimeGap;
 

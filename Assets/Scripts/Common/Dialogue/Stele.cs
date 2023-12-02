@@ -15,7 +15,6 @@ public class Stele : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            Debug.Log(123);
             SteleUI.instance.ShowContents(contents);
         }
     }
