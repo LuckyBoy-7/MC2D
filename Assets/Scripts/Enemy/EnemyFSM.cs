@@ -104,8 +104,6 @@ public class GroundEnemyFSM : EnemyFSM
 
     #region PhysicsCheck
 
-    
-
     private bool isOverLeftCliff
     {
         get
