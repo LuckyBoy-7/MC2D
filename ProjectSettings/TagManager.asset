@@ -15,6 +15,7 @@ TagManager:
   - EnemyArrow
   - PlayerAttack
   - WoodenDoor
+  - TrapDoor
   layers:
   - Default
   - TransparentFX

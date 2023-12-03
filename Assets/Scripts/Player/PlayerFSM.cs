@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Cinemachine;
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.PlayerLoop;
 using Random = UnityEngine.Random;
 
 public class PlayerFSM : SingletonFSM<PlayerFSM>
@@ -176,6 +177,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         UpdateCollisionHurt(other);
         UpdateEmeraldSuck(other);
     }
+
 
     public void UpdateTriggerStay2D(Collider2D other)
     {
@@ -862,7 +864,9 @@ public class PlayerDrop : IState
         elapse += Time.deltaTime;
         if (elapse < m.dropWindupTime)
             return;
+        // 开始下砸
         m.rigidbody.velocity = Vector2.down * m.dropSpeed;
+        UpdateCollisionWithTrapDoor();
 
         if (m.isOnGround)
         {
@@ -870,6 +874,18 @@ public class PlayerDrop : IState
             dropPrefab = PlayerFSM.Instantiate(m.dropPrefab, m.transform);
             dropPrefab.transform.position += Vector3.down * 0.5f;
             m.invincibleExpireTime = Time.time + m.dropInvincibleTime;
+        }
+    }
+
+    private void UpdateCollisionWithTrapDoor()
+    {
+        List<Collider2D> res = new();
+        m.hitBoxCollider.OverlapCollider(new ContactFilter2D(), res);
+        foreach (var other in res)
+        {
+            if (!other.CompareTag("TrapDoor"))
+                return;
+            other.GetComponent<TrapDoor>().Attacked();
         }
     }
 
