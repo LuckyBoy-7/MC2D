@@ -1017,6 +1017,7 @@ public class PlayerAttack : IState
     private Animator currentAttack;
     private bool hasAttackSpike;
     private bool hasLootEmeraldPile;
+    private bool hasCausedDamage;
 
     public PlayerAttack(PlayerFSM m)
     {
@@ -1046,7 +1047,7 @@ public class PlayerAttack : IState
         else if (Input.GetKey(m.downKey) && !m.isOnGround)
             currentAttack = m.attackDown;
         else
-            currentAttack = m.attackRight;  
+            currentAttack = m.attackRight;
         currentAttack.transform.localScale = new Vector3(1, direction[Random.Range(0, 2)], 1);
         currentAttack.Play("PlayerAttack");
     }
@@ -1095,15 +1096,16 @@ public class PlayerAttack : IState
         m.attackCoolDownExpireTime = Time.time + m.attackCoolDown;
         hasAttackSpike = false;
         hasLootEmeraldPile = false;
+        hasCausedDamage = false;
     }
 
     public void UpdateTrigger()
     {
         List<Collider2D> colliders = new();
         Physics2D.OverlapCollider(attackCollider[currentAttack], new ContactFilter2D { useTriggers = true }, colliders);
+        UpdateAttackEnemyTrigger(colliders);
         foreach (var other in colliders)
         {
-            UpdateAttackEnemyTrigger(other);
             UpdateAttackSpikeTrigger(other);
             UpdateAttackArrowTrigger(other);
             UpdateAttackEmeraldPileTrigger(other);
@@ -1165,27 +1167,35 @@ public class PlayerAttack : IState
         PlayerFSM.instance.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
     }
 
-    private void UpdateAttackEnemyTrigger(Collider2D other)
+    private void UpdateAttackEnemyTrigger(List<Collider2D> others)
     {
-        if (!other.CompareTag("Enemy"))
-            return;
-
-        Pushed();
-        // 更新属性
-        if (currentAttack == m.attackDown) // 只有下劈才刷新
+        bool anyEnemyAttacked = false;
+        foreach (var other in others)
         {
-            m.canDoubleJump = true;
-            m.canDash = true;
+            if (!other.CompareTag("Enemy") || hasCausedDamage)
+                continue;
+            if (!anyEnemyAttacked) // 在第一个打到的敌人上播放特效
+                m.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
+            anyEnemyAttacked = true;
+
+            other.GetComponent<EnemyFSM>().Attacked(m.attackDamage, attackDirection[currentAttack] * m.attackForce);
         }
 
-        // 播放特效
-        m.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
+        if (anyEnemyAttacked)
+        {
+            hasCausedDamage = true;
+            Pushed();
+            // 更新属性
+            if (currentAttack == m.attackDown) // 只有下劈才刷新
+            {
+                m.canDoubleJump = true;
+                m.canDash = true;
+            }
 
-        // 更新exp
-        m.curExp = Mathf.Min(m.curExp + m.expAmountExtractedByAttack, m.maxExp);
-        PlayerExpUI.instance.UpdatePlayerExpUI();
-        // 放最后，万一enemy死了，前面就拿不到数据了
-        other.GetComponent<EnemyFSM>().Attacked(m.attackDamage, attackDirection[currentAttack] * m.attackForce);
+            // 更新exp
+            m.curExp = Mathf.Min(m.curExp + m.expAmountExtractedByAttack, m.maxExp);
+            PlayerExpUI.instance.UpdatePlayerExpUI();
+        }
     }
 
     private void Pushed()

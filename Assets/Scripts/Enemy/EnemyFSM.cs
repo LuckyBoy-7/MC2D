@@ -26,7 +26,7 @@ public class EnemyFSM : FSM
     public float roarHurtElapse;
     public float dropHurtElapse;
 
-     public event Action onKill;
+    public event Action onKill;
 
     protected virtual void Start()
     {
@@ -58,10 +58,10 @@ public class EnemyFSM : FSM
 
     private void Kill()
     {
+        onKill?.Invoke();
         if (canBeLooted)
             Instantiate(emeraldEmitterPrefab, transform.position, Quaternion.identity).num = ownEmeraldNumber;
         Destroy(gameObject);
-        onKill();
     }
 
 
