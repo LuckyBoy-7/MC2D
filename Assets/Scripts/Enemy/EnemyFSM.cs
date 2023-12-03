@@ -26,6 +26,7 @@ public class EnemyFSM : FSM
     public float roarHurtElapse;
     public float dropHurtElapse;
 
+     public event Action onKill;
 
     protected virtual void Start()
     {
@@ -60,6 +61,7 @@ public class EnemyFSM : FSM
         if (canBeLooted)
             Instantiate(emeraldEmitterPrefab, transform.position, Quaternion.identity).num = ownEmeraldNumber;
         Destroy(gameObject);
+        onKill();
     }
 
 
@@ -217,6 +219,5 @@ public class GroundEnemyFSM : EnemyFSM
 
 public class FlyEnemyFSM : EnemyFSM
 {
-    [Header("PhysicsCheck")] 
-    public BoxCollider2D hitBoxCollider;
+    [Header("PhysicsCheck")] public BoxCollider2D hitBoxCollider;
 }

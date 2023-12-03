@@ -180,7 +180,7 @@ GameObject:
   - component: {fileID: 4036103733564636278}
   - component: {fileID: 4036103733564636279}
   - component: {fileID: 4036103733564636272}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: TrapDoorSide
   m_TagString: TrapDoor
   m_Icon: {fileID: 0}

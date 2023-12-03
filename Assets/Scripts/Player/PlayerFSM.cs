@@ -11,6 +11,8 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 {
     public SpriteRenderer spriteRenderer;
     [Header("Debug")] public bool isDebug;
+    public bool isInvincibleDebug;
+    public bool isOverPowerDebug;
     [Header("Currency")] public int curEmeraldNumber;
     [Header("Health")] public int maxHealthPoint;
     public int healthPoint;
@@ -79,6 +81,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public float hurtForce;
     public float invincibleTime;
     public float invincibleExpireTime;
+    public event Action onDie;
 
     [Header("Recover")] public float recoverSpeed;
     public Animator recoverProcessAnim;
@@ -168,8 +171,10 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         PlayerExpUI.instance.UpdatePlayerExpUI();
         canDoubleJump = true;
         canDash = true;
-        invincibleExpireTime = Time.time + invincibleTime;
-        // attackDamage = 10;
+        if (isInvincibleDebug)
+            invincibleExpireTime = Time.time + invincibleTime;
+        if (isOverPowerDebug)
+            attackDamage = 10;
     }
 
     public void UpdateTriggerEnter2D(Collider2D other)
@@ -354,7 +359,8 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 
     private void Kill()
     {
-        Destroy(gameObject);
+        onDie();
+        gameObject.SetActive(false);
     }
 
     public bool isInvincible => Time.time <= invincibleExpireTime;
@@ -1009,7 +1015,6 @@ public class PlayerAttack : IState
     private Dictionary<Animator, Vector2> attackDirection;
     private Dictionary<Animator, PolygonCollider2D> attackCollider;
     private Animator currentAttack;
-    private bool hasCausedDamage;
     private bool hasAttackSpike;
     private bool hasLootEmeraldPile;
 
@@ -1041,7 +1046,7 @@ public class PlayerAttack : IState
         else if (Input.GetKey(m.downKey) && !m.isOnGround)
             currentAttack = m.attackDown;
         else
-            currentAttack = m.attackRight;
+            currentAttack = m.attackRight;  
         currentAttack.transform.localScale = new Vector3(1, direction[Random.Range(0, 2)], 1);
         currentAttack.Play("PlayerAttack");
     }
@@ -1088,7 +1093,6 @@ public class PlayerAttack : IState
     public void OnExit()
     {
         m.attackCoolDownExpireTime = Time.time + m.attackCoolDown;
-        hasCausedDamage = false;
         hasAttackSpike = false;
         hasLootEmeraldPile = false;
     }
@@ -1163,9 +1167,8 @@ public class PlayerAttack : IState
 
     private void UpdateAttackEnemyTrigger(Collider2D other)
     {
-        if (hasCausedDamage || !other.CompareTag("Enemy"))
+        if (!other.CompareTag("Enemy"))
             return;
-        hasCausedDamage = true;
 
         Pushed();
         // 更新属性
