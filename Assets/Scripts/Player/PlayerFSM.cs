@@ -1087,6 +1087,23 @@ public class PlayerAttack : IState
             UpdateAttackSpikeTrigger(other);
             UpdateAttackArrowTrigger(other);
             UpdateAttackEmeraldPileTrigger(other);
+            UpdateAttackWoodenDoorTrigger(other);
+        }
+    }
+
+    private void UpdateAttackWoodenDoorTrigger(Collider2D other)
+    {
+        if (other.CompareTag("WoodenDoor"))
+        {
+            other.GetComponent<WoodenDoor>().Attacked();
+            if (currentAttack == m.attackDown) // 只有下劈才刷新
+            {
+                m.canDoubleJump = true;
+                m.canDash = true;
+            }
+
+            // 播放特效
+            PlayerFSM.instance.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
         }
     }
 
