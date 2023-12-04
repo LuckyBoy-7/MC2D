@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.Design.Serialization;
+using UnityEditor.Rendering;
 using UnityEngine;
 
 public class CreeperFSM : GroundEnemyFSM
@@ -9,7 +11,8 @@ public class CreeperFSM : GroundEnemyFSM
     public float explosionCoolDown;
     public float explosionTriggerRadius;
     public float patrolRestTime;
-    public TNT tntPrefab;
+    public Rigidbody2D tntPrefab;
+    public float onDieSplillTNTForce;
 
     public float moveSpeed;
     public float chaseSpeed;
@@ -20,17 +23,21 @@ public class CreeperFSM : GroundEnemyFSM
         base.Start();
         states[StateType.Patrol] = new CreeperPatrol(this); // idle
         states[StateType.Attack] = new CreeperAttack(this);
+        states[StateType.Fall] = new CreeperFall(this);
         TransitionState(StateType.Patrol);
+
+        onKill += SpillTNT;
     }
 
-    private void Update()
-    {
-        currentState.OnUpdate();
-    }
 
-    private void FixedUpdate()
+    public void SpillTNT()
     {
-        currentState.OnFixedUpdate();
+        var left = Instantiate(tntPrefab, transform.position, Quaternion.identity);
+        var mid = Instantiate(tntPrefab, transform.position, Quaternion.identity);
+        var right = Instantiate(tntPrefab, transform.position, Quaternion.identity);
+        left.AddForce(new Vector2(-1, 1) * onDieSplillTNTForce, ForceMode2D.Impulse);
+        mid.AddForce(new Vector2(0, 1) * onDieSplillTNTForce, ForceMode2D.Impulse);
+        right.AddForce(new Vector2(1, 1) * onDieSplillTNTForce, ForceMode2D.Impulse);
     }
 
     private void OnDrawGizmos()
@@ -62,7 +69,7 @@ public class CreeperPatrol : IState
 {
     private CreeperFSM m;
     private float elapse;
-    private bool isRest;
+    private bool isResting;
 
     public CreeperPatrol(CreeperFSM m)
     {
@@ -81,32 +88,29 @@ public class CreeperPatrol : IState
             m.TransitionState(StateType.Attack);
 
         if (m.isWalkingDownCliff)
-        {
-            isRest = true;
-            m.ReverseFacingDirection();
-        }
+            isResting = true;
 
-        if (isRest)
+        if (isResting)
         {
             elapse += Time.deltaTime;
             if (elapse > m.patrolRestTime)
             {
                 elapse = 0;
-                isRest = false;
+                isResting = false;
+                m.ReverseFacingDirection();
             }
         }
     }
 
     public void OnFixedUpdate()
     {
-        if (isRest)
+        if (isResting)
         {
             m.rigidbody.velocity = Vector2.zero;
             return;
         }
 
-        var newX = Mathf.MoveTowards(m.rigidbody.velocity.x, m.moveSpeed * m.facingDirection, m.xVelocityChangeSpeed);
-        m.rigidbody.velocity = new Vector2(newX, m.rigidbody.velocity.y);
+        m.LerpVelocityX(m.moveSpeed * m.facingDirection);
     }
 
     public void OnExit()
@@ -139,26 +143,52 @@ public class CreeperAttack : IState
             return;
         }
 
-        if (elapse >= m.explosionCoolDown)
+        if (elapse >= m.explosionCoolDown) // 时间到了，但player离太远了，先憋着
         {
-            elapse -= m.explosionCoolDown;
-            Shoot();
+            if ((PlayerFSM.instance.transform.position - m.transform.position).magnitude < m.explosionTriggerRadius)
+            {
+                elapse -= m.explosionCoolDown;
+                ReleaseTNT();
+            }
         }
 
         elapse += Time.deltaTime;
     }
 
-
-    private void Shoot()
-    {
-    }
-
+    public void ReleaseTNT() => Object.Instantiate(m.tntPrefab, m.transform.position, Quaternion.identity);
 
     public void OnFixedUpdate()
     {
-        var newX = Mathf.MoveTowards(m.rigidbody.velocity.x, m.chaseSpeed, m.xVelocityChangeSpeed);
-        // var newY = Mathf.MoveTowards(m.rigidbody.velocity.y, , m.yVelocityChangeSpeed);
-        m.rigidbody.velocity = new Vector2(newX, m.rigidbody.velocity.y);
+        m.LerpVelocityX(Mathf.Sign(PlayerFSM.instance.transform.position.x - m.transform.position.x) * m.chaseSpeed);
+    }
+
+    public void OnExit()
+    {
+    }
+}
+
+public class CreeperFall : IState
+{
+    private CreeperFSM m;
+
+    public CreeperFall(CreeperFSM m)
+    {
+        this.m = m;
+    }
+
+    public void OnEnter()
+    {
+    }
+
+    public void OnUpdate()
+    {
+        if (m.isOnGround)
+            m.TransitionState(StateType.Patrol);
+    }
+
+    public void OnFixedUpdate()
+    {
+        m.LerpVelocityY(-m.maxFallingSpeed);
     }
 
     public void OnExit()

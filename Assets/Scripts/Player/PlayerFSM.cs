@@ -833,9 +833,6 @@ public class PlayerRoar : IState
     }
 }
 
-/// <summary>
-/// 既然本来表现力就不佳了，那干脆就不造成伤害，单纯作为躲避和打开隐藏通路
-/// </summary>
 public class PlayerDrop : IState
 {
     private PlayerFSM m;

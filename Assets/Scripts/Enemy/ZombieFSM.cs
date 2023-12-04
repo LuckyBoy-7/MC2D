@@ -33,13 +33,6 @@ public class ZombieFSM : GroundEnemyFSM
         TransitionState(StateType.Patrol);
     }
 
-    protected override void Update()
-    {
-        base.Update();
-        Debug.Log(currentState);
-        Debug.Log(isOnGround);
-    }
-
     public bool isPlayerInView => isPlayerInFrontView || isPlayerInBehindView;
 
     public bool isPlayerInFrontView

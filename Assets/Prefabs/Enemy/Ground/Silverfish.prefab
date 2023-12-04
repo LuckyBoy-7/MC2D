@@ -137,15 +137,13 @@ MonoBehaviour:
   facingDirection: 1
   xVelocityChangeSpeed: 100
   yVelocityChangeSpeed: 0
+  hitBoxCollider: {fileID: 499204593053448965}
   showHurtEffectTime: 0.3
-  roarHurtElapse: 0
-  dropHurtElapse: 0
-  cliffCheckDownRaycastDist: 0.3
-  boxLeftRightCastDist: 0.1
+  knockedBackForceMultiplier: 1
   groundLayer:
     serializedVersion: 2
     m_Bits: 128
-  hitBoxCollider: {fileID: 499204593053448965}
+  maxFallingSpeed: 0
   moveSpeed: 3
   moveDir: 1
   rotateTime: 0.5
@@ -241,9 +239,9 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 1598004183
-  m_SortingLayer: 4
-  m_SortingOrder: -1
+  m_SortingLayerID: 442469903
+  m_SortingLayer: 2
+  m_SortingOrder: 9999
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 0}
   m_FlipX: 0
