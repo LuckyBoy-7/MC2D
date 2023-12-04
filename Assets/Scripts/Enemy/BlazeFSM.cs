@@ -155,15 +155,13 @@ public class BlazeAttack : IState
 
     public void OnFixedUpdate()
     {
-        if ((m.transform.position - PlayerFSM.instance.transform.position).magnitude < 1e-5)
+        if ((m.transform.position - PlayerFSM.instance.transform.position).magnitude < 1e-3)
             RollTargetPos();
         else
         {
             var targetSpeed = (m.targetPos - (Vector2)m.transform.position).normalized * m.moveSpeed;
-
-            var newX = Mathf.MoveTowards(m.rigidbody.velocity.x, targetSpeed.x, m.xVelocityChangeSpeed);
-            var newY = Mathf.MoveTowards(m.rigidbody.velocity.y, targetSpeed.y, m.yVelocityChangeSpeed);
-            m.rigidbody.velocity = new Vector2(newX, newY);
+            m.LerpVelocityX(targetSpeed.x);
+            m.LerpVelocityY(targetSpeed.y);
         }
     }
 

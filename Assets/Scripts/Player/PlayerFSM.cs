@@ -937,7 +937,7 @@ public class PlayerReleaseArrow : IState
             return;
         Time.timeScale = 1;
 
-        if (Mathf.Abs(m.rigidbody.velocity.x) > 1e-5) // 后摇还没结束
+        if (Mathf.Abs(m.rigidbody.velocity.x) > 1e-3) // 后摇还没结束
             return;
         if (m.isOnGround)
             m.TransitionState(m.moveTrigger ? StateType.Run : StateType.Idle);
@@ -1169,15 +1169,16 @@ public class PlayerAttack : IState
 
     private void UpdateAttackEnemyTrigger(List<Collider2D> others)
     {
+        if (hasCausedDamage)
+            return;
         bool anyEnemyAttacked = false;
         foreach (var other in others)
         {
-            if (!other.CompareTag("Enemy") || hasCausedDamage)
+            if (!other.CompareTag("Enemy") || !other.isTrigger) // 只打trigger的，因为enemy有两个碰撞箱
                 continue;
             if (!anyEnemyAttacked) // 在第一个打到的敌人上播放特效
                 m.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
             anyEnemyAttacked = true;
-
             other.GetComponent<EnemyFSM>().Attacked(m.attackDamage, attackDirection[currentAttack] * m.attackForce);
         }
 

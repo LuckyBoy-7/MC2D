@@ -15,6 +15,7 @@ using UnityEngine.UI;
 public class SteleUI : Singleton<SteleUI>
 {
     public float fadeTime;
+    public float pauseTime;
     public float showEachCharTimeGap;
 
     public Text header;
@@ -44,7 +45,7 @@ public class SteleUI : Singleton<SteleUI>
     private void Reset()
     {
         StopAllCoroutines();
-        transform.position = origPos; 
+        transform.position = origPos;
         header.text = "";
         content1.text = "";
         content2.text = "";
@@ -63,7 +64,7 @@ public class SteleUI : Singleton<SteleUI>
 
     private IEnumerator ShowCharOneByOne(List<string> contents)
     {
-        yield return new WaitForSeconds(fadeTime);
+        yield return new WaitForSeconds(fadeTime + pauseTime);
         foreach (var c in contents[1])
         {
             content1.text += c;

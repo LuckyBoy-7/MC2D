@@ -29,20 +29,16 @@ public class ZombieFSM : GroundEnemyFSM
         states[StateType.Alert] = new ZombieAlert(this);
         states[StateType.Chase] = new ZombieChase(this);
         states[StateType.Question] = new ZombieQuestion(this);
+        states[StateType.Fall] = new ZombieFall(this);
         TransitionState(StateType.Patrol);
     }
 
-    private void Update()
+    protected override void Update()
     {
-        currentState.OnUpdate();
-        // Debug.Log($"currentState: {currentState}");
+        base.Update();
+        Debug.Log(currentState);
+        Debug.Log(isOnGround);
     }
-
-    private void FixedUpdate()
-    {
-        currentState.OnFixedUpdate();
-    }
-
 
     public bool isPlayerInView => isPlayerInFrontView || isPlayerInBehindView;
 
@@ -142,9 +138,7 @@ public class ZombiePatrol : IState
     {
         if (isRest)
             return;
-        var newX = Mathf.MoveTowards(m.rigidbody.velocity.x, m.facingDirection * m.patrolMoveSpeed,
-            m.xVelocityChangeSpeed * Time.deltaTime);
-        m.rigidbody.velocity = new Vector2(newX, m.rigidbody.velocity.y);
+        m.LerpVelocityX(m.facingDirection * m.patrolMoveSpeed);
     }
 
     public void OnExit()
@@ -177,9 +171,7 @@ public class ZombieAlert : IState
 
     public void OnFixedUpdate()
     {
-        var newX = Mathf.MoveTowards(m.rigidbody.velocity.x, 0,
-            m.xVelocityChangeSpeed * Time.deltaTime);
-        m.rigidbody.velocity = new Vector2(newX, m.rigidbody.velocity.y);
+        m.LerpVelocityX(0);
     }
 
     public void OnExit()
@@ -213,16 +205,12 @@ public class ZombieChase : IState
 
     public void OnFixedUpdate()
     {
-        var newX = Mathf.MoveTowards(m.rigidbody.velocity.x, m.facingDirection * m.chaseSpeed,
-            m.xVelocityChangeSpeed * Time.deltaTime);
-        m.rigidbody.velocity = new Vector2(newX, m.rigidbody.velocity.y);
-        if (m.rigidbody.position.x > targetPosX && m.facingDirection == 1 ||
-            m.rigidbody.position.x < targetPosX && m.facingDirection == -1) // 到目的地了
+        m.LerpVelocityX(m.facingDirection * m.chaseSpeed);
+        // 即targetPos到现在pos方向的单位向量是否是面朝的方向，是的话就是走过了，因为velocity并不精准
+        if (Math.Abs(Mathf.Sign(m.rigidbody.position.x - targetPosX) - m.facingDirection) < 1e-3) // 到目的地了
         {
             if (m.isPlayerInView)
-            {
                 RollTargetPosAndResetOrient();
-            }
             else
                 m.TransitionState(StateType.Question);
         }
@@ -264,13 +252,40 @@ public class ZombieQuestion : IState
 
     public void OnFixedUpdate()
     {
-        var newX = Mathf.MoveTowards(m.rigidbody.velocity.x, 0,
-            m.xVelocityChangeSpeed * Time.deltaTime);
-        m.rigidbody.velocity = new Vector2(newX, m.rigidbody.velocity.y);
+        m.LerpVelocityX(0);
     }
 
     public void OnExit()
     {
         elapse = 0;
+    }
+}
+
+public class ZombieFall : IState
+{
+    private ZombieFSM m;
+
+    public ZombieFall(ZombieFSM m)
+    {
+        this.m = m;
+    }
+
+    public void OnEnter()
+    {
+    }
+
+    public void OnUpdate()
+    {
+        if (m.isOnGround)
+            m.TransitionState(StateType.Patrol);
+    }
+
+    public void OnFixedUpdate()
+    {
+        m.LerpVelocityY(-m.maxFallingSpeed);
+    }
+
+    public void OnExit()
+    {
     }
 }

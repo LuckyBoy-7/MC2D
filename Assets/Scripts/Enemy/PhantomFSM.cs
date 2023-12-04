@@ -46,7 +46,6 @@ public class PhantomFSM : FlyEnemyFSM
         // hit box
         Gizmos.color = Color.red;
         Gizmos.DrawWireCube(position, hitBoxCollider.size);
-
     }
 }
 
@@ -73,6 +72,7 @@ public class PhantomWait : IState
 
     public void OnFixedUpdate()
     {
+        m.LerpVelocity(Vector2.zero);
     }
 
     public void OnExit()
@@ -101,7 +101,7 @@ public class PhantomAttack : IState
 
     public void OnFixedUpdate()
     {
-        m.rigidbody.velocity = (PlayerFSM.instance.transform.position - m.transform.position).normalized * m.moveSpeed;
+        m.LerpVelocity((PlayerFSM.instance.transform.position - m.transform.position).normalized * m.moveSpeed);
     }
 
     public void OnExit()
