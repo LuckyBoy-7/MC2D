@@ -10,6 +10,11 @@ public enum Enums
 
 public enum InputType
 {
-    Move, Jump, Dash, Attack, Heal, Arrow, Drop, Roar
+    Move, Jump, Dash, Attack, Heal, Arrow, Drop, Roar, SuperDash
     
+}
+
+public enum InventoryType
+{
+    Dash, Sword, Heal, Arrow, Drop, Roar, WallSlide, DoubleJump, SuperDash
 }

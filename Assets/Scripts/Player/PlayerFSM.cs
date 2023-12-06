@@ -14,6 +14,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     [Header("Debug")] public bool isDebug;
     public bool isInvincibleDebug;
     public bool isOverPowerDebug;
+    public bool isAllAbilityDebug;
     [Header("Currency")] public int curEmeraldNumber;
     [Header("Health")] public int maxHealthPoint;
     public int healthPoint;
@@ -116,7 +117,6 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public float roarOverTimePercent = 0.8f;
 
     [Header("SuperDash")] public SpriteRenderer spikePrefab;
-    public float superDashWindupTime;
     public int oneSideSpikeCount;
     public float spikeSpacing;
     public float spikeMinScaleY;
@@ -135,6 +135,14 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public KeyCode attackKey = KeyCode.A;
     public KeyCode spellKey = KeyCode.Q;
     public KeyCode superDashKey = KeyCode.W;
+
+    [Header("States")] public bool hasDashAbility;
+    public bool hasRoarAbility;
+    public bool hasDoubleJumpAbility;
+    public bool hasSuperDashAbility;
+    public bool hasDropAbility;
+    public bool hasReleaseArrowAbility;
+    public bool hasWallSlideAbility;
 
 
     void Start()
@@ -191,6 +199,16 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
             invincibleExpireTime = Time.time + invincibleTime;
         if (isOverPowerDebug)
             attackDamage = 10;
+        if (isAllAbilityDebug)
+        {
+            hasDashAbility = true;
+            hasRoarAbility = true;
+            hasDoubleJumpAbility = true;
+            hasSuperDashAbility = true;
+            hasDropAbility = true;
+            hasReleaseArrowAbility = true;
+            hasWallSlideAbility = true;
+        }
     }
 
     public void UpdateTriggerEnter2D(Collider2D other)
@@ -395,9 +413,9 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 
     #region StateTransitionTrigger
 
-    public bool wallSlideTrigger =>
+    public bool wallSlideTrigger => hasWallSlideAbility && (
         (isOnLeftWall && Input.GetKey(leftKey) && rigidbody.velocity.x <= 1e-3 // 不然蹬墙跳一出去就就又变成wallSlide状态了
-         || isOnRightWall && Input.GetKey(rightKey) && rigidbody.velocity.x >= -1e-3);
+         || isOnRightWall && Input.GetKey(rightKey) && rigidbody.velocity.x >= -1e-3));
 
     public bool jumpTrigger => // 就是尝试跳跃后，如果在地上或不在地上但是狼跳还在
         Time.time <= jumpBufferExpireTime && (isOnGround || Time.time <= wolfJumpBufferExpireTime);
@@ -405,10 +423,10 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public bool wallJumpTrigger => // 就是尝试跳跃后，如果在墙上或不在墙上但是狼跳还在
         Time.time <= jumpBufferExpireTime && Time.time <= wallWolfJumpBufferExpireTime;
 
-    public bool doubleJumpTrigger => Time.time <= jumpBufferExpireTime && canDoubleJump;
+    public bool doubleJumpTrigger => hasDoubleJumpAbility && Time.time <= jumpBufferExpireTime && canDoubleJump;
 
-    public bool dashTrigger =>
-        Time.time <= dashBufferExpireTime && Time.time >= dashCoolDownExpireTime && canDash;
+    public bool dashTrigger => hasDashAbility &&
+                               Time.time <= dashBufferExpireTime && Time.time >= dashCoolDownExpireTime && canDash;
 
     public bool moveTrigger => Input.GetKey(leftKey) || Input.GetKey(rightKey);
     public bool fallTrigger => rigidbody.velocity.y < -1e-3;
@@ -422,7 +440,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public bool recoverTrigger => curExp >= 3
                                   && isOnGround && Input.GetKey(spellKey) && Time.time > spellPreparationExpireTime;
 
-    public bool superDashTrigger => Input.GetKeyDown(superDashKey);
+    public bool superDashTrigger => hasSuperDashAbility && Input.GetKeyDown(superDashKey);
 
     #endregion
 }
@@ -804,12 +822,14 @@ public class PlayerSpell : IState
         m.curExp -= 3;
         PlayerExpUI.instance.UpdatePlayerExpUI();
 
-        if (Input.GetKey(m.downKey))
+        if (Input.GetKey(m.downKey) && m.hasDropAbility)
             m.TransitionState(StateType.Drop);
-        else if (Input.GetKey(m.upKey))
+        else if (Input.GetKey(m.upKey) && m.hasRoarAbility)
             m.TransitionState(StateType.Roar);
-        else
+        else if (m.hasReleaseArrowAbility)
             m.TransitionState(StateType.ReleaseArrow);
+        else
+            m.TransitionState(m.preStateType);
     }
 
     public void OnUpdate()
@@ -1313,6 +1333,7 @@ public class PlayerSuperDash : IState
     private bool isDashing;
     private bool isOver;
     private bool isShowingSpike;
+    private float superDashWindupTime;
 
     Dictionary<Vector3, Vector3> dir2Angle = new()
     {
@@ -1332,6 +1353,7 @@ public class PlayerSuperDash : IState
     public PlayerSuperDash(PlayerFSM m)
     {
         this.m = m;
+        superDashWindupTime = (m.oneSideSpikeCount - 1) * m.spikePopUpTimeGap + m.spikePopUpTime;
     }
 
     public void OnEnter()
@@ -1349,10 +1371,11 @@ public class PlayerSuperDash : IState
 
     public void OnUpdate()
     {
+        
         readyElapse += Time.deltaTime;
         // if (readyElapse > m.superDashWindupTime && readyElapse - Time.deltaTime < m.superDashWindupTime)
         //     Debug.Log("Ready");
-        isReady = readyElapse >= m.superDashWindupTime;
+        isReady = readyElapse >= superDashWindupTime;
         if (!isReady)
         {
             m.rigidbody.velocity = Vector2.zero;
@@ -1455,6 +1478,7 @@ public class PlayerSuperDash : IState
 
     public void OnExit()
     {
+        spikes.ForEach((spike)=>m.StopAllCoroutines());
         spikes.ForEach(Object.Destroy); // 可能还没冲刺就被打断了
         m.rigidbody.gravityScale = gravityBackup;
     }

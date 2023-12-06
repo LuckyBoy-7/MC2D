@@ -34,6 +34,8 @@ public class Guide : MonoBehaviour
                 GuideUI.instance.ShowContents(firstVerb, secondVerb, player.downKey, player.spellKey);
             else if (inputType == InputType.Roar)
                 GuideUI.instance.ShowContents(firstVerb, secondVerb, player.upKey, player.spellKey);
+            else if (inputType == InputType.SuperDash)
+                GuideUI.instance.ShowContents(firstVerb, secondVerb, player.superDashKey);
         }
     }
 }
