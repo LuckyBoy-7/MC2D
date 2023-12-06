@@ -169,6 +169,8 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 
     private void Update()
     {
+        if (GameManager.instance.state != GameStateType.Play)
+            return;
         UpdateKeyDownDirection();
         UpdateInputBuffer();
         UpdateStates();
@@ -1371,7 +1373,6 @@ public class PlayerSuperDash : IState
 
     public void OnUpdate()
     {
-        
         readyElapse += Time.deltaTime;
         // if (readyElapse > m.superDashWindupTime && readyElapse - Time.deltaTime < m.superDashWindupTime)
         //     Debug.Log("Ready");
@@ -1478,7 +1479,7 @@ public class PlayerSuperDash : IState
 
     public void OnExit()
     {
-        spikes.ForEach((spike)=>m.StopAllCoroutines());
+        spikes.ForEach((spike) => m.StopAllCoroutines());
         spikes.ForEach(Object.Destroy); // 可能还没冲刺就被打断了
         m.rigidbody.gravityScale = gravityBackup;
     }
