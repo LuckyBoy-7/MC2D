@@ -3,8 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using Cinemachine;
 using DG.Tweening;
+using UnityEditor;
 using UnityEngine;
-using UnityEngine.PlayerLoop;
+using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
 
 public class PlayerFSM : SingletonFSM<PlayerFSM>
@@ -53,6 +54,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 
     [Header("RaycastCheck")] public Collider2D hitBoxCollider;
     public float boxLeftRightCastDist;
+    public float wallCheckBoxHeight;
     public float boxDownCastDist;
     public LayerMask groundLayer;
 
@@ -113,6 +115,17 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public float roarDamageTimeGap;
     public float roarOverTimePercent = 0.8f;
 
+    [Header("SuperDash")] public SpriteRenderer spikePrefab;
+    public float superDashWindupTime;
+    public int oneSideSpikeCount;
+    public float spikeSpacing;
+    public float spikeMinScaleY;
+    public float spikeMaxScaleY;
+    public float spikePopUpTime;
+    public float spikePopUpTimeGap;
+    public float superDashMoveChangeSpeed;
+    public float superDashSpeed;
+
     [Header("Key")] public KeyCode leftKey = KeyCode.J;
     public KeyCode rightKey = KeyCode.L;
     public KeyCode upKey = KeyCode.I;
@@ -121,6 +134,8 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public KeyCode dashKey = KeyCode.S;
     public KeyCode attackKey = KeyCode.A;
     public KeyCode spellKey = KeyCode.Q;
+    public KeyCode superDashKey = KeyCode.W;
+
 
     void Start()
     {
@@ -140,6 +155,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         states[StateType.Roar] = new PlayerRoar(this);
         states[StateType.Drop] = new PlayerDrop(this);
         states[StateType.Recover] = new PlayerRecover(this);
+        states[StateType.SuperDash] = new PlayerSuperDash(this);
         TransitionState(StateType.Idle);
     }
 
@@ -296,14 +312,20 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
             new Vector2(0.95f, boxDownCastDist), 0, groundLayer);
 
     public bool isOnRightWall =>
-        Physics2D.OverlapBox(transform.position + Vector3.right * (0.5f + boxLeftRightCastDist / 2),
-            new Vector2(boxLeftRightCastDist, 0.95f), 0, groundLayer);
+        Physics2D.OverlapBox(
+            transform.position + Vector3.right * (0.5f + boxLeftRightCastDist / 2) +
+            Vector3.down * (0.45f - wallCheckBoxHeight / 2),
+            new Vector2(boxLeftRightCastDist, wallCheckBoxHeight), 0, groundLayer);
 
     public bool isOnLeftWall =>
-        Physics2D.OverlapBox(transform.position + Vector3.left * (0.5f + boxLeftRightCastDist / 2),
-            new Vector2(boxLeftRightCastDist, 0.95f), 0, groundLayer);
+        Physics2D.OverlapBox(
+            transform.position + Vector3.left * (0.5f + boxLeftRightCastDist / 2) +
+            Vector3.down * (0.45f - wallCheckBoxHeight / 2),
+            new Vector2(boxLeftRightCastDist, wallCheckBoxHeight), 0, groundLayer);
 
     public bool isOnWall => isOnLeftWall || isOnRightWall;
+    public bool isHittingWall => isOnLeftWall && facingDirection.x == -1 || isOnRightWall && facingDirection.x == 1;
+    public bool isOffWall => isOnLeftWall && facingDirection.x == 1 || isOnRightWall && facingDirection.x == -1;
 
     #endregion
 
@@ -314,10 +336,14 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         Gizmos.DrawWireCube(transform.position + Vector3.down * (0.5f + boxDownCastDist / 2),
             new Vector2(1, boxDownCastDist));
         // Wall Box
-        Gizmos.DrawWireCube(transform.position + Vector3.right * (0.5f + boxLeftRightCastDist / 2),
-            new Vector2(boxLeftRightCastDist, 1));
-        Gizmos.DrawWireCube(transform.position + Vector3.left * (0.5f + boxLeftRightCastDist / 2),
-            new Vector2(boxLeftRightCastDist, 1));
+        Gizmos.DrawWireCube(
+            transform.position + Vector3.right * (0.5f + boxLeftRightCastDist / 2) +
+            Vector3.down * (0.45f - wallCheckBoxHeight / 2),
+            new Vector2(boxLeftRightCastDist, wallCheckBoxHeight));
+        Gizmos.DrawWireCube(
+            transform.position + Vector3.left * (0.5f + boxLeftRightCastDist / 2) +
+            Vector3.down * (0.45f - wallCheckBoxHeight / 2),
+            new Vector2(boxLeftRightCastDist, wallCheckBoxHeight));
         // Hit Box
         Gizmos.color = Color.red;
         Gizmos.DrawWireCube(transform.position, hitBoxCollider.bounds.size);
@@ -396,6 +422,8 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public bool recoverTrigger => curExp >= 3
                                   && isOnGround && Input.GetKey(spellKey) && Time.time > spellPreparationExpireTime;
 
+    public bool superDashTrigger => Input.GetKeyDown(superDashKey);
+
     #endregion
 }
 
@@ -427,6 +455,10 @@ public class PlayerIdle : IState
             m.TransitionState(StateType.Spell);
         else if (m.recoverTrigger)
             m.TransitionState(StateType.Recover);
+        else if (m.superDashTrigger)
+            m.TransitionState(StateType.SuperDash);
+        else if (m.fallTrigger)
+            m.TransitionState(StateType.Fall);
     }
 
     public void OnFixedUpdate()
@@ -470,6 +502,8 @@ public class PlayerRun : IState
             m.TransitionState(StateType.Spell);
         else if (m.recoverTrigger)
             m.TransitionState(StateType.Recover);
+        else if (m.superDashTrigger)
+            m.TransitionState(StateType.SuperDash);
     }
 
     public void OnFixedUpdate()
@@ -647,6 +681,8 @@ public class PlayerWallSlide : IState
             m.TransitionState(StateType.Spell);
         else if (m.attackTrigger)
             m.TransitionState(StateType.Attack);
+        else if (m.superDashTrigger)
+            m.TransitionState(StateType.SuperDash);
     }
 
     public void OnFixedUpdate()
@@ -1265,5 +1301,161 @@ public class PlayerRecover : IState
 
     public void UpdateTrigger()
     {
+    }
+}
+
+public class PlayerSuperDash : IState
+{
+    private PlayerFSM m;
+    private float gravityBackup;
+    private float readyElapse;
+    private bool isReady;
+    private bool isDashing;
+    private bool isOver;
+    private bool isShowingSpike;
+
+    Dictionary<Vector3, Vector3> dir2Angle = new()
+    {
+        { Vector3.up, new Vector3(0, 0, 0) }, { Vector3.right, new Vector3(0, 0, -90) },
+        { Vector3.left, new Vector3(0, 0, 90) }
+    };
+
+    // 确定每个方向对应的旋转，因为只有刺向上的图片
+    Dictionary<Vector3, Vector3> dir2StartPosOffset = new()
+    {
+        { Vector3.up, new Vector3(0, -0.5f, 0) }, { Vector3.right, new Vector3(-0.5f, 0, 0) },
+        { Vector3.left, new Vector3(0.5f, 0, 90) }
+    };
+
+    private List<GameObject> spikes = new();
+
+    public PlayerSuperDash(PlayerFSM m)
+    {
+        this.m = m;
+    }
+
+    public void OnEnter()
+    {
+        // Debug.Log("SuperDashEnter!");
+        readyElapse = 0;
+        isReady = false;
+        isDashing = false;
+        isOver = false;
+        isShowingSpike = false;
+        gravityBackup = m.rigidbody.gravityScale;
+        m.rigidbody.gravityScale = 0;
+    }
+
+
+    public void OnUpdate()
+    {
+        readyElapse += Time.deltaTime;
+        // if (readyElapse > m.superDashWindupTime && readyElapse - Time.deltaTime < m.superDashWindupTime)
+        //     Debug.Log("Ready");
+        isReady = readyElapse >= m.superDashWindupTime;
+        if (!isReady)
+        {
+            m.rigidbody.velocity = Vector2.zero;
+
+            if (Input.GetKeyUp(m.superDashKey))
+            {
+                m.TransitionState(m.preStateType);
+            }
+
+            if (!isShowingSpike)
+                m.StartCoroutine(TryShowSpike());
+        }
+        else if (!isDashing)
+        {
+            if (Input.GetKeyUp(m.superDashKey))
+            {
+                m.rigidbody.velocity = new Vector2(m.facingDirection.x * m.superDashSpeed, 0);
+                spikes.ForEach(Object.Destroy);
+                isDashing = true;
+            }
+        }
+        else if (isDashing)
+        {
+            if (Input.GetKeyUp(m.jumpKey) || Input.GetKeyUp(m.dashKey) || Input.GetKeyUp(m.superDashKey) ||
+                m.isHittingWall)
+            {
+                isOver = true;
+            }
+        }
+    }
+
+    private IEnumerator TryShowSpike() // 根据已有spike数和对应elapse判断是否生成以及位置
+    {
+        isShowingSpike = true;
+
+        // 确定生成的刺面对的方向
+        var spikeFacingDir = Vector3.up;
+        var placingDir = Vector3.right;
+        if (m.preStateType == StateType.WallSlide)
+        {
+            spikeFacingDir = m.facingDirection.x == 1 ? Vector3.right : Vector3.left;
+            placingDir = Vector3.up;
+        }
+
+        bool right = true;
+        bool left = true;
+        for (int i = 0; i < m.oneSideSpikeCount; i++)
+        {
+            if (right)
+                right = SpawnSpike(spikeFacingDir, i, placingDir, dir2Angle[spikeFacingDir]);
+            if (left)
+                left = SpawnSpike(spikeFacingDir, i, -placingDir, dir2Angle[spikeFacingDir]);
+            yield return new WaitForSeconds(m.spikePopUpTimeGap);
+        }
+    }
+
+    private bool SpawnSpike(Vector3 spikeFacingDir, int order, Vector3 placingDir, Vector3 eulerAngle)
+    {
+        bool retval = true;
+        // 做完这些，刺就在正确的位置上了
+        var pos = m.transform.position + dir2StartPosOffset[spikeFacingDir] + placingDir * (order * m.spikeSpacing);
+        var spike = Object.Instantiate(m.spikePrefab, pos, Quaternion.identity);
+        spikes.Add(spike.gameObject);
+        var (width, height) = (spike.bounds.size.x, spike.bounds.size.y);
+        var (w, h) = (width / 2, height / 2);
+        spike.transform.Rotate(eulerAngle);
+        // 如果这根刺露出来了, 就要把这根刺调整到合适的位置，并且让后续不要再生成刺了
+        if (!Physics2D.Raycast(spike.transform.position + placingDir * w, -spikeFacingDir, 0.1f, m.groundLayer))
+        {
+            while (!Physics2D.Raycast(spike.transform.position + placingDir * w, -spikeFacingDir, 0.1f, m.groundLayer))
+            {
+                spike.transform.position -= placingDir * 0.001f;
+                Physics2D.SyncTransforms();
+            }
+
+            retval = false;
+        }
+
+        // 调整缩放
+        var scale = m.spikeMinScaleY + (m.spikeMaxScaleY - m.spikeMinScaleY) * order / m.oneSideSpikeCount;
+        spike.transform.localScale = new Vector3(1, scale, 1);
+
+        // 动画
+        spike.transform.position -= spikeFacingDir * (height * scale);
+        spike.transform.DOMove(spike.transform.position + spikeFacingDir * (height * scale), m.spikePopUpTime);
+
+        return retval;
+    }
+
+    public void OnFixedUpdate()
+    {
+        if (isOver)
+        {
+            var newX = Mathf.MoveTowards(m.rigidbody.velocity.x, 0, m.superDashMoveChangeSpeed);
+            m.rigidbody.velocity = new Vector2(newX, m.rigidbody.velocity.y);
+            if (Mathf.Abs(newX) < 1e-3)
+                m.TransitionState(m.preStateType);
+        }
+    }
+
+    public void OnExit()
+    {
+        spikes.ForEach(Object.Destroy); // 可能还没冲刺就被打断了
+        m.rigidbody.gravityScale = gravityBackup;
     }
 }

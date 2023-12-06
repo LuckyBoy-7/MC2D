@@ -34,10 +34,14 @@ public class SingletonFSM<T> : MonoBehaviour where T: SingletonFSM<T>
     }
     public Dictionary<StateType, IState> states = new();
     protected IState currentState;
+    private StateType currentStateType;
+    public StateType preStateType;
 
     public void TransitionState(StateType stateType)
     {
         currentState?.OnExit();
+        preStateType = currentStateType;
+        currentStateType = stateType;
         currentState = states[stateType];
         currentState.OnEnter();
     }

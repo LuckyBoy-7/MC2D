@@ -22,6 +22,7 @@ public enum StateType
     Drop,
     Roar,
     Recover,
+    SuperDash,
     // Enemy
     Chase,
     Teleport,
@@ -29,5 +30,5 @@ public enum StateType
     Question,
     Patrol,
     Move,
-    Wait
+    Wait,
 }
