@@ -17,6 +17,8 @@ public class MovingSpike : MonoBehaviour
 
     private void OnDrawGizmos()
     {
+        if (routes == null)
+            return;
         Gizmos.color = routeMarkColor;
         foreach (var route in routes)
         {
