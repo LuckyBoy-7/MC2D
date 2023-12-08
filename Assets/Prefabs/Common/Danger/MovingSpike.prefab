@@ -45,7 +45,7 @@ GameObject:
   - component: {fileID: 6318823871882677400}
   m_Layer: 0
   m_Name: _MovingSpike
-  m_TagString: Untagged
+  m_TagString: MovingSpike
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -240,7 +240,6 @@ MonoBehaviour:
   routes:
   - {fileID: 6318823871629336552}
   - {fileID: 6318823872326471430}
-  - {fileID: 0}
   routeMarkColor: {r: 1, g: 0, b: 0, a: 1}
   routeMarkRadius: 0.29
 --- !u!50 &6318823872655391088

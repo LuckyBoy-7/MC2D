@@ -1072,6 +1072,7 @@ public class PlayerAttack : IState
     private Dictionary<Animator, PolygonCollider2D> attackCollider;
     private Animator currentAttack;
     private bool hasAttackSpike;
+    private bool hasAttackMovingSpike;
     private bool hasLootEmeraldPile;
     private bool hasCausedDamage;
 
@@ -1153,6 +1154,7 @@ public class PlayerAttack : IState
         hasAttackSpike = false;
         hasLootEmeraldPile = false;
         hasCausedDamage = false;
+        hasAttackMovingSpike = false;
     }
 
     public void UpdateTrigger()
@@ -1163,9 +1165,20 @@ public class PlayerAttack : IState
         foreach (var other in colliders)
         {
             UpdateAttackSpikeTrigger(other);
+            UpdateAttackMovingSpikeTrigger(other);
             UpdateAttackArrowTrigger(other);
             UpdateAttackEmeraldPileTrigger(other);
             UpdateAttackWoodenDoorTrigger(other);
+        }
+    }
+
+    private void UpdateAttackMovingSpikeTrigger(Collider2D other)
+    {
+        if (other.CompareTag("MovingSpike") && !hasAttackMovingSpike)
+        {
+            hasAttackMovingSpike = true;
+            Pushed();
+            PlayerFSM.instance.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
         }
     }
 

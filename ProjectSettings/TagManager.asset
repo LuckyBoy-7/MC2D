@@ -16,6 +16,7 @@ TagManager:
   - PlayerAttack
   - WoodenDoor
   - TrapDoor
+  - MovingSpike
   layers:
   - Default
   - TransparentFX
