@@ -5,6 +5,7 @@ using Cinemachine;
 using DG.Tweening;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
 
@@ -29,11 +30,13 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public float moveSpeed;
     public float moveChangeSpeed;
     [Header("Idle")] public float dampingSpeed;
-    [Header("Jump")] public bool canDoubleJump = true;
+    [Header("Jump")] public float jumpAfloatMaxTime;
+    public float jumpAfloatMinTime;
+    public float doubleJumpAfloatMaxTime;
+    public float doubleJumpAfloatMinTime;
+    public bool canDoubleJump = true;
     public float firstJumpForce;
-    public float firstJumpAdditionalForce;
     public float doubleJumpForce;
-    public float doubleJumpAdditionalForce;
     public float jumpBufferTime;
     public float jumpBufferExpireTime = -1;
     public float wolfJumpBufferTime;
@@ -48,7 +51,6 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public float dashCoolDownExpireTime;
     [Header("WallSlide")] public float wallSlideSpeed;
     [Header("WallJump")] public Vector2 wallJumpForce;
-    public float wallJumpAdditionalForce;
     public float wallJumpMoveChangeSpeed;
     public float wallWolfJumpBufferTime;
     public float wallWolfJumpBufferExpireTime;
@@ -59,6 +61,8 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public float wallCheckBoxHeight;
     public float boxDownCastDist;
     public LayerMask groundLayer;
+
+    [Header("Physics")] public float gravityScaleBackup;
 
     [Header("Attack")] public Animator attackRight;
     public PolygonCollider2D attackColliderRight;
@@ -149,6 +153,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     void Start()
     {
         healthPoint = maxHealthPoint;
+        gravityScaleBackup = rigidbody.gravityScale;
         states[StateType.Idle] = new PlayerIdle(this);
         states[StateType.Run] = new PlayerRun(this);
         states[StateType.Hurt] = new PlayerHurt(this);
@@ -328,6 +333,10 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 
     #region PhysicsCheck
 
+    public bool isHittingCeiling =>
+        Physics2D.OverlapBox(transform.position + Vector3.up * (0.5f + boxDownCastDist / 2),
+            new Vector2(0.95f, boxDownCastDist), 0, groundLayer) && rigidbody.velocity.y > 1e-3;
+
     public bool isOnGround =>
         Physics2D.OverlapBox(transform.position + Vector3.down * (0.5f + boxDownCastDist / 2),
             new Vector2(0.95f, boxDownCastDist), 0, groundLayer);
@@ -413,6 +422,9 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public bool isInvincible => Time.time <= invincibleExpireTime;
 
     public void PlayAttackEffect(Vector3 position) => Instantiate(attackEffect, position, Quaternion.identity);
+
+    public void SetZeroGravity() => rigidbody.gravityScale = 0;
+    public void ResetGravity() => rigidbody.gravityScale = gravityScaleBackup;
 
     #region StateTransitionTrigger
 
@@ -572,6 +584,8 @@ public class PlayerJump : IState
 {
     private PlayerFSM m;
     private bool isKeyReleased;
+    private float jumpAFloatElapse;
+    private bool hasSetSpeedYZero;
 
     public PlayerJump(PlayerFSM m)
     {
@@ -580,6 +594,7 @@ public class PlayerJump : IState
 
     public void OnEnter()
     {
+        m.SetZeroGravity();
         m.rigidbody.velocity = Vector2.up * m.firstJumpForce;
         m.jumpBufferExpireTime = -1; // 重置，否则如果从跳跃到落地的时间<bufferTime，则跳跃会被触发两次 
         m.wolfJumpBufferExpireTime = -1;
@@ -589,6 +604,15 @@ public class PlayerJump : IState
     {
         m.UpdateFacingDirection();
         isKeyReleased = isKeyReleased || Input.GetKeyUp(m.jumpKey);
+        jumpAFloatElapse += Time.deltaTime;
+        // 跳跃至少持续0.08s
+        if (jumpAFloatElapse > m.jumpAfloatMinTime && (isKeyReleased || jumpAFloatElapse > m.jumpAfloatMaxTime))
+            m.ResetGravity();
+        if (!hasSetSpeedYZero && (isKeyReleased || m.isHittingCeiling))
+        {
+            m.rigidbody.velocity = new Vector2(m.rigidbody.velocity.x, 0);
+            hasSetSpeedYZero = true;
+        }
 
         if (m.fallTrigger)
             m.TransitionState(StateType.Fall);
@@ -604,9 +628,6 @@ public class PlayerJump : IState
 
     public void OnFixedUpdate()
     {
-        if (!isKeyReleased)
-            m.rigidbody.AddForce(m.firstJumpAdditionalForce * Vector2.up); // 因为更新速率恒定，所以加不加deltatime都一样
-
         var newX = Mathf.MoveTowards(m.rigidbody.velocity.x, m.moveSpeed * m.keyDownDirection.x,
             m.moveChangeSpeed);
         m.rigidbody.velocity = new Vector2(newX, m.rigidbody.velocity.y);
@@ -615,6 +636,9 @@ public class PlayerJump : IState
     public void OnExit()
     {
         isKeyReleased = false;
+        jumpAFloatElapse = 0;
+        hasSetSpeedYZero = false;
+        m.ResetGravity();
     }
 }
 
@@ -622,6 +646,8 @@ public class PlayerWallJump : IState
 {
     private PlayerFSM m;
     private bool isKeyReleased;
+    private float jumpAFloatElapse;
+    private bool hasSetSpeedYZero;
 
     public PlayerWallJump(PlayerFSM m)
     {
@@ -630,6 +656,7 @@ public class PlayerWallJump : IState
 
     public void OnEnter()
     {
+        m.SetZeroGravity();
         m.rigidbody.velocity = new Vector2(m.facingDirection.x * m.wallJumpForce.x, m.wallJumpForce.y);
         m.jumpBufferExpireTime = -1; // 重置，否则如果从跳跃到落地的时间<bufferTime，则跳跃会被触发两次 
         m.wallWolfJumpBufferExpireTime = -1;
@@ -640,6 +667,15 @@ public class PlayerWallJump : IState
     {
         m.UpdateFacingDirection();
         isKeyReleased = isKeyReleased || Input.GetKeyUp(m.jumpKey);
+        jumpAFloatElapse += Time.deltaTime;
+        // 跳跃至少持续0.08s
+        if (jumpAFloatElapse > m.doubleJumpAfloatMinTime && (isKeyReleased || jumpAFloatElapse > m.doubleJumpAfloatMaxTime))
+            m.ResetGravity();
+        if (!hasSetSpeedYZero && (isKeyReleased || m.isHittingCeiling))
+        {
+            m.rigidbody.velocity = new Vector2(m.rigidbody.velocity.x, 0);
+            hasSetSpeedYZero = true;
+        }
 
         if (m.fallTrigger)
             m.TransitionState(StateType.Fall);
@@ -657,21 +693,21 @@ public class PlayerWallJump : IState
     {
         float newX = Mathf.MoveTowards(m.rigidbody.velocity.x, m.moveSpeed * m.keyDownDirection.x,
             m.wallJumpMoveChangeSpeed);
-        if (!isKeyReleased)
-            m.rigidbody.AddForce(m.wallJumpAdditionalForce * Vector2.up);
         m.rigidbody.velocity = new Vector2(newX, m.rigidbody.velocity.y);
     }
 
     public void OnExit()
     {
         isKeyReleased = false;
+        hasSetSpeedYZero = false;
+        jumpAFloatElapse = 0;
+        m.ResetGravity();
     }
 }
 
 public class PlayerWallSlide : IState
 {
     private PlayerFSM m;
-    private float gravityScaleBackup;
 
     public PlayerWallSlide(PlayerFSM m)
     {
@@ -680,7 +716,6 @@ public class PlayerWallSlide : IState
 
     public void OnEnter()
     {
-        gravityScaleBackup = m.rigidbody.gravityScale;
         m.rigidbody.gravityScale = 0;
         m.rigidbody.velocity = new Vector2(0, -m.wallSlideSpeed);
         m.canDash = true;
@@ -712,7 +747,7 @@ public class PlayerWallSlide : IState
 
     public void OnExit()
     {
-        m.rigidbody.gravityScale = gravityScaleBackup;
+        m.rigidbody.gravityScale = m.gravityScaleBackup;
     }
 }
 
@@ -767,7 +802,6 @@ public class PlayerFall : IState
 public class PlayerDash : IState
 {
     private PlayerFSM m;
-    private float gravityScaleBackup;
     private float elapse;
 
     public PlayerDash(PlayerFSM m)
@@ -780,7 +814,6 @@ public class PlayerDash : IState
         m.dashBufferExpireTime = -1;
         m.canDash = false;
         m.rigidbody.velocity = new Vector2(m.facingDirection.x * m.dashSpeed, 0);
-        gravityScaleBackup = m.rigidbody.gravityScale;
         m.rigidbody.gravityScale = 0;
     }
 
@@ -804,7 +837,7 @@ public class PlayerDash : IState
 
     public void OnExit()
     {
-        m.rigidbody.gravityScale = gravityScaleBackup;
+        m.rigidbody.gravityScale = m.gravityScaleBackup;
         elapse = 0;
         m.dashCoolDownExpireTime = Time.time + m.dashCoolDown;
         m.rigidbody.velocity = Vector2.zero;
@@ -851,7 +884,6 @@ public class PlayerSpell : IState
 public class PlayerRoar : IState
 {
     private PlayerFSM m;
-    private float gravityBackup;
     private PlayerRoarPrefab roarPrefab;
     private Animator anim;
     private AnimatorStateInfo info;
@@ -863,7 +895,6 @@ public class PlayerRoar : IState
 
     public void OnEnter()
     {
-        gravityBackup = m.rigidbody.gravityScale;
         m.rigidbody.gravityScale = 0;
         m.rigidbody.velocity = Vector2.zero;
         roarPrefab = PlayerFSM.Instantiate(m.roarPrefab, PlayerFSM.instance.transform.position, Quaternion.identity);
@@ -888,7 +919,7 @@ public class PlayerRoar : IState
 
     public void OnExit()
     {
-        m.rigidbody.gravityScale = gravityBackup;
+        m.rigidbody.gravityScale = m.gravityScaleBackup;
     }
 }
 
@@ -896,7 +927,6 @@ public class PlayerDrop : IState
 {
     private PlayerFSM m;
     private float elapse;
-    private float gravityBackup;
     private bool isFirstOnGround;
     private PlayerDropPrefab dropPrefab;
 
@@ -908,7 +938,6 @@ public class PlayerDrop : IState
     public void OnEnter()
     {
         m.rigidbody.velocity = Vector2.up * m.windupForce;
-        gravityBackup = m.rigidbody.gravityScale;
         m.rigidbody.gravityScale = 0;
         if (m.isOnGround)
             elapse += m.dropWindupDeltaCompensation;
@@ -958,7 +987,7 @@ public class PlayerDrop : IState
     public void OnExit()
     {
         elapse = 0;
-        m.rigidbody.gravityScale = gravityBackup;
+        m.rigidbody.gravityScale = m.gravityScaleBackup;
         isFirstOnGround = false;
     }
 }
@@ -966,7 +995,6 @@ public class PlayerDrop : IState
 public class PlayerReleaseArrow : IState
 {
     private PlayerFSM m;
-    private float gravityBackup;
     private float elapse;
 
     public PlayerReleaseArrow(PlayerFSM m)
@@ -979,7 +1007,6 @@ public class PlayerReleaseArrow : IState
         var arrow = PlayerFSM.Instantiate(m.arrowPrefab, PlayerFSM.instance.transform.position, Quaternion.identity);
         arrow.SetMove(m.facingDirection.x, m.arrowSpeed);
 
-        gravityBackup = m.rigidbody.gravityScale;
         m.rigidbody.gravityScale = 0;
 
         m.rigidbody.velocity = new Vector2(-m.facingDirection.x * m.spellArrowKnockBackForce, 0);
@@ -1009,7 +1036,7 @@ public class PlayerReleaseArrow : IState
 
     public void OnExit()
     {
-        m.rigidbody.gravityScale = gravityBackup;
+        m.rigidbody.gravityScale = m.gravityScaleBackup;
         elapse = 0;
     }
 }
@@ -1018,6 +1045,8 @@ public class PlayerDoubleJump : IState
 {
     private PlayerFSM m;
     private bool isKeyReleased;
+    private float jumpAFloatElapse;
+    private bool hasSetSpeedYZero;
 
     public PlayerDoubleJump(PlayerFSM m)
     {
@@ -1026,6 +1055,7 @@ public class PlayerDoubleJump : IState
 
     public void OnEnter()
     {
+        m.SetZeroGravity();
         m.rigidbody.velocity = new Vector2(m.rigidbody.velocity.x, m.doubleJumpForce);
         // m.rigidbody.AddForce(Vector2.up * doubleJumpForce, ForceMode2D.Impulse);
         m.jumpBufferExpireTime = -1; // 重置，否则如果从跳跃到落地的时间<bufferTime，则跳跃会被触发两次 
@@ -1037,6 +1067,15 @@ public class PlayerDoubleJump : IState
     {
         m.UpdateFacingDirection();
         isKeyReleased = isKeyReleased || Input.GetKeyUp(m.jumpKey);
+        jumpAFloatElapse += Time.deltaTime;
+        // 跳跃至少持续0.08s
+        if (jumpAFloatElapse > m.jumpAfloatMinTime && (isKeyReleased || jumpAFloatElapse > m.jumpAfloatMaxTime))
+            m.ResetGravity();
+        if (!hasSetSpeedYZero && (isKeyReleased || m.isHittingCeiling))
+        {
+            m.rigidbody.velocity = new Vector2(m.rigidbody.velocity.x, 0);
+            hasSetSpeedYZero = true;
+        }
 
         if (m.fallTrigger)
             m.TransitionState(StateType.Fall);
@@ -1052,15 +1091,15 @@ public class PlayerDoubleJump : IState
 
     public void OnFixedUpdate()
     {
-        if (!isKeyReleased)
-            m.rigidbody.AddForce(m.doubleJumpAdditionalForce * Vector2.up);
-
         m.rigidbody.velocity = new Vector2(m.moveSpeed * m.keyDownDirection.x, m.rigidbody.velocity.y);
     }
 
     public void OnExit()
     {
         isKeyReleased = false;
+        jumpAFloatElapse = 0;
+        hasSetSpeedYZero = false;
+        m.ResetGravity();
     }
 }
 
@@ -1343,7 +1382,6 @@ public class PlayerRecover : IState
 public class PlayerSuperDash : IState
 {
     private PlayerFSM m;
-    private float gravityBackup;
     private float readyElapse;
     private bool isReady;
     private bool isDashing;
@@ -1380,7 +1418,6 @@ public class PlayerSuperDash : IState
         isDashing = false;
         isOver = false;
         isShowingSpike = false;
-        gravityBackup = m.rigidbody.gravityScale;
         m.rigidbody.gravityScale = 0;
     }
 
@@ -1495,6 +1532,6 @@ public class PlayerSuperDash : IState
     {
         spikes.ForEach((spike) => m.StopAllCoroutines());
         spikes.ForEach(Object.Destroy); // 可能还没冲刺就被打断了
-        m.rigidbody.gravityScale = gravityBackup;
+        m.rigidbody.gravityScale = m.gravityScaleBackup;
     }
 }
