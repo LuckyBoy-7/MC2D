@@ -16,6 +16,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public bool isOverPowerDebug;
     public bool isAllAbilityDebug;
     [Header("Currency")] public int curEmeraldNumber;
+    [Header("Collectable")] public int strawberryNumber;
     [Header("Health")] public int maxHealthPoint;
     public int healthPoint;
 
