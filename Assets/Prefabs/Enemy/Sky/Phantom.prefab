@@ -105,7 +105,7 @@ MonoBehaviour:
   canBeKnockedBack: 1
   emeraldEmitterPrefab: {fileID: 7434508363890164307, guid: 5135224466e9b204ea19ad01e00c1bda, type: 3}
   ownEmeraldNumber: 5
-  maxHealthPoint: 111
+  maxHealthPoint: 2
   healthPoint: 2
   hurtMask: {fileID: 5643705198150407640}
   rigidbody: {fileID: 5643705197914635138}
