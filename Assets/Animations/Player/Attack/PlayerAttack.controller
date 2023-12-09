@@ -59,7 +59,7 @@ AnimatorStateMachine:
   m_ChildStates:
   - serializedVersion: 1
     m_State: {fileID: 6202576929763063293}
-    m_Position: {x: 570, y: 120, z: 0}
+    m_Position: {x: 470, y: 100, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 600310281879496870}
     m_Position: {x: 390, y: -10, z: 0}
@@ -81,7 +81,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: PlayerAttack
-  m_Speed: 8
+  m_Speed: 6
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: 7369532671172668096}

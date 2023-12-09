@@ -64,22 +64,6 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 
     [Header("Physics")] public float gravityScaleBackup;
 
-    [Header("Attack")] public Animator attackRight;
-    public PolygonCollider2D attackColliderRight;
-    public Animator attackDown;
-    public PolygonCollider2D attackColliderDown;
-    public Animator attackUp;
-    public PolygonCollider2D attackColliderUp;
-    public float attackCoolDown;
-    public float attackCoolDownExpireTime;
-    public float attackForce;
-    public float attackDownForceMultiplier;
-    public float attackMoveChangeSpeed;
-    public float attackBufferTime;
-    public float attackBufferExpireTime;
-    public int attackDamage;
-    public int expAmountExtractedByAttack = 1;
-
     [Header("Exp")] public int maxExp = 9;
     public int curExp = 0;
 
@@ -163,7 +147,6 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         states[StateType.Fall] = new PlayerFall(this);
         states[StateType.Dash] = new PlayerDash(this);
         states[StateType.DoubleJump] = new PlayerDoubleJump(this);
-        states[StateType.Attack] = new PlayerAttack(this);
         states[StateType.Spell] = new PlayerSpell(this);
         states[StateType.ReleaseArrow] = new PlayerReleaseArrow(this);
         states[StateType.Roar] = new PlayerRoar(this);
@@ -206,7 +189,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         if (isInvincibleDebug)
             invincibleExpireTime = Time.time + invincibleTime;
         if (isOverPowerDebug)
-            attackDamage = 10;
+            PlayerAttack.instance.attackDamage = 10;
         if (isAllAbilityDebug)
         {
             hasDashAbility = true;
@@ -311,8 +294,6 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
             jumpBufferExpireTime = Time.time + jumpBufferTime;
         if (Input.GetKeyDown(dashKey))
             dashBufferExpireTime = Time.time + dashBufferTime;
-        if (Input.GetKeyDown(attackKey))
-            attackBufferExpireTime = Time.time + attackBufferTime;
         if (Input.GetKeyDown(spellKey))
             spellPreparationExpireTime = Time.time + spellPreparationTime;
         if (isOnGround)
@@ -386,8 +367,10 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         keyDownDirection = new Vector2(x, y);
     }
 
-    public void UpdateFacingDirection() // 看起来像是没什么用，但是如果我放黑波的时候改变了方向，下次就算没动键盘放出来的波会向相反方向移动
+    public void TryUpdateFacingDirection() // 看起来像是没什么用，但是如果我放黑波的时候改变了方向，下次就算没动键盘放出来的波会向相反方向移动
     {
+        if (PlayerAttack.instance.isAttacking)
+            return;
         var (x, y) = (keyDownDirection.x, keyDownDirection.y);
         if (x != 0)
             facingDirection.x = x;
@@ -446,7 +429,6 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public bool moveTrigger => Input.GetKey(leftKey) || Input.GetKey(rightKey);
     public bool fallTrigger => rigidbody.velocity.y < -1e-3;
     public bool offWallTrigger => isOnLeftWall && Input.GetKey(rightKey) || isOnRightWall && Input.GetKey(leftKey);
-    public bool attackTrigger => Time.time >= attackCoolDownExpireTime && Time.time <= attackBufferExpireTime;
 
     public bool spellTrigger => curExp >= 3
                                 && (isOnGround && Input.GetKeyUp(spellKey) && Time.time <= spellPreparationExpireTime
@@ -475,15 +457,14 @@ public class PlayerIdle : IState
 
     public void OnUpdate()
     {
-        m.UpdateFacingDirection();
+        m.TryUpdateFacingDirection();
         if (m.moveTrigger)
             m.TransitionState(StateType.Run);
         else if (m.jumpTrigger)
             m.TransitionState(StateType.Jump);
         else if (m.dashTrigger)
             m.TransitionState(StateType.Dash);
-        else if (m.attackTrigger)
-            m.TransitionState(StateType.Attack);
+
         else if (m.spellTrigger)
             m.TransitionState(StateType.Spell);
         else if (m.recoverTrigger)
@@ -520,7 +501,7 @@ public class PlayerRun : IState
 
     public void OnUpdate()
     {
-        m.UpdateFacingDirection();
+        m.TryUpdateFacingDirection();
         if (!m.moveTrigger)
             m.TransitionState(StateType.Idle);
         else if (m.jumpTrigger)
@@ -529,8 +510,7 @@ public class PlayerRun : IState
             m.TransitionState(StateType.Fall);
         else if (m.dashTrigger)
             m.TransitionState(StateType.Dash);
-        else if (m.attackTrigger)
-            m.TransitionState(StateType.Attack);
+
         else if (m.spellTrigger)
             m.TransitionState(StateType.Spell);
         else if (m.recoverTrigger)
@@ -602,7 +582,7 @@ public class PlayerJump : IState
 
     public void OnUpdate()
     {
-        m.UpdateFacingDirection();
+        m.TryUpdateFacingDirection();
         isKeyReleased = isKeyReleased || Input.GetKeyUp(m.jumpKey);
         jumpAFloatElapse += Time.deltaTime;
         // 跳跃至少持续0.08s
@@ -620,8 +600,7 @@ public class PlayerJump : IState
             m.TransitionState(StateType.DoubleJump);
         else if (m.dashTrigger)
             m.TransitionState(StateType.Dash);
-        else if (m.attackTrigger)
-            m.TransitionState(StateType.Attack);
+
         else if (m.spellTrigger)
             m.TransitionState(StateType.Spell);
     }
@@ -665,11 +644,12 @@ public class PlayerWallJump : IState
 
     public void OnUpdate()
     {
-        m.UpdateFacingDirection();
+        m.TryUpdateFacingDirection();
         isKeyReleased = isKeyReleased || Input.GetKeyUp(m.jumpKey);
         jumpAFloatElapse += Time.deltaTime;
         // 跳跃至少持续0.08s
-        if (jumpAFloatElapse > m.doubleJumpAfloatMinTime && (isKeyReleased || jumpAFloatElapse > m.doubleJumpAfloatMaxTime))
+        if (jumpAFloatElapse > m.doubleJumpAfloatMinTime &&
+            (isKeyReleased || jumpAFloatElapse > m.doubleJumpAfloatMaxTime))
             m.ResetGravity();
         if (!hasSetSpeedYZero && (isKeyReleased || m.isHittingCeiling))
         {
@@ -683,8 +663,7 @@ public class PlayerWallJump : IState
             m.TransitionState(StateType.Dash);
         else if (m.doubleJumpTrigger)
             m.TransitionState(StateType.DoubleJump);
-        else if (m.attackTrigger)
-            m.TransitionState(StateType.Attack);
+
         else if (m.spellTrigger)
             m.TransitionState(StateType.Spell);
     }
@@ -735,8 +714,7 @@ public class PlayerWallSlide : IState
             m.TransitionState(StateType.Dash);
         else if (m.spellTrigger)
             m.TransitionState(StateType.Spell);
-        else if (m.attackTrigger)
-            m.TransitionState(StateType.Attack);
+
         else if (m.superDashTrigger)
             m.TransitionState(StateType.SuperDash);
     }
@@ -766,7 +744,7 @@ public class PlayerFall : IState
 
     public void OnUpdate()
     {
-        m.UpdateFacingDirection();
+        m.TryUpdateFacingDirection();
 
         if (m.isOnGround)
             m.TransitionState(m.moveTrigger ? StateType.Run : StateType.Idle);
@@ -780,8 +758,7 @@ public class PlayerFall : IState
             m.TransitionState(StateType.Dash);
         else if (m.wallSlideTrigger)
             m.TransitionState(StateType.WallSlide);
-        else if (m.attackTrigger)
-            m.TransitionState(StateType.Attack);
+
         else if (m.spellTrigger)
             m.TransitionState(StateType.Spell);
     }
@@ -1065,7 +1042,7 @@ public class PlayerDoubleJump : IState
 
     public void OnUpdate()
     {
-        m.UpdateFacingDirection();
+        m.TryUpdateFacingDirection();
         isKeyReleased = isKeyReleased || Input.GetKeyUp(m.jumpKey);
         jumpAFloatElapse += Time.deltaTime;
         // 跳跃至少持续0.08s
@@ -1081,8 +1058,7 @@ public class PlayerDoubleJump : IState
             m.TransitionState(StateType.Fall);
         else if (m.dashTrigger)
             m.TransitionState(StateType.Dash);
-        else if (m.attackTrigger)
-            m.TransitionState(StateType.Attack);
+
         else if (m.spellTrigger)
             m.TransitionState(StateType.Spell);
         else if (m.wallSlideTrigger)
@@ -1100,227 +1076,6 @@ public class PlayerDoubleJump : IState
         jumpAFloatElapse = 0;
         hasSetSpeedYZero = false;
         m.ResetGravity();
-    }
-}
-
-public class PlayerAttack : IState
-{
-    private PlayerFSM m;
-    private AnimatorStateInfo info;
-    private Dictionary<Animator, Vector2> attackDirection;
-    private Dictionary<Animator, PolygonCollider2D> attackCollider;
-    private Animator currentAttack;
-    private bool hasAttackSpike;
-    private bool hasAttackMovingSpike;
-    private bool hasLootEmeraldPile;
-    private bool hasCausedDamage;
-
-    public PlayerAttack(PlayerFSM m)
-    {
-        this.m = m;
-        attackDirection = new()
-        {
-            { m.attackRight, new Vector2(1, 0) * m.facingDirection.x },
-            { m.attackUp, new Vector2(0, 1) },
-            { m.attackDown, new Vector2(0, -1) }
-        };
-
-        attackCollider = new()
-        {
-            { m.attackRight, m.attackColliderRight },
-            { m.attackUp, m.attackColliderUp },
-            { m.attackDown, m.attackColliderDown }
-        };
-    }
-
-    public void OnEnter()
-    {
-        m.attackBufferExpireTime = -1;
-
-        List<int> direction = new() { -1, 1 };
-        if (Input.GetKey(m.upKey))
-            currentAttack = m.attackUp;
-        else if (Input.GetKey(m.downKey) && !m.isOnGround)
-            currentAttack = m.attackDown;
-        else
-            currentAttack = m.attackRight;
-        currentAttack.transform.localScale = new Vector3(1, direction[Random.Range(0, 2)], 1);
-        currentAttack.Play("PlayerAttack");
-    }
-
-
-    public void OnUpdate()
-    {
-        // 这段话要不停调用（天坑！！！）
-        info = currentAttack.GetCurrentAnimatorStateInfo(0);
-        // 更新向右攻击的方向
-        attackDirection[m.attackRight] = new Vector2(1, 0) * m.facingDirection.x;
-        UpdateTrigger();
-
-        if (m.isOnGround)
-            m.TransitionState(m.moveTrigger ? StateType.Run : StateType.Idle);
-        else if (m.fallTrigger)
-            m.TransitionState(StateType.Fall);
-        else if (m.dashTrigger)
-            m.TransitionState(StateType.Dash);
-        else if (m.doubleJumpTrigger)
-            m.TransitionState(StateType.DoubleJump);
-
-        // The integer part is the number of time a state has been looped. The fractional part is the % (0-1) of progress in the current loop.
-        // 整数部分是循环次数，小数部分是运行进度, 主要是为了防止攻击的时候转向
-        if (info.IsName("PlayerAttack") && info.normalizedTime - (int)info.normalizedTime < 0.95f)
-            return;
-        m.UpdateFacingDirection();
-    }
-
-    public void OnFixedUpdate()
-    {
-        var newX = Mathf.MoveTowards(m.rigidbody.velocity.x, m.moveSpeed * m.keyDownDirection.x,
-            m.attackMoveChangeSpeed);
-        // 我感觉如果要写的更精细的话就要有更多的状态，比如FallAttack，RunAttack之类的
-        if (m.fallTrigger)
-        {
-            var newY = -Mathf.Min(-m.rigidbody.velocity.y, m.maxFallingSpeed);
-            m.rigidbody.velocity = new Vector2(newX, newY);
-        }
-        else
-            m.rigidbody.velocity = new Vector2(newX, m.rigidbody.velocity.y);
-    }
-
-    public void OnExit()
-    {
-        m.attackCoolDownExpireTime = Time.time + m.attackCoolDown;
-        hasAttackSpike = false;
-        hasLootEmeraldPile = false;
-        hasCausedDamage = false;
-        hasAttackMovingSpike = false;
-    }
-
-    public void UpdateTrigger()
-    {
-        List<Collider2D> colliders = new();
-        Physics2D.OverlapCollider(attackCollider[currentAttack], new ContactFilter2D { useTriggers = true }, colliders);
-        UpdateAttackEnemyTrigger(colliders);
-        foreach (var other in colliders)
-        {
-            UpdateAttackSpikeTrigger(other);
-            UpdateAttackMovingSpikeTrigger(other);
-            UpdateAttackArrowTrigger(other);
-            UpdateAttackEmeraldPileTrigger(other);
-            UpdateAttackWoodenDoorTrigger(other);
-        }
-    }
-
-    private void UpdateAttackMovingSpikeTrigger(Collider2D other)
-    {
-        if (other.CompareTag("MovingSpike") && !hasAttackMovingSpike)
-        {
-            hasAttackMovingSpike = true;
-            Pushed();
-            PlayerFSM.instance.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
-        }
-    }
-
-    private void UpdateAttackWoodenDoorTrigger(Collider2D other)
-    {
-        if (other.CompareTag("WoodenDoor"))
-        {
-            other.GetComponent<WoodenDoor>().Attacked();
-            if (currentAttack == m.attackDown) // 只有下劈才刷新
-            {
-                m.canDoubleJump = true;
-                m.canDash = true;
-            }
-
-            // 播放特效
-            PlayerFSM.instance.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
-        }
-    }
-
-    private void UpdateAttackArrowTrigger(Collider2D other)
-    {
-        if (other.CompareTag("EnemyArrow"))
-        {
-            PlayerFSM.Destroy(other.gameObject);
-            Pushed();
-            PlayerFSM.instance.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
-        }
-    }
-
-    private void UpdateAttackEmeraldPileTrigger(Collider2D other)
-    {
-        if (hasLootEmeraldPile || !other.CompareTag("EmeraldPile"))
-            return;
-        other.GetComponent<EmeraldPile>().Looted();
-        Pushed();
-        hasLootEmeraldPile = true;
-        PlayerFSM.instance.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
-    }
-
-    private void UpdateAttackSpikeTrigger(Collider2D other)
-    {
-        if (hasAttackSpike || !other.CompareTag("Spike"))
-            return;
-
-        hasAttackSpike = true;
-        Pushed();
-        // 更新属性
-        if (currentAttack == m.attackDown) // 只有下劈才刷新
-        {
-            m.canDoubleJump = true;
-            m.canDash = true;
-        }
-
-        // 播放特效
-        PlayerFSM.instance.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
-    }
-
-    private void UpdateAttackEnemyTrigger(List<Collider2D> others)
-    {
-        if (hasCausedDamage)
-            return;
-        bool anyEnemyAttacked = false;
-        foreach (var other in others)
-        {
-            if (!other.CompareTag("Enemy") || !other.isTrigger) // 只打trigger的，因为enemy有两个碰撞箱
-                continue;
-            if (!anyEnemyAttacked) // 在第一个打到的敌人上播放特效
-                m.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
-            anyEnemyAttacked = true;
-            other.GetComponent<EnemyFSM>().Attacked(m.attackDamage, attackDirection[currentAttack] * m.attackForce);
-        }
-
-        if (anyEnemyAttacked)
-        {
-            hasCausedDamage = true;
-            Pushed();
-            // 更新属性
-            if (currentAttack == m.attackDown) // 只有下劈才刷新
-            {
-                m.canDoubleJump = true;
-                m.canDash = true;
-            }
-
-            // 更新exp
-            m.curExp = Mathf.Min(m.curExp + m.expAmountExtractedByAttack, m.maxExp);
-            PlayerExpUI.instance.UpdatePlayerExpUI();
-        }
-    }
-
-    private void Pushed()
-    {
-        if (currentAttack == m.attackRight)
-            m.rigidbody.velocity = new Vector2(-attackDirection[currentAttack].x * m.attackForce,
-                m.rigidbody.velocity.y);
-        else if (currentAttack == m.attackUp)
-        {
-        }
-        else
-        {
-            m.rigidbody.velocity = new Vector2(m.rigidbody.velocity.x,
-                -attackDirection[currentAttack].y * (m.attackForce * m.attackDownForceMultiplier));
-            m.dashCoolDownExpireTime = -1; // 下劈立即刷新dash，怪不得下劈完冲不出去，我还以为是动画播的太慢了
-        }
     }
 }
 
