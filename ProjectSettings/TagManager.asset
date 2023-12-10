@@ -17,6 +17,7 @@ TagManager:
   - WoodenDoor
   - TrapDoor
   - MovingSpike
+  - DripStone
   layers:
   - Default
   - TransparentFX

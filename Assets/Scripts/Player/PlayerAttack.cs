@@ -26,6 +26,7 @@ public class PlayerAttack : Singleton<PlayerAttack>
     private bool hasAttackMovingSpike;
     private bool hasLootEmeraldPile;
     private bool hasAttackedEnemy;
+    private bool hasAttackedDripStone;
 
     public bool isAttacking;
 
@@ -92,6 +93,7 @@ public class PlayerAttack : Singleton<PlayerAttack>
         hasAttackedEnemy = false;
         hasAttackMovingSpike = false;
         isAttacking = false;
+        hasAttackedDripStone = false;
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -102,6 +104,7 @@ public class PlayerAttack : Singleton<PlayerAttack>
         UpdateAttackArrowTrigger(other);
         UpdateAttackEmeraldPileTrigger(other);
         UpdateAttackWoodenDoorTrigger(other);
+        UpdateAttackDripStoneTrigger(other);
     }
 
     private void UpdateAttackMovingSpikeTrigger(Collider2D other)
@@ -167,6 +170,24 @@ public class PlayerAttack : Singleton<PlayerAttack>
         PlayerFSM.instance.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
     }
 
+    private void UpdateAttackDripStoneTrigger(Collider2D other)
+    {
+        if (hasAttackedDripStone || !other.CompareTag("DripStone"))
+            return;
+        hasAttackedDripStone = true;
+        Pushed();
+        // 更新属性
+        if (currentAttack == attackDown) // 只有下劈才刷新
+        {
+            m.canDoubleJump = true;
+            m.canDash = true;
+        }
+
+        // 播放特效
+        PlayerFSM.instance.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
+        Destroy(other.gameObject);
+    }
+
     private void UpdateAttackEnemyTrigger(Collider2D other)
     {
         if (hasAttackedEnemy)
@@ -193,7 +214,7 @@ public class PlayerAttack : Singleton<PlayerAttack>
         }
     }
 
-    private void Pushed()
+    public void Pushed()
     {
         if (currentAttack == attackRight)
             m.rigidbody.velocity = new Vector2(-attackDirection[currentAttack].x * attackForce,
