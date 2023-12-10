@@ -175,7 +175,7 @@ public class PlayerAttack : Singleton<PlayerAttack>
             return;
 
         other.GetComponent<EnemyFSM>().Attacked(attackDamage, attackDirection[currentAttack] * attackForce);
-        if (!hasAttackedEnemy) // 第一个打到的敌人
+        if (!hasAttackedEnemy) // 第一个打到的敌人 
         {
             m.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position)); // 在第一个打到的敌人上播放特效
             hasAttackedEnemy = true;
