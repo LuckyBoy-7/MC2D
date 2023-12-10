@@ -7,8 +7,6 @@ public class SilvefishFSM : GroundEnemyFSM
     [Header("Move")] // 最无脑的生物
     public float moveSpeed;
 
-    public int moveDir;
-
     public float rotateTime;
     public float turnStateCheckDelay;
     // public List<Vector2> dirLst = new (){ Vector2.right ,Vector2.down,Vector2.left,Vector2.up};
@@ -16,7 +14,6 @@ public class SilvefishFSM : GroundEnemyFSM
     protected override void Start()
     {
         base.Start();
-        healthPoint = maxHealthPoint;
         states[StateType.Move] = new SilverfishMove(this);
         TransitionState(StateType.Move);
     }
@@ -126,8 +123,8 @@ public class SilverfishMove : IState
     private void Stop() => m.rigidbody.velocity = Vector2.zero;
 
     private void Rotate() =>
-        m.transform.DORotate(m.transform.eulerAngles + new Vector3(0, 0, -m.moveDir * 90), m.rotateTime).onComplete +=
+        m.transform.DORotate(m.transform.eulerAngles + new Vector3(0, 0, -m.facingDirection * 90), m.rotateTime).onComplete +=
             Move;
 
-    private void Move() => m.rigidbody.velocity = m.transform.right * (m.moveDir * m.moveSpeed);
+    private void Move() => m.rigidbody.velocity = m.transform.right * (m.facingDirection * m.moveSpeed);
 }

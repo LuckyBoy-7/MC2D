@@ -20,6 +20,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     [Header("Collectable")] public int strawberryNumber;
     [Header("Health")] public int maxHealthPoint;
     public int healthPoint;
+    public int extraHealthPoint;
 
     [Header("CameraConfiner")] public CinemachineConfiner2D cinemachineConfiner2D;
 
@@ -156,6 +157,8 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         TransitionState(StateType.Idle);
     }
 
+    #region Update
+
     private void Update()
     {
         if (GameManager.instance.state != GameStateType.Play)
@@ -263,17 +266,6 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         TryTakeDamage(1, other.transform.position);
     }
 
-    public void TryTakeDamage(int damage, Vector2 from)
-    {
-        if (isInvincible)
-            return;
-        hurtDirection = from.x > transform.position.x
-            ? new Vector2(-hurtDirectionXMultiplier, 1)
-            : new Vector2(hurtDirectionXMultiplier, 1);
-        TakeDamage(damage);
-        TransitionState(StateType.Hurt);
-    }
-
     private void FixedUpdate()
     {
         currentState.OnFixedUpdate();
@@ -310,6 +302,25 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     {
         if (Input.GetKeyUp(spellKey)) // 防止这个更新的比trigger更快，所以放到lateUpdate里了
             spellPreparationExpireTime = Single.PositiveInfinity;
+    }
+
+    #endregion
+
+    public void TryTakeDamage(int damage, Vector2 from)
+    {
+        if (isInvincible)
+            return;
+        hurtDirection = from.x > transform.position.x
+            ? new Vector2(-hurtDirectionXMultiplier, 1)
+            : new Vector2(hurtDirectionXMultiplier, 1);
+        TakeDamage(damage);
+        TransitionState(StateType.Hurt);
+    }
+
+    public void GetExtraHealth()
+    {
+        extraHealthPoint += 1;
+        HealthUI.instance.UpdateUI();
     }
 
     #region PhysicsCheck
@@ -387,7 +398,10 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 
     public void TakeDamage(int damage)
     {
-        healthPoint -= damage;
+        if (extraHealthPoint > 0)
+            extraHealthPoint -= 1;
+        else
+            healthPoint -= damage;
         HealthUI.instance.UpdateUI();
         spriteRenderer.color = Color.red;
         spriteRenderer.DOColor(Color.white, showHurtEffectTime);

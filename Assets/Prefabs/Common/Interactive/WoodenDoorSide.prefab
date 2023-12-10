@@ -96,7 +96,7 @@ GameObject:
   - component: {fileID: 8938613751958278629}
   - component: {fileID: 8938613751958278631}
   - component: {fileID: 8938613751958278627}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: WoodenDoorSide
   m_TagString: WoodenDoor
   m_Icon: {fileID: 0}

@@ -94,7 +94,6 @@ public class PlayerAttack : Singleton<PlayerAttack>
         isAttacking = false;
     }
 
-
     private void OnTriggerEnter2D(Collider2D other)
     {
         UpdateAttackEnemyTrigger(other);
@@ -172,7 +171,7 @@ public class PlayerAttack : Singleton<PlayerAttack>
     {
         if (hasAttackedEnemy)
             return;
-        if (!other.CompareTag("Enemy") || !other.isTrigger) // 只打trigger的，因为enemy有两个碰撞箱
+        if (!other.CompareTag("Enemy"))
             return;
 
         other.GetComponent<EnemyFSM>().Attacked(attackDamage, attackDirection[currentAttack] * attackForce);

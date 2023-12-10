@@ -98,7 +98,7 @@ BoxCollider2D:
   m_Enabled: 1
   m_Density: 1
   m_Material: {fileID: 0}
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
   m_Offset: {x: 0, y: 0.25}
@@ -145,7 +145,6 @@ MonoBehaviour:
     m_Bits: 128
   maxFallingSpeed: 0
   moveSpeed: 3
-  moveDir: 1
   rotateTime: 0.5
   turnStateCheckDelay: 0.1
 --- !u!50 &499204593053448966
