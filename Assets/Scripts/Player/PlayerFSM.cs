@@ -142,6 +142,14 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     {
         healthPoint = maxHealthPoint;
         gravityScaleBackup = rigidbody.gravityScale;
+        invincibleExpireTime = -1;
+        dashBufferExpireTime = -1;
+        jumpBufferExpireTime = -1;
+        spellPreparationExpireTime = -1;
+        dashCoolDownExpireTime = -1;
+        wolfJumpBufferExpireTime = -1;
+        wallWolfJumpBufferExpireTime = -1;
+
         states[StateType.Idle] = new PlayerIdle(this);
         states[StateType.Run] = new PlayerRun(this);
         states[StateType.Hurt] = new PlayerHurt(this);
