@@ -69,6 +69,15 @@ public class PlayerAttack : Singleton<PlayerAttack>
         // attack trigger
         if (Time.time >= attackCoolDownExpireTime && Time.time <= attackBufferExpireTime && !isAttacking)
         {
+            if (new List<StateType>
+                {
+                    StateType.ReleaseArrow,
+                    StateType.Drop,
+                    StateType.Roar,
+                    StateType.Recover
+                }.Contains(
+                    PlayerFSM.instance.currentStateType))
+                return;
             Attack();
         }
     }

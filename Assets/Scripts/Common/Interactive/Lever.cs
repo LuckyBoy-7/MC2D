@@ -3,12 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class Lever : MonoBehaviour
 {
     public Transform lever;
     public float leverRotateDuration;
-    public IronDoor ironDoor;
+    public UnityEvent onAttacked;
 
     public void Attacked()
     {
@@ -23,7 +24,7 @@ public class Lever : MonoBehaviour
         if (other.CompareTag("PlayerAttack"))
         {
             Attacked();
-            ironDoor.Open();
+            onAttacked?.Invoke();
         }
     }
 }

@@ -18,6 +18,7 @@ TagManager:
   - TrapDoor
   - MovingSpike
   - DripStone
+  - OneWaySlab
   layers:
   - Default
   - TransparentFX

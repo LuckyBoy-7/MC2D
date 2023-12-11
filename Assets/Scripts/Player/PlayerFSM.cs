@@ -35,6 +35,8 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public float jumpAfloatMinTime;
     public float doubleJumpAfloatMaxTime;
     public float doubleJumpAfloatMinTime;
+    public float wallJumpAfloatMaxTime;
+    public float wallJumpAfloatMinTime;
     public bool canDoubleJump = true;
     public float firstJumpForce;
     public float doubleJumpForce;
@@ -325,9 +327,17 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 
     #region PhysicsCheck
 
-    public bool isHittingCeiling =>
-        Physics2D.OverlapBox(transform.position + Vector3.up * (0.5f + boxDownCastDist / 2),
-            new Vector2(0.95f, boxDownCastDist), 0, groundLayer) && rigidbody.velocity.y > 1e-3;
+    public bool isHittingCeiling
+    {
+        get
+        {
+            var collider = Physics2D.OverlapBox(transform.position + Vector3.up * (0.5f + boxDownCastDist / 2),
+                new Vector2(0.95f, boxDownCastDist), 0, groundLayer);
+            // 碰到除了单向通过的天花板
+            return collider != null && !collider.CompareTag("OneWaySlab") && rigidbody.velocity.y > 1e-3;
+        }
+    }
+
 
     public bool isOnGround =>
         Physics2D.OverlapBox(transform.position + Vector3.down * (0.5f + boxDownCastDist / 2),
@@ -422,11 +432,12 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 
     public void SetZeroGravity() => rigidbody.gravityScale = 0;
     public void ResetGravity() => rigidbody.gravityScale = gravityScaleBackup;
+    public bool isMovingUp => rigidbody.velocity.y > 1e-3;
 
     #region StateTransitionTrigger
 
     public bool wallSlideTrigger => hasWallSlideAbility && (
-        (isOnLeftWall && Input.GetKey(leftKey) && rigidbody.velocity.x <= 1e-3 // 不然蹬墙跳一出去就就又变成wallSlide状态了
+        (isOnLeftWall && Input.GetKey(leftKey) && rigidbody.velocity.x <= 1e-3 // 不然蹬墙跳一出去就就又变成wallSlide状态了，且下落状态才能trigger  
          || isOnRightWall && Input.GetKey(rightKey) && rigidbody.velocity.x >= -1e-3));
 
     public bool jumpTrigger => // 就是尝试跳跃后，如果在地上或不在地上但是狼跳还在
@@ -589,7 +600,7 @@ public class PlayerJump : IState
     public void OnEnter()
     {
         m.SetZeroGravity();
-        m.rigidbody.velocity = Vector2.up * m.firstJumpForce;
+        m.rigidbody.velocity = new Vector2(m.rigidbody.velocity.x, m.doubleJumpForce);
         m.jumpBufferExpireTime = -1; // 重置，否则如果从跳跃到落地的时间<bufferTime，则跳跃会被触发两次 
         m.wolfJumpBufferExpireTime = -1;
     }
@@ -662,8 +673,8 @@ public class PlayerWallJump : IState
         isKeyReleased = isKeyReleased || Input.GetKeyUp(m.jumpKey);
         jumpAFloatElapse += Time.deltaTime;
         // 跳跃至少持续0.08s
-        if (jumpAFloatElapse > m.doubleJumpAfloatMinTime &&
-            (isKeyReleased || jumpAFloatElapse > m.doubleJumpAfloatMaxTime))
+        if (jumpAFloatElapse > m.wallJumpAfloatMinTime &&
+            (isKeyReleased || jumpAFloatElapse > m.wallJumpAfloatMaxTime))
             m.ResetGravity();
         if (!hasSetSpeedYZero && (isKeyReleased || m.isHittingCeiling))
         {
@@ -677,7 +688,6 @@ public class PlayerWallJump : IState
             m.TransitionState(StateType.Dash);
         else if (m.doubleJumpTrigger)
             m.TransitionState(StateType.DoubleJump);
-
         else if (m.spellTrigger)
             m.TransitionState(StateType.Spell);
     }
@@ -1060,7 +1070,8 @@ public class PlayerDoubleJump : IState
         isKeyReleased = isKeyReleased || Input.GetKeyUp(m.jumpKey);
         jumpAFloatElapse += Time.deltaTime;
         // 跳跃至少持续0.08s
-        if (jumpAFloatElapse > m.jumpAfloatMinTime && (isKeyReleased || jumpAFloatElapse > m.jumpAfloatMaxTime))
+        if (jumpAFloatElapse > m.doubleJumpAfloatMinTime &&
+            (isKeyReleased || jumpAFloatElapse > m.doubleJumpAfloatMaxTime))
             m.ResetGravity();
         if (!hasSetSpeedYZero && (isKeyReleased || m.isHittingCeiling))
         {
@@ -1072,16 +1083,15 @@ public class PlayerDoubleJump : IState
             m.TransitionState(StateType.Fall);
         else if (m.dashTrigger)
             m.TransitionState(StateType.Dash);
-
         else if (m.spellTrigger)
             m.TransitionState(StateType.Spell);
-        else if (m.wallSlideTrigger)
-            m.TransitionState(StateType.WallSlide);
     }
 
     public void OnFixedUpdate()
     {
-        m.rigidbody.velocity = new Vector2(m.moveSpeed * m.keyDownDirection.x, m.rigidbody.velocity.y);
+        var newX = Mathf.MoveTowards(m.rigidbody.velocity.x, m.moveSpeed * m.keyDownDirection.x,
+            m.moveChangeSpeed);
+        m.rigidbody.velocity = new Vector2(newX, m.rigidbody.velocity.y);
     }
 
     public void OnExit()
