@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 5643705197914635139}
   - component: {fileID: 5643705197914635138}
   - component: {fileID: 5643705197914635137}
+  - component: {fileID: 6393781627339615898}
   m_Layer: 9
   m_Name: Phantom
   m_TagString: Enemy
@@ -108,17 +109,23 @@ MonoBehaviour:
   healthPoint: 2
   hurtMask: {fileID: 5643705198150407640}
   rigidbody: {fileID: 5643705197914635138}
-  facingDirection: 0
   xVelocityChangeSpeed: 20
   yVelocityChangeSpeed: 20
   hitBoxCollider: {fileID: 5643705197914635137}
   showHurtEffectTime: 0.3
   knockedBackForceMultiplier: 0.3
-  playerDetectionRadius: 7
+  playerInDetectionRadius: 7.8
+  playerOutDetectionRadius: 16.64
   viewLayer:
     serializedVersion: 2
     m_Bits: 384
+  attackCoolDown: 0
+  idleRadius: 0
+  keepDistance: 0
+  targetPos: {x: 388.57956, y: 86.51495}
+  pivotPos: {x: 388.57956, y: 86.51495}
   moveSpeed: 4
+  isSelfControlMovement: 1
 --- !u!50 &5643705197914635138
 Rigidbody2D:
   serializedVersion: 4
@@ -166,6 +173,19 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.875, y: 1}
   m_EdgeRadius: 0
+--- !u!114 &6393781627339615898
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5643705197914635136}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 723b7df2a3b5de1468efab37bf0338b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  collisionHurt: 1
 --- !u!1 &5643705198150407647
 GameObject:
   m_ObjectHideFlags: 0

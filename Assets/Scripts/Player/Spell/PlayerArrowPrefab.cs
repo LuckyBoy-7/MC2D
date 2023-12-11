@@ -31,7 +31,7 @@ public class PlayerArrowPrefab : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Enemy") && other.isTrigger)
+        if (other.CompareTag("Enemy"))
             other.GetComponent<EnemyFSM>().Attacked(PlayerFSM.instance.arrowDamage);
     }
 }

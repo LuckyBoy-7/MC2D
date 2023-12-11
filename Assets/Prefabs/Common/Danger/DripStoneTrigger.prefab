@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 4723569843704163965}
   m_Layer: 10
   m_Name: DripStoneTrigger
-  m_TagString: Untagged
+  m_TagString: Damageable
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

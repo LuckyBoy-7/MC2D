@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 2298696808606079276}
   - component: {fileID: 2298696808606079277}
   - component: {fileID: 2298696808606079250}
+  - component: {fileID: 249482516844816167}
   m_Layer: 9
   m_Name: Spider
   m_TagString: Enemy
@@ -172,6 +173,19 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 1.25, y: 1.125}
   m_EdgeRadius: 0
+--- !u!114 &249482516844816167
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2298696808606079251}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 723b7df2a3b5de1468efab37bf0338b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  collisionHurt: 1
 --- !u!1 &2298696810145652537
 GameObject:
   m_ObjectHideFlags: 0

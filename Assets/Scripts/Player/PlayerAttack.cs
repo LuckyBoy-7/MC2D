@@ -22,11 +22,7 @@ public class PlayerAttack : Singleton<PlayerAttack>
     private AnimatorStateInfo info;
     private Dictionary<Animator, Vector2> attackDirection;
     private Animator currentAttack;
-    private bool hasAttackSpike;
-    private bool hasAttackMovingSpike;
-    private bool hasLootEmeraldPile;
     private bool hasAttackedEnemy;
-    private bool hasAttackedDripStone;
 
     public bool isAttacking;
 
@@ -97,30 +93,24 @@ public class PlayerAttack : Singleton<PlayerAttack>
 
         // OnExit()
         attackCoolDownExpireTime = Time.time + attackCoolDown;
-        hasAttackSpike = false;
-        hasLootEmeraldPile = false;
         hasAttackedEnemy = false;
-        hasAttackMovingSpike = false;
         isAttacking = false;
-        hasAttackedDripStone = false;
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
         UpdateAttackEnemyTrigger(other);
+        UpdateAttackDamageableTrigger(other);
         UpdateAttackSpikeTrigger(other);
         UpdateAttackMovingSpikeTrigger(other);
-        UpdateAttackArrowTrigger(other);
         UpdateAttackEmeraldPileTrigger(other);
         UpdateAttackWoodenDoorTrigger(other);
-        UpdateAttackDripStoneTrigger(other);
     }
 
     private void UpdateAttackMovingSpikeTrigger(Collider2D other)
     {
-        if (other.CompareTag("MovingSpike") && !hasAttackMovingSpike)
+        if (other.CompareTag("MovingSpike"))
         {
-            hasAttackMovingSpike = true;
             Pushed();
             PlayerFSM.instance.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
         }
@@ -142,9 +132,9 @@ public class PlayerAttack : Singleton<PlayerAttack>
         }
     }
 
-    private void UpdateAttackArrowTrigger(Collider2D other)
+    private void UpdateAttackDamageableTrigger(Collider2D other)
     {
-        if (other.CompareTag("EnemyArrow"))
+        if (other.CompareTag("Damageable"))
         {
             Destroy(other.gameObject);
             Pushed();
@@ -154,19 +144,17 @@ public class PlayerAttack : Singleton<PlayerAttack>
 
     private void UpdateAttackEmeraldPileTrigger(Collider2D other)
     {
-        if (hasLootEmeraldPile || !other.CompareTag("EmeraldPile"))
+        if (!other.CompareTag("EmeraldPile"))
             return;
         other.GetComponent<EmeraldPile>().Looted();
         Pushed();
-        hasLootEmeraldPile = true;
         PlayerFSM.instance.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
     }
 
     private void UpdateAttackSpikeTrigger(Collider2D other)
     {
-        if (hasAttackSpike || !other.CompareTag("Spike"))
+        if (!other.CompareTag("Spike"))
             return;
-        hasAttackSpike = true;
         Pushed();
         // 更新属性
         if (currentAttack == attackDown) // 只有下劈才刷新
@@ -179,23 +167,6 @@ public class PlayerAttack : Singleton<PlayerAttack>
         PlayerFSM.instance.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
     }
 
-    private void UpdateAttackDripStoneTrigger(Collider2D other)
-    {
-        if (hasAttackedDripStone || !other.CompareTag("DripStone"))
-            return;
-        hasAttackedDripStone = true;
-        Pushed();
-        // 更新属性
-        if (currentAttack == attackDown) // 只有下劈才刷新
-        {
-            m.canDoubleJump = true;
-            m.canDash = true;
-        }
-
-        // 播放特效
-        PlayerFSM.instance.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
-        Destroy(other.gameObject);
-    }
 
     private void UpdateAttackEnemyTrigger(Collider2D other)
     {

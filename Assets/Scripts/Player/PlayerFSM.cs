@@ -261,11 +261,10 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 
     private void UpdateCollisionHurt(Collider2D other)
     {
-        bool damageable = other.CompareTag("Enemy")
-                          || other.CompareTag("Spike");
-        if (!damageable)
+        var collisionHurt = other.GetComponent<CollisionHurt>();
+        if (!collisionHurt)
             return;
-        TryTakeDamage(1, other.transform.position);
+        TryTakeDamage(collisionHurt.collisionHurt, other.transform.position);
     }
 
     private void FixedUpdate()
@@ -437,7 +436,8 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     #region StateTransitionTrigger
 
     public bool wallSlideTrigger => hasWallSlideAbility && (
-        (isOnLeftWall && Input.GetKey(leftKey) && rigidbody.velocity.x <= 1e-3 // 不然蹬墙跳一出去就就又变成wallSlide状态了，且下落状态才能trigger  
+        (isOnLeftWall && Input.GetKey(leftKey) &&
+         rigidbody.velocity.x <= 1e-3 // 不然蹬墙跳一出去就就又变成wallSlide状态了，且下落状态才能trigger  
          || isOnRightWall && Input.GetKey(rightKey) && rigidbody.velocity.x >= -1e-3));
 
     public bool jumpTrigger => // 就是尝试跳跃后，如果在地上或不在地上但是狼跳还在
