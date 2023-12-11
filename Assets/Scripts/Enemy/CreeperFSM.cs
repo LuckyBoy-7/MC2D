@@ -23,7 +23,6 @@ public class CreeperFSM : GroundEnemyFSM
         base.Start();
         states[StateType.Patrol] = new CreeperPatrol(this); // idle
         states[StateType.Attack] = new CreeperAttack(this);
-        states[StateType.Fall] = new CreeperFall(this);
         TransitionState(StateType.Patrol);
 
         onKill += SpillTNT;
@@ -167,31 +166,3 @@ public class CreeperAttack : IState
     }
 }
 
-public class CreeperFall : IState
-{
-    private CreeperFSM m;
-
-    public CreeperFall(CreeperFSM m)
-    {
-        this.m = m;
-    }
-
-    public void OnEnter()
-    {
-    }
-
-    public void OnUpdate()
-    {
-        if (m.isOnGround)
-            m.TransitionState(StateType.Patrol);
-    }
-
-    public void OnFixedUpdate()
-    {
-        m.LerpVelocityY(-m.maxFallingSpeed);
-    }
-
-    public void OnExit()
-    {
-    }
-}

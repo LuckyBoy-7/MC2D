@@ -57,8 +57,7 @@ public class EnemyFSM : FSM
         }
     }
 
-
-    public void Attacked(int damage, Vector2 attackForceVec = default) // 被击打的方向加力度
+    public virtual void Attacked(int damage, Vector2 attackForceVec = default) // 被击打的方向加力度
     {
         TakeDamage(damage);
 
@@ -140,9 +139,15 @@ public class GroundEnemyFSM : EnemyFSM
 
     protected override void Update()
     {
-        if (fallTrigger)
-            TransitionState(StateType.Fall);
         base.Update();
+        UpdateFacingDirection();
+    }
+
+    private void UpdateFacingDirection()
+    {
+        Vector3 scale = transform.localScale;
+        transform.localScale = new Vector3(Mathf.Abs(scale.x) * facingDirection, scale.y, scale.z);
+        Debug.Log(132);
     }
 
     public void ReverseFacingDirection() => facingDirection *= -1;
@@ -392,7 +397,7 @@ public class FlyEnemyAttack : IState
         m.pivotPos = -dir * m.keepDistance + PlayerFSM.instance.transform.position;
         if (m.hitBoxCollider.IsTouchingLayers(1 << LayerMask.NameToLayer("Platform")))
             RollTargetPos();
-        
+
         m.keepAttackFunc?.Invoke();
         if (elapse >= m.attackCoolDown)
         {

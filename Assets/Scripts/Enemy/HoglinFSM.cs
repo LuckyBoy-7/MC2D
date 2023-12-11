@@ -15,17 +15,6 @@ public class HoglinFSM : GroundEnemyFSM
         TransitionState(StateType.Move);
     }
 
-    private void Update()
-    {
-        currentState.OnUpdate();
-    }
-
-    private void FixedUpdate()
-    {
-        currentState.OnFixedUpdate();
-    }
-
-
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.green;
@@ -79,3 +68,4 @@ public class HoglinMove : IState
     {
     }
 }
+

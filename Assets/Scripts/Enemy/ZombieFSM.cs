@@ -29,7 +29,6 @@ public class ZombieFSM : GroundEnemyFSM
         states[StateType.Alert] = new ZombieAlert(this);
         states[StateType.Chase] = new ZombieChase(this);
         states[StateType.Question] = new ZombieQuestion(this);
-        states[StateType.Fall] = new ZombieFall(this);
         TransitionState(StateType.Patrol);
     }
 
@@ -254,31 +253,3 @@ public class ZombieQuestion : IState
     }
 }
 
-public class ZombieFall : IState
-{
-    private ZombieFSM m;
-
-    public ZombieFall(ZombieFSM m)
-    {
-        this.m = m;
-    }
-
-    public void OnEnter()
-    {
-    }
-
-    public void OnUpdate()
-    {
-        if (m.isOnGround)
-            m.TransitionState(StateType.Patrol);
-    }
-
-    public void OnFixedUpdate()
-    {
-        m.LerpVelocityY(-m.maxFallingSpeed);
-    }
-
-    public void OnExit()
-    {
-    }
-}
