@@ -25,11 +25,12 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     [Header("CameraConfiner")] public CinemachineConfiner2D cinemachineConfiner2D;
 
     [Header("Movement")] public Rigidbody2D rigidbody;
-
     public Vector2 facingDirection;
     public Vector2 keyDownDirection;
     public float moveSpeed;
     public float moveChangeSpeed;
+    public float moveHorizontalExtraForce;
+    public float moveVerticalExtraForce;
     [Header("Idle")] public float dampingSpeed;
     [Header("Jump")] public float jumpAfloatMaxTime;
     public float jumpAfloatMinTime;
@@ -433,6 +434,44 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public void ResetGravity() => rigidbody.gravityScale = gravityScaleBackup;
     public bool isMovingUp => rigidbody.velocity.y > 1e-3;
 
+    #region LerpVelocity
+
+    public void LerpVelocityX(float to, float k = default)
+    {
+        to += moveHorizontalExtraForce;
+        if (k == default)
+            k = moveChangeSpeed;
+        var newX = Mathf.MoveTowards(rigidbody.velocity.x, to, k * Time.fixedDeltaTime);
+        rigidbody.velocity = new Vector2(newX, rigidbody.velocity.y);
+    }
+
+    public void LerpVelocityY(float to, float k = default)
+    {
+        to += moveVerticalExtraForce;
+        if (k == default)
+            k = moveChangeSpeed;
+        var newY = Mathf.MoveTowards(rigidbody.velocity.y, to, k * Time.fixedDeltaTime);
+        rigidbody.velocity = new Vector2(rigidbody.velocity.x, newY);
+    }
+
+    public void LerpVelocity(Vector2 velocity, float k = default)
+    {
+        if (k == default)
+            k = moveChangeSpeed;
+        LerpVelocityX(velocity.x, k);
+        LerpVelocityY(velocity.y, k);
+    }
+
+    public void LerpVelocity(float x, float y, float k = default)
+    {
+        if (k == default)
+            k = moveChangeSpeed;
+        LerpVelocityX(x, k);
+        LerpVelocityY(y, k);
+    }
+
+    #endregion
+
     #region StateTransitionTrigger
 
     public bool wallSlideTrigger => hasWallSlideAbility && (
@@ -489,7 +528,6 @@ public class PlayerIdle : IState
             m.TransitionState(StateType.Jump);
         else if (m.dashTrigger)
             m.TransitionState(StateType.Dash);
-
         else if (m.spellTrigger)
             m.TransitionState(StateType.Spell);
         else if (m.recoverTrigger)
@@ -502,8 +540,7 @@ public class PlayerIdle : IState
 
     public void OnFixedUpdate()
     {
-        var newX = Mathf.MoveTowards(m.rigidbody.velocity.x, 0, m.dampingSpeed * Time.deltaTime);
-        m.rigidbody.velocity = new Vector2(newX, m.rigidbody.velocity.y);
+        m.LerpVelocityX(0, m.dampingSpeed);
     }
 
     public void OnExit()
@@ -546,9 +583,7 @@ public class PlayerRun : IState
 
     public void OnFixedUpdate()
     {
-        var newX = Mathf.MoveTowards(m.rigidbody.velocity.x, m.moveSpeed * m.keyDownDirection.x,
-            m.moveChangeSpeed * Time.deltaTime);
-        m.rigidbody.velocity = new Vector2(newX, m.rigidbody.velocity.y);
+        m.LerpVelocityX(m.moveSpeed * m.keyDownDirection.x);
     }
 
     public void OnExit()
@@ -632,9 +667,7 @@ public class PlayerJump : IState
 
     public void OnFixedUpdate()
     {
-        var newX = Mathf.MoveTowards(m.rigidbody.velocity.x, m.moveSpeed * m.keyDownDirection.x,
-            m.moveChangeSpeed);
-        m.rigidbody.velocity = new Vector2(newX, m.rigidbody.velocity.y);
+        m.LerpVelocityX(m.moveSpeed * m.keyDownDirection.x);
     }
 
     public void OnExit()
@@ -694,9 +727,7 @@ public class PlayerWallJump : IState
 
     public void OnFixedUpdate()
     {
-        float newX = Mathf.MoveTowards(m.rigidbody.velocity.x, m.moveSpeed * m.keyDownDirection.x,
-            m.wallJumpMoveChangeSpeed);
-        m.rigidbody.velocity = new Vector2(newX, m.rigidbody.velocity.y);
+        m.LerpVelocityX(m.moveSpeed * m.keyDownDirection.x, m.wallJumpMoveChangeSpeed);
     }
 
     public void OnExit()
@@ -720,7 +751,6 @@ public class PlayerWallSlide : IState
     public void OnEnter()
     {
         m.rigidbody.gravityScale = 0;
-        m.rigidbody.velocity = new Vector2(0, -m.wallSlideSpeed);
         m.canDash = true;
         m.canDoubleJump = true;
         m.ReverseFacingDirection();
@@ -738,13 +768,13 @@ public class PlayerWallSlide : IState
             m.TransitionState(StateType.Dash);
         else if (m.spellTrigger)
             m.TransitionState(StateType.Spell);
-
         else if (m.superDashTrigger)
             m.TransitionState(StateType.SuperDash);
     }
 
     public void OnFixedUpdate()
     {
+        m.LerpVelocityY(-m.wallSlideSpeed);
     }
 
     public void OnExit()
@@ -789,10 +819,10 @@ public class PlayerFall : IState
 
     public void OnFixedUpdate()
     {
+        // 这里没办法，除非重力也由代码控制
         var newY = -Mathf.Min(-m.rigidbody.velocity.y, m.maxFallingSpeed);
-        float newX = Mathf.MoveTowards(m.rigidbody.velocity.x, m.moveSpeed * m.keyDownDirection.x,
-            m.moveChangeSpeed * Time.deltaTime);
-        m.rigidbody.velocity = new Vector2(newX, newY);
+        m.rigidbody.velocity = new Vector2(m.rigidbody.velocity.x, newY);
+        m.LerpVelocityX(m.moveSpeed * m.keyDownDirection.x);
     }
 
     public void OnExit()
@@ -1031,8 +1061,7 @@ public class PlayerReleaseArrow : IState
 
     public void OnFixedUpdate()
     {
-        var newX = Mathf.MoveTowards(m.rigidbody.velocity.x, 0, m.spellArrowMoveChangeSpeed);
-        m.rigidbody.velocity = new Vector2(newX, m.rigidbody.velocity.y);
+        m.LerpVelocityX(0, m.spellArrowMoveChangeSpeed);
     }
 
     public void OnExit()
@@ -1089,9 +1118,7 @@ public class PlayerDoubleJump : IState
 
     public void OnFixedUpdate()
     {
-        var newX = Mathf.MoveTowards(m.rigidbody.velocity.x, m.moveSpeed * m.keyDownDirection.x,
-            m.moveChangeSpeed);
-        m.rigidbody.velocity = new Vector2(newX, m.rigidbody.velocity.y);
+        m.LerpVelocityX(m.moveSpeed * m.keyDownDirection.x, m.moveChangeSpeed);
     }
 
     public void OnExit()
@@ -1150,10 +1177,6 @@ public class PlayerRecover : IState
     }
 
     public void OnExit()
-    {
-    }
-
-    public void UpdateTrigger()
     {
     }
 }
@@ -1300,9 +1323,8 @@ public class PlayerSuperDash : IState
     {
         if (isOver)
         {
-            var newX = Mathf.MoveTowards(m.rigidbody.velocity.x, 0, m.superDashMoveChangeSpeed);
-            m.rigidbody.velocity = new Vector2(newX, m.rigidbody.velocity.y);
-            if (Mathf.Abs(newX) < 1e-3)
+            m.LerpVelocityX(0, m.superDashMoveChangeSpeed);
+            if (Mathf.Abs(m.rigidbody.velocity.x) < 1e-2)
                 m.TransitionState(m.preStateType);
         }
     }
