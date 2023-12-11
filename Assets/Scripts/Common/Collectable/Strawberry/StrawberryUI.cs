@@ -55,7 +55,6 @@ public class StrawberryUI : Singleton<StrawberryUI>
         var player = PlayerFSM.instance;
         while (strawberryCollected < player.strawberryNumber)
         {
-            Debug.Log(123);
             strawberryCollected += 1;
             numberText.text = strawberryCollected.ToString();
             numberMask.text = strawberryCollected.ToString();

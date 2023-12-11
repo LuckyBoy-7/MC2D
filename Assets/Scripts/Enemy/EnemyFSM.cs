@@ -147,7 +147,6 @@ public class GroundEnemyFSM : EnemyFSM
     {
         Vector3 scale = transform.localScale;
         transform.localScale = new Vector3(Mathf.Abs(scale.x) * facingDirection, scale.y, scale.z);
-        Debug.Log(132);
     }
 
     public void ReverseFacingDirection() => facingDirection *= -1;
