@@ -328,7 +328,7 @@ public class FlyEnemyFSM : EnemyFSM
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(position, playerOutDetectionRadius);
         // hit box
-        Gizmos.DrawWireCube(position, hitBoxCollider.size);
+        Gizmos.DrawWireCube(position, hitBoxCollider.size * transform.localScale);
 
         // idle box
         Gizmos.color = Color.blue;
