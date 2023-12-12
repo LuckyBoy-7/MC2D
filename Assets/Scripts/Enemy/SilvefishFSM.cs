@@ -9,7 +9,6 @@ public class SilvefishFSM : GroundEnemyFSM
 
     public float rotateTime;
     public float turnStateCheckDelay;
-    // public List<Vector2> dirLst = new (){ Vector2.right ,Vector2.down,Vector2.left,Vector2.up};
 
     protected override void Start()
     {

@@ -31,4 +31,5 @@ public enum StateType
     Patrol,
     Move,
     Wait,
+    Guard,
 }

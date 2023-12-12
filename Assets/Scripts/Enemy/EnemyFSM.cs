@@ -153,118 +153,85 @@ public class GroundEnemyFSM : EnemyFSM
 
     #region PhysicsCheck
 
-    private bool isOverLeftCliff
+    public bool isWalkingDownCliff
     {
         get
         {
-            var center = GetColliderCenter(out var width, out var height, out var w, out var h);
+            var center = GetColliderCenter(out float width, out float height, out float w, out float h,
+                out Vector3 right,
+                out Vector3 left, out Vector3 down);
 
-            Vector3 bottomCenter = center + Vector3.down * h;
-            Vector3 bottomLeft = bottomCenter - Vector3.right * w;
-
-
-            bool overLeftCliff = !Physics2D.Linecast(bottomLeft,
-                bottomLeft + Vector3.down * cliffCheckDownRaycastDist,
-                groundLayer);
-            return overLeftCliff;
-        }
-    }
-
-    private bool isOverRightCliff
-    {
-        get
-        {
-            var center = GetColliderCenter(out var width, out var height, out var w, out var h);
-
-            Vector3 bottomCenter = center + Vector3.down * h;
-            Vector3 bottomRight = bottomCenter + Vector3.right * w;
+            Vector3 bottomCenter = center + down * h;
+            Vector3 bottomRight = bottomCenter + right * w;
 
 
             bool overRightCliff = !Physics2D.Linecast(bottomRight,
-                bottomRight + Vector3.down * cliffCheckDownRaycastDist,
+                bottomRight + down * cliffCheckDownRaycastDist,
                 groundLayer);
             return overRightCliff;
         }
     }
 
-    public bool isWalkingDownCliff => // 因为有可能生成时在空中，但先进入patrol，结果检测到“悬崖”，又转向
-        !isOverRightCliff && isOverLeftCliff && facingDirection == -1 ||
-        !isOverLeftCliff && isOverRightCliff && facingDirection == 1;
-
-    private bool isOverLeftGround // 就是到悬崖边上后检测下面是否是空地
+    public bool isOverGroundAboveCliff
     {
         get
         {
-            var center = GetColliderCenter(out var width, out var height, out var w, out var h);
+            var center = GetColliderCenter(out float width, out float height, out float w, out float h,
+                out Vector3 right,
+                out Vector3 left, out Vector3 down);
 
-            Vector3 bottomCenter = center + Vector3.down * h;
-            Vector3 bottomLeft = bottomCenter - Vector3.right * w;
-
-
-            bool overLeftGround = Physics2D.Raycast(bottomLeft, Vector2.down, 6, groundLayer);
-            return overLeftGround;
-        }
-    }
-
-    private bool isOverRightGround
-    {
-        get
-        {
-            var center = GetColliderCenter(out var width, out var height, out var w, out var h);
-
-            Vector3 bottomCenter = center + Vector3.down * h;
-            Vector3 bottomRight = bottomCenter + Vector3.right * w;
+            Vector3 bottomCenter = center + down * h;
+            Vector3 bottomRight = bottomCenter + right * w;
 
 
             bool overRightGround = Physics2D.Raycast(bottomRight, Vector2.down, 6, groundLayer);
-            return overRightGround;
+            return overRightGround && isWalkingDownCliff;
         }
     }
 
-    public bool isOverGroundAboveCliff => isOverLeftCliff && isOverLeftGround || isOverRightCliff && isOverRightGround;
 
-    private bool isOnLeftWall
+    public bool isHittingWall
     {
         get
         {
-            var center = GetColliderCenter(out var width, out var height, out var w, out var h);
+            var center = GetColliderCenter(out float width, out float height, out float w, out float h,
+                out Vector3 right,
+                out Vector3 left, out Vector3 down);
 
-            return Physics2D.OverlapBox(center + Vector3.left * (w + boxLeftRightCastDist / 2),
+            return Physics2D.OverlapBox(center + right * (w + boxLeftRightCastDist / 2),
                 new Vector2(boxLeftRightCastDist, height * 0.95f), 0, groundLayer);
         }
     }
 
-
-    private bool isOnRightWall
-    {
-        get
-        {
-            var center = GetColliderCenter(out var width, out var height, out var w, out var h);
-
-            return Physics2D.OverlapBox(center + Vector3.right * (w + boxLeftRightCastDist / 2),
-                new Vector2(boxLeftRightCastDist, height * 0.95f), 0, groundLayer);
-        }
-    }
-
-    public bool isHittingWall => isOnLeftWall && facingDirection == -1 || isOnRightWall && facingDirection == 1;
 
     // 只给那些能被knockedBack的对象调用
     public bool isOnGround
     {
         get
         {
-            var center = GetColliderCenter(out var width, out var height, out var w, out var h);
-            return Physics2D.OverlapBox(center + Vector3.down * (h + boxLeftRightCastDist / 2),
+            var center = GetColliderCenter(out float width, out float height, out float w, out float h,
+                out Vector3 right,
+                out Vector3 left, out Vector3 down);
+            return Physics2D.OverlapBox(center + down * (h + boxLeftRightCastDist / 2),
                 new Vector2(width * 0.95f, boxLeftRightCastDist), 0, groundLayer);
         }
     }
 
-    private Vector3 GetColliderCenter(out float width, out float height, out float w, out float h)
+    private Vector3 GetColliderCenter(out float width, out float height, out float w, out float h, out Vector3 right,
+        out Vector3 left, out Vector3 down) // 注意这里的right是transform.right
     {
-        var bounds = hitBoxCollider.bounds;
-        (width, height) = (bounds.max.x - bounds.min.x, bounds.max.y - bounds.min.y);
-        (w, h) = (width / 2, height / 2);
-        return bounds.center;
+        var position = transform.position;
+        var box = hitBoxCollider;
+        width = box.size.x * transform.localScale.x;
+        w = width / 2;
+        height = box.size.y * transform.localScale.y;
+        h = height / 2;
+        var transformDown = Quaternion.Euler(0, 0, -90) * transform.right;
+        right = transform.right;
+        left = -right;
+        down = transformDown;
+
+        return position;
     }
 
     #endregion
@@ -328,7 +295,7 @@ public class FlyEnemyFSM : EnemyFSM
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(position, playerOutDetectionRadius);
         // hit box
-        Gizmos.DrawWireCube(position, hitBoxCollider.size * transform.localScale);
+        Gizmos.DrawWireCube(position, hitBoxCollider.size);
 
         // idle box
         Gizmos.color = Color.blue;

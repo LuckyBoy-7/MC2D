@@ -26,11 +26,11 @@ public class GiantTortoiseFSM : GroundEnemyFSM
         var transformDown = Quaternion.Euler(0, 0, -90) * transform.right;
 
         // cliff
-        Gizmos.DrawLine(position, position + transformDown * cliffCheckDownRaycastDist);
-
-        // Hit Box
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireCube(box.bounds.center, box.bounds.size);
+        var bottomLeft = position + transformDown * box.size.y / 2 - transform.right * box.size.x / 2;
+        var bottomRight = position + transformDown * box.size.y / 2 + transform.right * box.size.x / 2;
+        // cliff
+        Gizmos.DrawLine(bottomLeft, bottomLeft + transformDown * cliffCheckDownRaycastDist);
+        Gizmos.DrawLine(bottomRight, bottomRight + transformDown * cliffCheckDownRaycastDist);
     }
 
     public override void Attacked(int damage, Vector2 attackForceVec = default)
@@ -62,6 +62,7 @@ public class GiantTortoiseMove : IState
     {
         if (m.isWalkingDownCliff || m.isHittingWall)
         {
+            Debug.Log(11111);
             m.ReverseFacingDirection();
         }
     }
