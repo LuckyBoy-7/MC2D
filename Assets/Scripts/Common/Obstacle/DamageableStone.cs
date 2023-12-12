@@ -4,20 +4,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 
-public class DamageableStone : MonoBehaviour
+public class DamageableStone : MonoBehaviour, ICanBeAttacked
 {
     public SpriteRenderer destroyMask;
     private int idx;
     public Sprite[] sprites;
 
-    private void OnTriggerEnter2D(Collider2D other)
+
+    public void Attacked(Collider2D other = default)
     {
-        if (other.CompareTag("PlayerAttack"))
-        {
-            if (idx < sprites.Length)
-                destroyMask.sprite = sprites[idx++];
-            else
-                Destroy(gameObject);
-        }
+        if (idx < sprites.Length)
+            destroyMask.sprite = sprites[idx++];
+        else
+            Destroy(gameObject);
     }
 }

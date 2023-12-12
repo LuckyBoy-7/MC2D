@@ -13,7 +13,6 @@ public class WoodenPlatform : MonoBehaviour
     public float flipRemainTime;
 
     private bool isWorking;
-    public BoxCollider2D spikeCollider;
 
 
     private void OnCollisionStay2D(Collision2D other)
@@ -34,18 +33,16 @@ public class WoodenPlatform : MonoBehaviour
         isWorking = false;
     }
 
-    private void OnTriggerEnter2D(Collider2D other)
-    {
-        if (other.CompareTag("PlayerAttack") && isWorking)
-        {
-            if (spikeCollider.IsTouching(other)) // 如果player攻击了平台下的spike，则平台立即复位
-            {
-                DOTween.Kill("FlipSpike");
-                StopAllCoroutines();
 
-                var resetDuration = Mathf.Abs(transform.eulerAngles.z / 180) * rotateDuration;
-                transform.DORotate(new Vector3(0, 0, 0), resetDuration).onComplete += () => { isWorking = false; };
-            }
+    public void TryReset(Collider2D other = default)
+    {
+        if (isWorking)  // 如果player攻击了正在反转的平台下的spike，则这个函数会被触发，平台立即复位
+        {
+            DOTween.Kill("FlipSpike");
+            StopAllCoroutines();
+
+            var resetDuration = Mathf.Abs(transform.eulerAngles.z / 180) * rotateDuration;
+            transform.DORotate(new Vector3(0, 0, 0), resetDuration).onComplete += () => { isWorking = false; };
         }
     }
 }

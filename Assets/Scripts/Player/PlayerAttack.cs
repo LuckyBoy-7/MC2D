@@ -1,8 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Random = UnityEngine.Random;
+
 
 public class PlayerAttack : Singleton<PlayerAttack>
 {
@@ -100,71 +102,21 @@ public class PlayerAttack : Singleton<PlayerAttack>
     private void OnTriggerEnter2D(Collider2D other)
     {
         UpdateAttackEnemyTrigger(other);
-        UpdateAttackDamageableTrigger(other);
-        UpdateAttackSpikeTrigger(other);
-        UpdateAttackMovingSpikeTrigger(other);
-        UpdateAttackEmeraldPileTrigger(other);
-        UpdateAttackWoodenDoorTrigger(other);
-    }
 
-    private void UpdateAttackMovingSpikeTrigger(Collider2D other)
-    {
-        if (other.CompareTag("MovingSpike"))
+        var component = other.GetComponent<ICanBeAttacked>();
+        if (component != null)
         {
-            Pushed();
-            PlayerFSM.instance.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
-        }
-    }
-
-    private void UpdateAttackWoodenDoorTrigger(Collider2D other)
-    {
-        if (other.CompareTag("WoodenDoor"))
-        {
-            other.GetComponent<WoodenDoor>().Attacked();
+            component.Attacked();
             if (currentAttack == attackDown) // 只有下劈才刷新
             {
                 m.canDoubleJump = true;
                 m.canDash = true;
             }
 
+            TryPushed();
             // 播放特效
             PlayerFSM.instance.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
         }
-    }
-
-    private void UpdateAttackDamageableTrigger(Collider2D other)
-    {
-        if (other.CompareTag("Damageable"))
-        {
-            Destroy(other.gameObject);
-            Pushed();
-            PlayerFSM.instance.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
-        }
-    }
-
-    private void UpdateAttackEmeraldPileTrigger(Collider2D other)
-    {
-        if (!other.CompareTag("EmeraldPile"))
-            return;
-        other.GetComponent<EmeraldPile>().Looted();
-        Pushed();
-        PlayerFSM.instance.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
-    }
-
-    private void UpdateAttackSpikeTrigger(Collider2D other)
-    {
-        if (!other.CompareTag("Spike"))
-            return;
-        Pushed();
-        // 更新属性
-        if (currentAttack == attackDown) // 只有下劈才刷新
-        {
-            m.canDoubleJump = true;
-            m.canDash = true;
-        }
-
-        // 播放特效
-        PlayerFSM.instance.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
     }
 
 
@@ -180,7 +132,7 @@ public class PlayerAttack : Singleton<PlayerAttack>
         {
             m.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position)); // 在第一个打到的敌人上播放特效
             hasAttackedEnemy = true;
-            Pushed();
+            TryPushed();
             // 更新属性
             if (currentAttack == attackDown) // 只有下劈才刷新
             {
@@ -194,15 +146,12 @@ public class PlayerAttack : Singleton<PlayerAttack>
         }
     }
 
-    public void Pushed()
+    public void TryPushed()
     {
         if (currentAttack == attackRight)
             m.rigidbody.velocity = new Vector2(-attackDirection[currentAttack].x * attackForce,
                 m.rigidbody.velocity.y);
-        else if (currentAttack == attackUp)
-        {
-        }
-        else
+        else if (currentAttack == attackDown)
         {
             m.rigidbody.velocity = new Vector2(m.rigidbody.velocity.x,
                 -attackDirection[currentAttack].y * (attackForce * attackDownForceMultiplier));

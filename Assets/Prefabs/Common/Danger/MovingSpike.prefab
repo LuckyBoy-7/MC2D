@@ -43,6 +43,8 @@ GameObject:
   - component: {fileID: 6318823871882677401}
   - component: {fileID: 6318823871882677398}
   - component: {fileID: 6318823871882677400}
+  - component: {fileID: 1644990713}
+  - component: {fileID: 1644990714}
   m_Layer: 0
   m_Name: _MovingSpike
   m_TagString: MovingSpike
@@ -154,6 +156,31 @@ CircleCollider2D:
   m_Offset: {x: 0, y: 0}
   serializedVersion: 2
   m_Radius: 0.6
+--- !u!114 &1644990713
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6318823871882677396}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 723b7df2a3b5de1468efab37bf0338b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  collisionHurt: 1
+--- !u!114 &1644990714
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6318823871882677396}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5466865202534749843a0880feb87ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &6318823872326471431
 GameObject:
   m_ObjectHideFlags: 0
@@ -195,7 +222,6 @@ GameObject:
   m_Component:
   - component: {fileID: 6318823872655391089}
   - component: {fileID: 6318823872655391054}
-  - component: {fileID: 6318823872655391088}
   m_Layer: 0
   m_Name: MovingSpike
   m_TagString: Untagged
@@ -242,24 +268,3 @@ MonoBehaviour:
   - {fileID: 6318823872326471430}
   routeMarkColor: {r: 1, g: 0, b: 0, a: 1}
   routeMarkRadius: 0.29
---- !u!50 &6318823872655391088
-Rigidbody2D:
-  serializedVersion: 4
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6318823872655391055}
-  m_BodyType: 1
-  m_Simulated: 1
-  m_UseFullKinematicContacts: 0
-  m_UseAutoMass: 0
-  m_Mass: 1
-  m_LinearDrag: 0
-  m_AngularDrag: 0.05
-  m_GravityScale: 1
-  m_Material: {fileID: 0}
-  m_Interpolate: 0
-  m_SleepingMode: 1
-  m_CollisionDetection: 0
-  m_Constraints: 0

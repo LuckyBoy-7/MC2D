@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 1669829268169438553}
   - component: {fileID: 1669829268169438558}
   - component: {fileID: 1669829268169438559}
+  - component: {fileID: -8592452601975598173}
   m_Layer: 0
   m_Name: RedStoneLamp
   m_TagString: Untagged
@@ -135,3 +136,16 @@ MonoBehaviour:
   - {x: 0.5, y: -0.5, z: 0}
   - {x: 0.5, y: 0.5, z: 0}
   - {x: -0.5, y: 0.5, z: 0}
+--- !u!114 &-8592452601975598173
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1669829268169438556}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5466865202534749843a0880feb87ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  canBeDestroyed: 0

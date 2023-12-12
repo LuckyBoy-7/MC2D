@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 7021787063325171197}
   - component: {fileID: 7021787063325171184}
   - component: {fileID: 7021787063325171185}
+  - component: {fileID: -8943889522966410380}
   m_Layer: 7
   m_Name: LaserButton
   m_TagString: Untagged
@@ -121,9 +122,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a586d56ec3aef0b4dbf79d28c1b2f9e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  arc: 154.65
+  arc: 157.2
   lineRenderer: {fileID: 136377655308134073, guid: 3310102ba9d32664fb1b49c86f43242c, type: 3}
   pivot: {fileID: 7021787063752438756}
+  gizmosRadius: 14.65
 --- !u!61 &7021787063325171185
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -150,6 +152,18 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.6352539, y: 1.125}
   m_EdgeRadius: 0
+--- !u!114 &-8943889522966410380
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7021787063325171196}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5466865202534749843a0880feb87ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &7021787063752438755
 GameObject:
   m_ObjectHideFlags: 0

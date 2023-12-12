@@ -11,6 +11,7 @@ public class LaserButton : MonoBehaviour
     public Transform pivot;
     private bool isShooting;
     private bool hasCausedDamage;
+    public float gizmosRadius;
 
     private void Start()
     {
@@ -65,11 +66,7 @@ public class LaserButton : MonoBehaviour
     {
         Gizmos.color = Color.red;
         var position = pivot.position;
-        var hit = Physics2D.Raycast(position,
-            Quaternion.Euler(0, 0, arc) * Vector2.right,
-            Single.PositiveInfinity,
-            1 << LayerMask.NameToLayer("Platform"));
-
-        Gizmos.DrawLine(position, hit.point);
+        var dir = Quaternion.Euler(0, 0, arc) * Vector2.right;
+        Gizmos.DrawLine(position, position + dir * gizmosRadius);
     }
 }

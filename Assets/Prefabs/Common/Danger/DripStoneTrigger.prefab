@@ -85,6 +85,7 @@ GameObject:
   - component: {fileID: 4723569843775005035}
   - component: {fileID: 4723569843775005033}
   - component: {fileID: 4723569843775005032}
+  - component: {fileID: 10030547}
   m_Layer: 0
   m_Name: DripStone
   m_TagString: DripStone
@@ -218,3 +219,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c07a61d7537b2747ad7e16d208a44f8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &10030547
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4723569843775005045}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5466865202534749843a0880feb87ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  canBeDestroyed: 1

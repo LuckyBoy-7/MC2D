@@ -1,16 +1,12 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Serialization;
 
-public class EmeraldPile : MonoBehaviour
+public class EmeraldPile : MonoBehaviour, ICanBeAttacked
 {
     public EmeraldEmitter emeraldEmitter;
     public int spawnEmeraldCount;
     public int spawnEmeraldNumberEachTime;
 
-    public void Looted()
+    public void Attacked(Collider2D other = default)
     {
         Instantiate(emeraldEmitter, transform.position, Quaternion.identity).num = spawnEmeraldNumberEachTime;
         if (--spawnEmeraldCount <= 0)
