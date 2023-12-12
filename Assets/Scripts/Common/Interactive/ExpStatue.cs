@@ -1,23 +1,29 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
-public class ExpStatue : MonoBehaviour
+public class ExpStatue : MonoBehaviour, ICanBeAttacked
 {
-    private BoxCollider2D box;
+    [Range(0, 1f)] public float minAlpha = 0.3f;
+    public int expCollectedMaxCount = 3;
+    private int curCount;
+    private SpriteRenderer spriteRenderer;
 
     private void Awake()
     {
-        box = GetComponent<BoxCollider2D>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
-    private void OnTriggerEnter2D(Collider2D other)
+    public void Attacked(Collider2D other = default)
     {
-        if (other.CompareTag("PlayerAttack"))
+        if (curCount < expCollectedMaxCount)
         {
-            PlayerFSM.instance.PlayAttackEffect(box.ClosestPoint(other.transform.position));
-            other.GetComponent<PlayerAttack>().TryPushed();
+            PlayerFSM.instance.UpdateExp(1);
+            curCount += 1;
+            var alpha = 1 - (1 - minAlpha) / expCollectedMaxCount * curCount;
+            spriteRenderer.color = spriteRenderer.color.WithAlpha(alpha);
         }
     }
 }

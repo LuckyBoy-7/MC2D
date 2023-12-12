@@ -140,6 +140,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 
     void Start()
     {
+        UpdateExp();
         healthPoint = maxHealthPoint;
         gravityScaleBackup = rigidbody.gravityScale;
         invincibleExpireTime = -1;
@@ -197,7 +198,8 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         if (!isDebug)
             return;
         curExp = maxExp;
-        PlayerExpUI.instance.UpdatePlayerExpUI();
+        UpdateExp();
+
         canDoubleJump = true;
         canDash = true;
         if (isInvincibleDebug)
@@ -432,6 +434,12 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     {
         onDie();
         gameObject.SetActive(false);
+    }
+
+    public void UpdateExp(int delta = default)
+    {
+        curExp = Mathf.Min(curExp + delta, maxExp);
+        PlayerExpUI.instance.UpdatePlayerExpUI();
     }
 
     public bool isInvincible => Time.time <= invincibleExpireTime;
@@ -894,8 +902,7 @@ public class PlayerSpell : IState
 
     public void OnEnter()
     {
-        m.curExp -= 3;
-        PlayerExpUI.instance.UpdatePlayerExpUI();
+        m.UpdateExp(-3);
 
         if (Input.GetKey(m.downKey) && m.hasDropAbility)
             m.TransitionState(StateType.Drop);
@@ -1172,8 +1179,7 @@ public class PlayerRecover : IState
         }
 
         m.recoverBurstAnim.Play("RecoverBurst");
-        m.curExp -= 3;
-        PlayerExpUI.instance.UpdatePlayerExpUI();
+        m.UpdateExp(-3);
 
         m.healthPoint = Mathf.Min(m.healthPoint + 1, m.maxHealthPoint);
         HealthUI.instance.UpdateUI();
