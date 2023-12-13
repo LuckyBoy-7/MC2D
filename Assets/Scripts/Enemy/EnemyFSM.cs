@@ -145,8 +145,11 @@ public class GroundEnemyFSM : EnemyFSM
 
     private void UpdateFacingDirection()
     {
-        Vector3 scale = transform.localScale;
-        transform.localScale = new Vector3(Mathf.Abs(scale.x) * facingDirection, scale.y, scale.z);
+        var scale = transform.localScale;
+        var x = Mathf.Abs(scale.x);
+        transform.localScale = facingDirection == 1
+            ? new Vector3(x, scale.y, scale.z)
+            : new Vector3(-x, scale.y, scale.z);
     }
 
     public void ReverseFacingDirection() => facingDirection *= -1;
@@ -163,7 +166,6 @@ public class GroundEnemyFSM : EnemyFSM
 
             Vector3 bottomCenter = center + down * h;
             Vector3 bottomRight = bottomCenter + right * w;
-
 
             bool overRightCliff = !Physics2D.Linecast(bottomRight,
                 bottomRight + down * cliffCheckDownRaycastDist,
@@ -203,31 +205,18 @@ public class GroundEnemyFSM : EnemyFSM
         }
     }
 
-
-    // 只给那些能被knockedBack的对象调用
-    public bool isOnGround
-    {
-        get
-        {
-            var center = GetColliderCenter(out float width, out float height, out float w, out float h,
-                out Vector3 right,
-                out Vector3 left, out Vector3 down);
-            return Physics2D.OverlapBox(center + down * (h + boxLeftRightCastDist / 2),
-                new Vector2(width * 0.95f, boxLeftRightCastDist), 0, groundLayer);
-        }
-    }
-
-    private Vector3 GetColliderCenter(out float width, out float height, out float w, out float h, out Vector3 right,
-        out Vector3 left, out Vector3 down) // 注意这里的right是transform.right
+    protected Vector3 GetColliderCenter(out float width, out float height, out float w, out float h, out Vector3 right,
+        out Vector3 left, out Vector3 down) // 注意这里的right是面朝的方向，换句话说，这些都是local的
     {
         var position = transform.position;
         var box = hitBoxCollider;
-        width = box.size.x * transform.localScale.x;
+        Debug.Log(box.size);
+        width = box.size.x * Mathf.Abs(transform.localScale.x);
         w = width / 2;
-        height = box.size.y * transform.localScale.y;
+        height = box.size.y * Mathf.Abs(transform.localScale.y);
         h = height / 2;
         var transformDown = Quaternion.Euler(0, 0, -90) * transform.right;
-        right = transform.right;
+        right = transform.right * facingDirection;
         left = -right;
         down = transformDown;
 

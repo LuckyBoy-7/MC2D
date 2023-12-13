@@ -62,7 +62,6 @@ public class GiantTortoiseMove : IState
     {
         if (m.isWalkingDownCliff || m.isHittingWall)
         {
-            Debug.Log(11111);
             m.ReverseFacingDirection();
         }
     }

@@ -12,7 +12,7 @@ public class PufferFSM : GroundEnemyFSM
 
     [Header("Check")] public float guardTriggerRadius;
     public GameObject guardHelmet;
-    
+
 
     protected override void Start()
     {
@@ -22,33 +22,34 @@ public class PufferFSM : GroundEnemyFSM
         TransitionState(StateType.Move);
     }
 
-    private void Update()
+    public override void Attacked(int damage, Vector2 attackForceVec = default) // 被击打的方向加力度
     {
-        currentState.OnUpdate();
+        if (currentState == states[StateType.Guard])
+            return;
+        TakeDamage(damage);
     }
-
-    private void FixedUpdate()
-    {
-        currentState.OnFixedUpdate();
-    }
-
 
     private void OnDrawGizmos()
     {
+        var center = GetColliderCenter(out float width, out float height, out float w, out float h,
+            out Vector3 right,
+            out Vector3 left, out Vector3 down);
         Gizmos.color = Color.green;
         // Cliff Raycast check
         var position = transform.position;
         var scale = transform.localScale;
         var box = hitBoxCollider;
-        var (width, height) = (box.bounds.max.x - box.bounds.min.x, box.bounds.max.y - box.bounds.min.y);
-        var (w, h) = (width / 2, height / 2);
-        var transformDown = Quaternion.Euler(0, 0, -90) * transform.right;
 
-        var bottomLeft = position + transformDown * box.size.y / 2 - transform.right * box.size.x / 2;
-        var bottomRight = position + transformDown * box.size.y / 2 + transform.right * box.size.x / 2;
+
+        var bottomLeft = position + down * h - right * w;
+        var bottomRight = position + down * h + right * w;
         // cliff
-        Gizmos.DrawLine(bottomLeft, bottomLeft + transformDown * cliffCheckDownRaycastDist);
-        Gizmos.DrawLine(bottomRight, bottomRight + transformDown * cliffCheckDownRaycastDist);
+        Gizmos.DrawLine(bottomLeft, bottomLeft + down * cliffCheckDownRaycastDist);
+        Gizmos.DrawLine(bottomRight, bottomRight + down * cliffCheckDownRaycastDist);
+
+        // guard
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, guardTriggerRadius);
     }
 }
 
@@ -69,24 +70,27 @@ public class PufferMove : IState
 
     public void OnUpdate()
     {
+        if ((m.transform.position - PlayerFSM.instance.transform.position).magnitude < m.guardTriggerRadius)
+            m.TransitionState(StateType.Guard);
         if (isRest)
         {
             elapse += Time.deltaTime;
             if (elapse > m.restTime)
             {
                 elapse = 0;
+                m.ReverseFacingDirection();
                 isRest = false;
             }
 
             return;
         }
 
-        m.rigidbody.velocity = m.facingDirection * m.transform.right * m.moveSpeed;
+        m.rigidbody.velocity = m.transform.right * (m.moveSpeed * m.facingDirection);
         if (m.isWalkingDownCliff)
         {
+            Debug.Log("Wal");
             isRest = true;
             m.rigidbody.velocity = Vector2.zero;
-            m.ReverseFacingDirection();
         }
     }
 
@@ -103,8 +107,6 @@ public class PufferMove : IState
 public class PufferGuard : IState
 {
     private PufferFSM m;
-    private float elapse;
-    private bool isRest;
 
     public PufferGuard(PufferFSM m)
     {
@@ -113,17 +115,14 @@ public class PufferGuard : IState
 
     public void OnEnter()
     {
+        m.rigidbody.velocity = Vector2.zero;
+        m.guardHelmet.SetActive(true);
     }
 
     public void OnUpdate()
     {
-        m.rigidbody.velocity = m.facingDirection * m.transform.right * m.moveSpeed;
-        if (m.isWalkingDownCliff)
-        {
-            isRest = true;
-            m.rigidbody.velocity = Vector2.zero;
-            m.ReverseFacingDirection();
-        }
+        if ((m.transform.position - PlayerFSM.instance.transform.position).magnitude > m.guardTriggerRadius)
+            m.TransitionState(StateType.Move);
     }
 
     public void OnFixedUpdate()
@@ -132,6 +131,6 @@ public class PufferGuard : IState
 
     public void OnExit()
     {
-        elapse = 0;
+        m.guardHelmet.SetActive(false);
     }
 }
