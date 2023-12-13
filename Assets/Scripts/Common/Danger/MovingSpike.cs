@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class MovingSpike : MonoBehaviour
 {
+    public float delayTime;
+    private float delayElapse;
     public Transform spike;
     public float movingSpeed;
     public bool enableResting;
@@ -25,6 +27,10 @@ public class MovingSpike : MonoBehaviour
 
     private void Update()
     {
+        delayElapse += Time.deltaTime;
+        if (delayElapse < delayTime)
+            return;
+        
         if ((spike.transform.position - routes[idx].position).magnitude < 1e-3) // 到了
         {
             if (enableResting)
