@@ -88,7 +88,6 @@ public class PufferMove : IState
         m.rigidbody.velocity = m.transform.right * (m.moveSpeed * m.facingDirection);
         if (m.isWalkingDownCliff)
         {
-            Debug.Log("Wal");
             isRest = true;
             m.rigidbody.velocity = Vector2.zero;
         }

@@ -210,7 +210,6 @@ public class GroundEnemyFSM : EnemyFSM
     {
         var position = transform.position;
         var box = hitBoxCollider;
-        Debug.Log(box.size);
         width = box.size.x * Mathf.Abs(transform.localScale.x);
         w = width / 2;
         height = box.size.y * Mathf.Abs(transform.localScale.y);

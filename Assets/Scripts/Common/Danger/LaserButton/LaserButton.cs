@@ -25,15 +25,20 @@ public class LaserButton : MonoBehaviour
             Single.PositiveInfinity,
             1 << LayerMask.NameToLayer("Platform"));
 
-        curLineRenderer = Instantiate(lineRenderer);
+        if (!curLineRenderer)
+        {
+            curLineRenderer = Instantiate(lineRenderer, transform, true);
+        }
+        curLineRenderer.gameObject.SetActive(true);
         curLineRenderer.SetPosition(0, position);
         curLineRenderer.SetPosition(1, hit.point);
+        
     }
 
     public void LaserFade()
     {
         isShooting = false;
-        Destroy(curLineRenderer.gameObject);
+        curLineRenderer.gameObject.SetActive(false);
     }
 
     private void Update()
@@ -44,8 +49,8 @@ public class LaserButton : MonoBehaviour
             var hit = Physics2D.Raycast(position,
                 Quaternion.Euler(0, 0, arc) * Vector2.right,
                 Single.PositiveInfinity,
-                1 << LayerMask.NameToLayer("Player"));
-            if (hit.collider != null) // 射到player了
+                1 << LayerMask.NameToLayer("Player") | 1 << LayerMask.NameToLayer("Platform"));
+            if (hit.collider != null && hit.collider.CompareTag("Player")) // 射到player了
             {
                 if (!hasCausedDamage)
                 {
