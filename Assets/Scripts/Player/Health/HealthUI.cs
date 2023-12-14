@@ -24,6 +24,12 @@ public class HealthUI : Singleton<HealthUI>
     public void UpdateUI()
     {
         int healthPoint = PlayerFSM.instance.healthPoint;
+        while (healthPoint > hearts.Count) // 意味着得到了生命水晶，UIHeart++
+        {
+            hearts.Insert(0, Instantiate(heartPrefab, heartContainer));
+        }
+
+
         for (int i = 0; i < healthPoint; i++)
             hearts[i].TryFulfill();
         for (int i = healthPoint; i < hearts.Count; i++)
