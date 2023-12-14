@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -20,6 +21,10 @@ public class PlayerAttack : Singleton<PlayerAttack>
     private PlayerFSM m;
     private AnimatorStateInfo info;
     private Dictionary<Animator, Vector2> attackDirection;
+    private Dictionary<Animator, PolygonCollider2D> attackColliderDict;
+    public PolygonCollider2D colliderUp;
+    public PolygonCollider2D colliderDown;
+    public PolygonCollider2D colliderRight;
     private Animator currentAttack;
     private bool hasAttackedEnemy;
 
@@ -28,11 +33,17 @@ public class PlayerAttack : Singleton<PlayerAttack>
     private void Start()
     {
         m = PlayerFSM.instance;
-        attackDirection = new()
+        attackDirection = new Dictionary<Animator, Vector2>
         {
             { attackRight, new Vector2(1, 0) * m.facingDirection.x },
             { attackUp, new Vector2(0, 1) },
             { attackDown, new Vector2(0, -1) }
+        };
+        attackColliderDict = new Dictionary<Animator, PolygonCollider2D>
+        {
+            { attackRight, colliderRight },
+            { attackUp, colliderUp },
+            { attackDown, colliderDown }
         };
     }
 
@@ -53,6 +64,8 @@ public class PlayerAttack : Singleton<PlayerAttack>
 
         // 更新向右攻击的方向
         attackDirection[attackRight] = new Vector2(1, 0) * m.facingDirection.x;
+
+        StartCoroutine(UpdateAttackEnemyTrigger());
     }
 
 
@@ -81,7 +94,7 @@ public class PlayerAttack : Singleton<PlayerAttack>
     {
         if (!isAttacking)
             return;
-
+        
         // OnEnter()
         // 这段话要不停调用（天坑！！！）
         info = currentAttack.GetCurrentAnimatorStateInfo(0);
@@ -98,8 +111,6 @@ public class PlayerAttack : Singleton<PlayerAttack>
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        UpdateAttackEnemyTrigger(other);
-
         var component = other.GetComponent<ICanBeAttacked>();
         if (component != null)
         {
@@ -116,30 +127,34 @@ public class PlayerAttack : Singleton<PlayerAttack>
         }
     }
 
-
-    private void UpdateAttackEnemyTrigger(Collider2D other)
+    private IEnumerator UpdateAttackEnemyTrigger()
     {
-        if (hasAttackedEnemy)
-            return;
-        if (!other.CompareTag("Enemy"))
-            return;
-
-        other.GetComponent<EnemyFSM>().Attacked(attackDamage, attackDirection[currentAttack] * attackForce);
-        if (!hasAttackedEnemy) // 第一个打到的敌人 
+        yield return new WaitForEndOfFrame();
+        List<Collider2D> results = new();
+        Physics2D.OverlapCollider(attackColliderDict[currentAttack], new ContactFilter2D(){useTriggers = true}, results);
+        foreach (var other in results) // 这样处理就不会出现，新生成的史莱姆马上被打死的情况
         {
-            m.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position)); // 在第一个打到的敌人上播放特效
-            hasAttackedEnemy = true;
-            TryPushed();
-            // 更新属性
-            if (currentAttack == attackDown) // 只有下劈才刷新
-            {
-                m.canDoubleJump = true;
-                m.canDash = true;
-            }
+            if (!other.CompareTag("Enemy"))
+                continue;
 
-            // 更新exp
-            m.curExp = Mathf.Min(m.curExp + expAmountExtractedByAttack, m.maxExp);
-            PlayerExpUI.instance.UpdatePlayerExpUI();
+            Debug.Log(123);
+            other.GetComponent<EnemyFSM>().Attacked(attackDamage, attackDirection[currentAttack] * attackForce);
+            if (!hasAttackedEnemy) // 第一个打到的敌人 
+            {
+                m.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position)); // 在第一个打到的敌人上播放特效
+                hasAttackedEnemy = true;
+                TryPushed();
+                // 更新属性
+                if (currentAttack == attackDown) // 只有下劈才刷新
+                {
+                    m.canDoubleJump = true;
+                    m.canDash = true;
+                }
+
+                // 更新exp
+                m.curExp = Mathf.Min(m.curExp + expAmountExtractedByAttack, m.maxExp);
+                PlayerExpUI.instance.UpdatePlayerExpUI();
+            }
         }
     }
 

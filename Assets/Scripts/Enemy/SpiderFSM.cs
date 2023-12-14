@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class SpiderFSM : GroundEnemyFSM
 {
-    [Header("Skeleton")] public float playerDetectionRadius;
+    public float playerDetectionRadius;
     public LayerMask viewLayer;
     public float jumpCoolDown;
     public float jumpForce;
@@ -16,16 +16,6 @@ public class SpiderFSM : GroundEnemyFSM
         states[StateType.Wait] = new SpiderWait(this);
         states[StateType.Attack] = new SpiderAttack(this);
         TransitionState(StateType.Wait);
-    }
-
-    private void Update()
-    {
-        currentState.OnUpdate();
-    }
-
-    private void FixedUpdate()
-    {
-        currentState.OnFixedUpdate();
     }
 
 

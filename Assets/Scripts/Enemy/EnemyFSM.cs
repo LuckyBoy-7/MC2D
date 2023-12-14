@@ -131,7 +131,7 @@ public class EnemyFSM : FSM
 public class GroundEnemyFSM : EnemyFSM
 {
     [Header("PhysicsCheck")] protected float cliffCheckDownRaycastDist = 0.3f;
-    protected float boxLeftRightCastDist = 0.1f;
+    protected float raycastDist = 0.1f;
     public LayerMask groundLayer;
     [Header("Fall")] public float maxFallingSpeed;
     [Header("Movement")] public int facingDirection; // x方向
@@ -200,8 +200,22 @@ public class GroundEnemyFSM : EnemyFSM
                 out Vector3 right,
                 out Vector3 left, out Vector3 down);
 
-            return Physics2D.OverlapBox(center + right * (w + boxLeftRightCastDist / 2),
-                new Vector2(boxLeftRightCastDist, height * 0.95f), 0, groundLayer);
+            return Physics2D.OverlapBox(center + right * (w + raycastDist / 2),
+                new Vector2(raycastDist, height * 0.95f), 0, groundLayer);
+        }
+    }
+
+
+    public bool isOnGround
+    {
+        get
+        {
+            var center = GetColliderCenter(out float width, out float height, out float w, out float h,
+                out Vector3 right,
+                out Vector3 left, out Vector3 down);
+
+            return Physics2D.OverlapBox(center + down * (h + raycastDist / 2),
+                new Vector2(width, height), 0, groundLayer);
         }
     }
 

@@ -68,10 +68,10 @@ public class ZombieFSM : GroundEnemyFSM
         Gizmos.DrawLine(bottomLeft, bottomLeft + Vector3.down * cliffCheckDownRaycastDist);
         Gizmos.DrawLine(bottomRight, bottomRight + Vector3.down * cliffCheckDownRaycastDist);
         // Wall Box
-        Gizmos.DrawWireCube(position + Vector3.right * (0.5f + boxLeftRightCastDist / 2),
-            new Vector2(boxLeftRightCastDist, 0.95f));
-        Gizmos.DrawWireCube(position + Vector3.left * (0.5f + boxLeftRightCastDist / 2),
-            new Vector2(boxLeftRightCastDist, 0.95f));
+        Gizmos.DrawWireCube(position + Vector3.right * (0.5f + raycastDist / 2),
+            new Vector2(raycastDist, 0.95f));
+        Gizmos.DrawWireCube(position + Vector3.left * (0.5f + raycastDist / 2),
+            new Vector2(raycastDist, 0.95f));
         // Hit Box
         Gizmos.color = Color.red;
         Gizmos.DrawWireCube(position, hitBoxCollider.bounds.size);
