@@ -8,7 +8,7 @@ public class PhantomFSM : FlyEnemyFSM
     protected override void Start()
     {
         base.Start();
-        intervalAttackFunc += Attack;
+        keepAttackFunc += Attack;
     }
 
     private void Attack()

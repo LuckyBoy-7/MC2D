@@ -253,7 +253,8 @@ public class FlyEnemyFSM : EnemyFSM
     [Header("Attack")] public Action intervalAttackFunc;
     public Action keepAttackFunc;
     public float attackCoolDown;
-    [Header("Movement")] public float idleRadius;
+    [Header("Movement")] public float keepDistanceCompensationY = 2f; // 不然player在地上就会贴着地板走了
+    public float idleRadius;
     public float keepDistance;
     public Vector2 targetPos;
     public Vector2 pivotPos;
@@ -268,17 +269,7 @@ public class FlyEnemyFSM : EnemyFSM
         TransitionState(StateType.Wait);
     }
 
-    protected virtual void Update()
-    {
-        currentState.OnUpdate();
-    }
-
-    private void FixedUpdate()
-    {
-        currentState.OnFixedUpdate();
-    }
-
-    private void OnDrawGizmos()
+    protected virtual void OnDrawGizmos()
     {
         if (PlayerFSM.instance != null && (PlayerFSM.instance.transform.position - transform.position).magnitude <=
             playerInDetectionRadius)
@@ -303,6 +294,8 @@ public class FlyEnemyFSM : EnemyFSM
         Gizmos.color = Color.blue;
         Gizmos.DrawWireSphere(pivotPos, idleRadius);
     }
+
+    public void ResetIntervalAttackElapse() => ((FlyEnemyAttack)states[StateType.Attack]).elapse = 0;
 }
 
 public class FlyEnemyWait : IState
@@ -339,7 +332,7 @@ public class FlyEnemyWait : IState
 public class FlyEnemyAttack : IState
 {
     private FlyEnemyFSM m;
-    private double elapse;
+    public double elapse;
 
     public FlyEnemyAttack(FlyEnemyFSM m)
     {
@@ -354,7 +347,8 @@ public class FlyEnemyAttack : IState
 
     public void OnUpdate()
     {
-        var dir = (PlayerFSM.instance.transform.position - m.transform.position).normalized;
+        var dir = (m.transform.position + Vector3.up * m.keepDistanceCompensationY -
+                   PlayerFSM.instance.transform.position).normalized;
         // player逃出范围("或被墙挡住" 这点去掉，不然enemy看上去有点呆)
         if ((PlayerFSM.instance.transform.position - m.transform.position).magnitude > m.playerOutDetectionRadius)
         {
@@ -362,7 +356,7 @@ public class FlyEnemyAttack : IState
             return;
         }
 
-        m.pivotPos = -dir * m.keepDistance + PlayerFSM.instance.transform.position;
+        m.pivotPos = dir * m.keepDistance + PlayerFSM.instance.transform.position;
         if (m.hitBoxCollider.IsTouchingLayers(1 << LayerMask.NameToLayer("Platform")))
             RollTargetPos();
 

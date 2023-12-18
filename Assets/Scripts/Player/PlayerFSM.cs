@@ -1081,6 +1081,7 @@ public class PlayerReleaseArrow : IState
 
     public void OnExit()
     {
+        Time.timeScale = 1;  // 可能因为hurt提前出状态
         m.rigidbody.gravityScale = m.gravityScaleBackup;
         elapse = 0;
     }
