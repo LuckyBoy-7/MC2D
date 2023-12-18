@@ -59,9 +59,9 @@ public class PlayerDeathParticle : MonoBehaviour
     {
         if (!isRealeasing)
             return;
-        elapse += Time.deltaTime;
         if (elapse > rotateDuration)
             Destroy(gameObject);
+        elapse += Time.deltaTime;
 
         transform.Rotate(new Vector3(0, 0, rotateSpeed * Time.deltaTime));
     }

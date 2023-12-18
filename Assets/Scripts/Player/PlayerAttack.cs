@@ -68,7 +68,6 @@ public class PlayerAttack : Singleton<PlayerAttack>
         StartCoroutine(UpdateAttackEnemyTrigger());
     }
 
-
     public void Update()
     {
         // Input Buffer
@@ -82,7 +81,8 @@ public class PlayerAttack : Singleton<PlayerAttack>
                     StateType.ReleaseArrow,
                     StateType.Drop,
                     StateType.Roar,
-                    StateType.Recover
+                    StateType.Recover,
+                    StateType.SuperDash
                 }.Contains(
                     PlayerFSM.instance.currentStateType))
                 return;
