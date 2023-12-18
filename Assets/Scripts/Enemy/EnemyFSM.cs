@@ -253,7 +253,7 @@ public class FlyEnemyFSM : EnemyFSM
     [Header("Attack")] public Action intervalAttackFunc;
     public Action keepAttackFunc;
     public float attackCoolDown;
-    [Header("Movement")] public float keepDistanceCompensationY = 2f; // 不然player在地上就会贴着地板走了
+    [Header("Movement")] public float keepDistanceCompensationY = 3f; // 不然player在地上就会贴着地板走了
     public float idleRadius;
     public float keepDistance;
     public Vector2 targetPos;
@@ -341,14 +341,11 @@ public class FlyEnemyAttack : IState
 
     public void OnEnter()
     {
-        m.pivotPos = m.transform.position;
         RollTargetPos();
     }
 
     public void OnUpdate()
     {
-        var dir = (m.transform.position + Vector3.up * m.keepDistanceCompensationY -
-                   PlayerFSM.instance.transform.position).normalized;
         // player逃出范围("或被墙挡住" 这点去掉，不然enemy看上去有点呆)
         if ((PlayerFSM.instance.transform.position - m.transform.position).magnitude > m.playerOutDetectionRadius)
         {
@@ -356,7 +353,6 @@ public class FlyEnemyAttack : IState
             return;
         }
 
-        m.pivotPos = dir * m.keepDistance + PlayerFSM.instance.transform.position;
         if (m.hitBoxCollider.IsTouchingLayers(1 << LayerMask.NameToLayer("Platform")))
             RollTargetPos();
 
@@ -372,9 +368,11 @@ public class FlyEnemyAttack : IState
 
     private void RollTargetPos()
     {
+        var dir = (m.transform.position + Vector3.up * m.keepDistanceCompensationY -
+                   PlayerFSM.instance.transform.position).normalized;
+        m.pivotPos = dir * m.keepDistance + PlayerFSM.instance.transform.position;
         m.targetPos = m.pivotPos + Random.insideUnitCircle * m.idleRadius;
     }
-
 
     public void OnFixedUpdate()
     {

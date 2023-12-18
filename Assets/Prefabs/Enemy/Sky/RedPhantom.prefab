@@ -205,8 +205,8 @@ MonoBehaviour:
     m_Bits: 384
   attackCoolDown: 2
   keepDistanceCompensationY: 2
-  idleRadius: 2
-  keepDistance: 5
+  idleRadius: 1.5
+  keepDistance: 9
   targetPos: {x: 0, y: 0}
   pivotPos: {x: 0, y: 0}
   moveSpeed: 2
