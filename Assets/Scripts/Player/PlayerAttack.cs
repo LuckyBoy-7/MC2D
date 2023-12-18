@@ -137,7 +137,6 @@ public class PlayerAttack : Singleton<PlayerAttack>
             if (!other.CompareTag("Enemy"))
                 continue;
 
-            Debug.Log(123);
             other.GetComponent<EnemyFSM>().Attacked(attackDamage, attackDirection[currentAttack] * attackForce);
             if (!hasAttackedEnemy) // 第一个打到的敌人 
             {

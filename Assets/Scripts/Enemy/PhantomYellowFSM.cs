@@ -27,7 +27,6 @@ public class PhantomYellowFSM : FlyEnemyFSM
     protected override void Update()
     {
         base.Update();
-        Debug.Log(currentState);
         if ((PlayerFSM.instance.transform.position - transform.position).magnitude < stabTriggerRadius &&
             isAttackStored)
         {
