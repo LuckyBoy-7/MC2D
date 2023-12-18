@@ -4207,13 +4207,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1244051059}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 645.69183, y: 37.841434, z: -0.4936695}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -285.08, y: -2.449997, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 15
+  m_RootOrder: 14
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1299552691
 GameObject:
@@ -4847,7 +4847,7 @@ Transform:
   - {fileID: 1014870879}
   - {fileID: 2112988322}
   m_Father: {fileID: 0}
-  m_RootOrder: 14
+  m_RootOrder: 15
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1383788132
 MonoBehaviour:
@@ -4866,8 +4866,8 @@ MonoBehaviour:
   spriteRenderer: {fileID: 1383788130}
   isDebug: 1
   isInvincibleDebug: 0
-  isOverPowerDebug: 1
-  isAllAbilityDebug: 0
+  isOverPowerDebug: 0
+  isAllAbilityDebug: 1
   curEmeraldNumber: 0
   strawberryNumber: 0
   maxHealthPoint: 33
@@ -4966,13 +4966,13 @@ MonoBehaviour:
   attackKey: 97
   spellKey: 113
   superDashKey: 119
-  hasDashAbility: 1
-  hasRoarAbility: 1
-  hasDoubleJumpAbility: 1
-  hasSuperDashAbility: 1
-  hasDropAbility: 1
-  hasReleaseArrowAbility: 1
-  hasWallSlideAbility: 1
+  hasDashAbility: 0
+  hasRoarAbility: 0
+  hasDoubleJumpAbility: 0
+  hasSuperDashAbility: 0
+  hasDropAbility: 0
+  hasReleaseArrowAbility: 0
+  hasWallSlideAbility: 0
 --- !u!1 &1383874843
 GameObject:
   m_ObjectHideFlags: 0
@@ -8887,6 +8887,46 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
+  - first: {x: -294, y: -5, z: 0}
+    second:
+      serializedVersion: 2
+      m_TileIndex: 0
+      m_TileSpriteIndex: 0
+      m_TileMatrixIndex: 0
+      m_TileColorIndex: 0
+      m_TileObjectToInstantiateIndex: 65535
+      dummyAlignment: 0
+      m_AllTileFlags: 1073741825
+  - first: {x: -293, y: -5, z: 0}
+    second:
+      serializedVersion: 2
+      m_TileIndex: 0
+      m_TileSpriteIndex: 0
+      m_TileMatrixIndex: 0
+      m_TileColorIndex: 0
+      m_TileObjectToInstantiateIndex: 65535
+      dummyAlignment: 0
+      m_AllTileFlags: 1073741825
+  - first: {x: -292, y: -5, z: 0}
+    second:
+      serializedVersion: 2
+      m_TileIndex: 0
+      m_TileSpriteIndex: 0
+      m_TileMatrixIndex: 0
+      m_TileColorIndex: 0
+      m_TileObjectToInstantiateIndex: 65535
+      dummyAlignment: 0
+      m_AllTileFlags: 1073741825
+  - first: {x: -291, y: -5, z: 0}
+    second:
+      serializedVersion: 2
+      m_TileIndex: 0
+      m_TileSpriteIndex: 0
+      m_TileMatrixIndex: 0
+      m_TileColorIndex: 0
+      m_TileObjectToInstantiateIndex: 65535
+      dummyAlignment: 0
+      m_AllTileFlags: 1073741825
   - first: {x: -257, y: -5, z: 0}
     second:
       serializedVersion: 2
@@ -10949,13 +10989,13 @@ Tilemap:
       m_AllTileFlags: 1073741825
   m_AnimatedTiles: {}
   m_TileAssetArray:
-  - m_RefCount: 564
+  - m_RefCount: 568
     m_Data: {fileID: 11400000, guid: e31483551cc524d418140020159243d4, type: 2}
   m_TileSpriteArray:
-  - m_RefCount: 564
+  - m_RefCount: 568
     m_Data: {fileID: 21300000, guid: 23ecb683e7aa5b9498d4daa5d6832bf1, type: 3}
   m_TileMatrixArray:
-  - m_RefCount: 564
+  - m_RefCount: 568
     m_Data:
       e00: 1
       e01: 0
@@ -10974,7 +11014,7 @@ Tilemap:
       e32: 0
       e33: 1
   m_TileColorArray:
-  - m_RefCount: 564
+  - m_RefCount: 568
     m_Data: {r: 1, g: 1, b: 1, a: 1}
   m_TileObjectToInstantiateArray: []
   m_AnimationFrameRate: 1
@@ -11037,6 +11077,14 @@ CompositeCollider2D:
       - X: -2940000000
         Y: -80000000
       - X: -2940000000
+        Y: -50000000
+      - X: -2900000000
+        Y: -50000000
+      - X: -2900000000
+        Y: -40000000
+      - X: -2940000000
+        Y: -40000000
+      - X: -2940000000
         Y: 70000000
       - X: -3040000000
         Y: 70000000
@@ -11071,6 +11119,10 @@ CompositeCollider2D:
       - {x: -257, y: 8.99997}
       - {x: -257.00003, y: -8}
       - {x: -294, y: -7.9999704}
+      - {x: -293.99997, y: -5}
+      - {x: -290, y: -4.999971}
+      - {x: -290.00003, y: -4}
+      - {x: -294, y: -3.9999704}
       - {x: -294.00003, y: 7}
       - {x: -304, y: 6.9999704}
       - {x: -303.99997, y: -14}
