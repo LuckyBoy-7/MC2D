@@ -263,7 +263,7 @@ MonoBehaviour:
   viewLayer:
     serializedVersion: 2
     m_Bits: 384
-  attackCoolDown: 1
+  attackCoolDown: 3
   keepDistanceCompensationY: 8
   idleRadius: 2
   keepDistance: 6

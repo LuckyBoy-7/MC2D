@@ -23,6 +23,10 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public int extraHealthPoint;
 
     [Header("CameraConfiner")] public CinemachineConfiner2D cinemachineConfiner2D;
+    [Header("LookDown")] public float lookDownKeyHoldTime;
+    public Transform lookDownCameraPivot;
+    public Transform lookUpCameraPivot;
+    public Transform cameraPivot;
 
     [Header("Movement")] public Rigidbody2D rigidbody;
     public Vector2 facingDirection;
@@ -530,6 +534,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 public class PlayerIdle : IState
 {
     private PlayerFSM m;
+    private float lookDownElapse;
 
     public PlayerIdle(PlayerFSM m)
     {
@@ -557,6 +562,23 @@ public class PlayerIdle : IState
             m.TransitionState(StateType.SuperDash);
         else if (m.fallTrigger)
             m.TransitionState(StateType.Fall);
+        else
+            TryLookingDown();
+    }
+
+    private void TryLookingDown()
+    {
+        if (Input.GetKey(m.downKey))
+        {
+            lookDownElapse += Time.deltaTime;
+            if (lookDownElapse >= m.lookDownKeyHoldTime)
+                m.cameraPivot.localPosition = m.lookDownCameraPivot.localPosition;
+        }
+        else // 松开了下键
+        {
+            m.cameraPivot.localPosition = m.lookUpCameraPivot.localPosition;
+            lookDownElapse = 0;
+        }
     }
 
     public void OnFixedUpdate()
@@ -566,6 +588,8 @@ public class PlayerIdle : IState
 
     public void OnExit()
     {
+        m.cameraPivot.localPosition = m.lookUpCameraPivot.localPosition;
+        lookDownElapse = 0;
     }
 }
 
@@ -656,7 +680,7 @@ public class PlayerJump : IState
     public void OnEnter()
     {
         m.SetZeroGravity();
-        m.rigidbody.velocity = new Vector2(m.rigidbody.velocity.x, m.doubleJumpForce);
+        m.rigidbody.velocity = new Vector2(m.rigidbody.velocity.x, m.firstJumpForce);
         m.jumpBufferExpireTime = -1; // 重置，否则如果从跳跃到落地的时间<bufferTime，则跳跃会被触发两次 
         m.wolfJumpBufferExpireTime = -1;
     }
