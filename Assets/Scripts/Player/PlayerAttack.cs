@@ -71,7 +71,7 @@ public class PlayerAttack : Singleton<PlayerAttack>
     public void Update()
     {
         // Input Buffer
-        if (Input.GetKeyDown(m.attackKey))
+        if (Input.GetKeyDown(m.attackKey) && GameManager.instance.state == GameStateType.Play)
             attackBufferExpireTime = Time.time + attackBufferTime;
         // attack trigger
         if (Time.time >= attackCoolDownExpireTime && Time.time <= attackBufferExpireTime && !isAttacking)

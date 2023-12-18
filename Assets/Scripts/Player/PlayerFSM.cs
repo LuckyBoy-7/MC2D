@@ -174,7 +174,12 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     private void Update()
     {
         if (GameManager.instance.state != GameStateType.Play)
+        {
+            TransitionState(StateType.Idle);
+            rigidbody.velocity = Vector2.zero;
             return;
+        }
+
         UpdateKeyDownDirection();
         UpdateInputBuffer();
         UpdateStates();
@@ -1081,7 +1086,7 @@ public class PlayerReleaseArrow : IState
 
     public void OnExit()
     {
-        Time.timeScale = 1;  // 可能因为hurt提前出状态
+        Time.timeScale = 1; // 可能因为hurt提前出状态
         m.rigidbody.gravityScale = m.gravityScaleBackup;
         elapse = 0;
     }

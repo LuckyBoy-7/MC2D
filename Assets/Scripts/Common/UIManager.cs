@@ -11,20 +11,20 @@ public class UIManager : MonoBehaviour
     private void Update()
     {
         var manager = GameManager.instance;
-        if (manager.state == GameStateType.Pause || manager.state == GameStateType.Dialogue)
-            return;
         if (Input.GetKeyDown(inventoryKey))
         {
             if (inventory.activeSelf)
             {
                 manager.state = GameStateType.Play;
+                inventory.SetActive(false);
             }
             else
             {
-                manager.state = GameStateType.Inventory;
+                if (manager.state == GameStateType.PausePlayer || manager.state == GameStateType.PauseAll)
+                    return;
+                manager.state = GameStateType.PausePlayer;
+                inventory.SetActive(true);
             }
-
-            inventory.SetActive(!inventory.activeSelf);
         }
     }
 }

@@ -71,7 +71,7 @@ public class DialogueUI : MonoBehaviour
 
     private IEnumerator OpenPanel()
     {
-        GameManager.instance.state = GameStateType.Dialogue;
+        GameManager.instance.state = GameStateType.PausePlayer;
         var origScale = transform.localScale;
         transform.localScale = new Vector3(origScale.x, 0, origScale.z);
         transform.DOScaleY(1, openPanelTime);
