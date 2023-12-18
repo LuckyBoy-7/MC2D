@@ -11480,6 +11480,7 @@ MonoBehaviour:
   attackCoolDown: 0.25
   attackCoolDownExpireTime: -1
   attackForce: 26
+  rightAttackForceBackMultiplier: 0.7
   attackDownForceMultiplier: 0.85
   attackBufferTime: 0.15
   attackBufferExpireTime: -1

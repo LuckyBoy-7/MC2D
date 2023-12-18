@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
 
 
@@ -12,6 +13,7 @@ public class PlayerAttack : Singleton<PlayerAttack>
     public float attackCoolDown;
     public float attackCoolDownExpireTime;
     public float attackForce;
+    public float rightAttackForceBackMultiplier;
     public float attackDownForceMultiplier;
     public float attackBufferTime;
     public float attackBufferExpireTime;
@@ -94,7 +96,7 @@ public class PlayerAttack : Singleton<PlayerAttack>
     {
         if (!isAttacking)
             return;
-        
+
         // OnEnter()
         // 这段话要不停调用（天坑！！！）
         info = currentAttack.GetCurrentAnimatorStateInfo(0);
@@ -131,7 +133,8 @@ public class PlayerAttack : Singleton<PlayerAttack>
     {
         yield return new WaitForEndOfFrame();
         List<Collider2D> results = new();
-        Physics2D.OverlapCollider(attackColliderDict[currentAttack], new ContactFilter2D(){useTriggers = true}, results);
+        Physics2D.OverlapCollider(attackColliderDict[currentAttack], new ContactFilter2D() { useTriggers = true },
+            results);
         foreach (var other in results) // 这样处理就不会出现，新生成的史莱姆马上被打死的情况
         {
             if (!other.CompareTag("Enemy"))
@@ -160,7 +163,8 @@ public class PlayerAttack : Singleton<PlayerAttack>
     public void TryPushed()
     {
         if (currentAttack == attackRight)
-            m.rigidbody.velocity = new Vector2(-attackDirection[currentAttack].x * attackForce,
+            m.rigidbody.velocity = new Vector2(
+                -attackDirection[currentAttack].x * attackForce * rightAttackForceBackMultiplier,
                 m.rigidbody.velocity.y);
         else if (currentAttack == attackDown)
         {
