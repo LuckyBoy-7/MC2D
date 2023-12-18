@@ -1378,7 +1378,7 @@ GameObject:
   - component: {fileID: 482452512}
   - component: {fileID: 482452511}
   - component: {fileID: 482452513}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: PlayerAttackRight
   m_TagString: PlayerAttack
   m_Icon: {fileID: 0}
@@ -4353,7 +4353,7 @@ GameObject:
   - component: {fileID: 1299782003}
   - component: {fileID: 1299782002}
   - component: {fileID: 1299782004}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: PlayerAttackUp
   m_TagString: PlayerAttack
   m_Icon: {fileID: 0}
@@ -11217,7 +11217,7 @@ GameObject:
   - component: {fileID: 1503216417}
   - component: {fileID: 1503216416}
   - component: {fileID: 1503216418}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: PlayerAttackDown
   m_TagString: PlayerAttack
   m_Icon: {fileID: 0}
@@ -11437,7 +11437,7 @@ GameObject:
   - component: {fileID: 1515190933}
   - component: {fileID: 1515190934}
   - component: {fileID: 1515190935}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: PlayerAttack
   m_TagString: Untagged
   m_Icon: {fileID: 0}
