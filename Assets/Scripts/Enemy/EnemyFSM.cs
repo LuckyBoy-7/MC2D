@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using DG.Tweening;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -22,6 +23,7 @@ public class EnemyFSM : FSM
 
     [Header("Hurt")] public BoxCollider2D hitBoxCollider;
     public float showHurtEffectTime = 0.3F;
+    private Coroutine hurtCoroutine;
     public float roarHurtElapse { get; set; } // 用于记录上吼下砸造成的连续伤害信息
     public float dropHurtElapse { get; set; }
     public float knockedBackForceMultiplier = 1;
@@ -47,13 +49,31 @@ public class EnemyFSM : FSM
     {
         healthPoint -= damage;
 
-        DOTween.Kill("MaskFadeOut"); // 因为两次击打时间可能很接近，所以可能还在淡出enemy就已经死了
+        if (hurtCoroutine != null)
+            StopCoroutine(hurtCoroutine); // 因为两次击打时间可能很接近，所以可能还在淡出enemy就已经死了
         if (healthPoint <= 0) // 伤害可能会溢出
             Kill();
         else
         {
             hurtMask.color = hurtMask.color.WithAlpha(1);
-            hurtMask.DOFade(0, showHurtEffectTime).SetId("MaskFadeOut");
+            hurtCoroutine = StartCoroutine(FadeTo(0, showHurtEffectTime));
+        }
+    }
+
+    protected void Heal(int healPoint)
+    {
+        healthPoint = Mathf.Min(healthPoint + healPoint, maxHealthPoint);
+    }
+
+
+
+    private IEnumerator FadeTo(float target, float duration)
+    {
+        float speed = Mathf.Abs(target - hurtMask.color.a) / duration;
+        while (hurtMask.color.a != target)
+        {
+            hurtMask.color = hurtMask.color.WithAlpha(Mathf.MoveTowards(hurtMask.color.a, target, speed * Time.deltaTime));
+            yield return null;
         }
     }
 
@@ -65,7 +85,7 @@ public class EnemyFSM : FSM
             rigidbody.velocity = attackForceVec * knockedBackForceMultiplier;
     }
 
-    private void Kill()
+    public void Kill()
     {
         onKill?.Invoke();
         if (canBeLooted)

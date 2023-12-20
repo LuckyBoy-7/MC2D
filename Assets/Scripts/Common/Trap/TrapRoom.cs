@@ -18,6 +18,7 @@ public class TrapRoomWave
 
 public class TrapRoom : MonoBehaviour
 {
+    // todo: 如果player中途死了，把生成的enemy清除
     public List<IronBar> controlledIronBars;
     public List<TrapRoomWave> waves;
     private bool isTrapping; // 表示当前是否正在困住player，不然player如果在陷阱房死了，就少一个状态

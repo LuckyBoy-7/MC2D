@@ -105,11 +105,10 @@ MonoBehaviour:
   canBeKnockedBack: 0
   emeraldEmitterPrefab: {fileID: 7434508363890164307, guid: 5135224466e9b204ea19ad01e00c1bda, type: 3}
   ownEmeraldNumber: 12
-  maxHealthPoint: 7
+  maxHealthPoint: 5
   healthPoint: 7
   hurtMask: {fileID: 2298696810145652536}
   rigidbody: {fileID: 2298696808606079277}
-  facingDirection: 0
   xVelocityChangeSpeed: 0.7
   yVelocityChangeSpeed: 5
   hitBoxCollider: {fileID: 2298696808606079250}
@@ -119,6 +118,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   maxFallingSpeed: 0
+  facingDirection: 0
   playerDetectionRadius: 11
   viewLayer:
     serializedVersion: 2

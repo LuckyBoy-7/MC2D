@@ -32,4 +32,6 @@ public enum StateType
     Move,
     Wait,
     Guard,
+    // Boss
+    Wander
 }
