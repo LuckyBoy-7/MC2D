@@ -81,8 +81,10 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public float hurtForce;
     public float invincibleTime;
     public float invincibleExpireTime;
+    [Header("Death")] public PlayerDeathParticle deathParticlePrefab;
     public event Action onDie;
 
+    [Header("Revive")] public Transform spawnPoint;
     [Header("Recover")] public float recoverSpeed;
     public Animator recoverProcessAnim;
     public Animator recoverBurstAnim;
@@ -225,6 +227,9 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
             hasReleaseArrowAbility = true;
             hasWallSlideAbility = true;
         }
+        
+        if (Input.GetKeyDown(KeyCode.U))
+            TakeDamage(100);
     }
 
     public void UpdateTriggerEnter2D(Collider2D other)
@@ -441,8 +446,19 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 
     private void Kill()
     {
-        onDie();
+        onDie?.Invoke();
+        Instantiate(deathParticlePrefab, transform.position, Quaternion.identity).Pushed(hurtDirection);
         gameObject.SetActive(false);
+    }
+
+    public void TryRevive()
+    {
+        if (healthPoint > 0)
+            return;
+        gameObject.SetActive(true);
+        if (spawnPoint)
+            transform.position = spawnPoint.position;
+        Recover();
     }
 
     public void UpdateExp(int delta = default)
@@ -529,6 +545,17 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public bool superDashTrigger => hasSuperDashAbility && Input.GetKeyDown(superDashKey);
 
     #endregion
+
+    public void Recover()
+    {
+        healthPoint = maxHealthPoint;
+        HealthUI.instance.UpdateUI();
+    }
+
+    public void SetSpawnPoint(Transform point)
+    {
+        spawnPoint = point;
+    }
 }
 
 public class PlayerIdle : IState

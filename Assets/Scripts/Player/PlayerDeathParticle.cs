@@ -31,8 +31,8 @@ public class PlayerDeathParticle : MonoBehaviour
         if (pushedDuration == 0)
             pushedDuration = GetLengthByName("DeathParticle");
         
-        // Test
-        Pushed(Vector3.right);
+        // // Test
+        // Pushed(Vector3.right);
     }
 
     public void Pushed(Vector3 dir = default)
@@ -42,7 +42,6 @@ public class PlayerDeathParticle : MonoBehaviour
 
     public void Release()
     {
-        Debug.Log("Release");
         isRealeasing = true;
         for (int i = 0; i < particleNum; i++)
         {
@@ -51,7 +50,7 @@ public class PlayerDeathParticle : MonoBehaviour
             var particle = Instantiate(singleParticle, transform);
             particle.position = transform.position;
             particle.DOLocalMove(targetPos, burstDuration);
-            particle.DOScale(Vector3.zero, rotateDuration);
+            particle.DOScale(Vector3.zero, rotateDuration).onComplete += () => DeathTransition.instance.TryPlay();
         }
     }
 
