@@ -21,7 +21,6 @@ public class DeathTransition : Singleton<DeathTransition>
 
     public void OnAnimationExecuteHalf()
     {
-        Debug.Log(123);
         PlayerFSM.instance.TryRevive();
     }
 }

@@ -88,6 +88,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     [Header("Recover")] public float recoverSpeed;
     public Animator recoverProcessAnim;
     public Animator recoverBurstAnim;
+    public bool canRecover = true;
 
     [Header("Effect")] public SwordAttackEffect attackEffect;
 
@@ -152,10 +153,11 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         invincibleExpireTime = -1;
         dashBufferExpireTime = -1;
         jumpBufferExpireTime = -1;
-        spellPreparationExpireTime = -1;
+        spellPreparationExpireTime = Single.PositiveInfinity;
         dashCoolDownExpireTime = -1;
         wolfJumpBufferExpireTime = -1;
         wallWolfJumpBufferExpireTime = -1;
+        canRecover = true;
 
         states[StateType.Idle] = new PlayerIdle(this);
         states[StateType.Run] = new PlayerRun(this);
@@ -227,7 +229,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
             hasReleaseArrowAbility = true;
             hasWallSlideAbility = true;
         }
-        
+
         if (Input.GetKeyDown(KeyCode.U))
             TakeDamage(100);
     }
@@ -461,6 +463,12 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         Recover();
     }
 
+    public void Heal(int delta = default)
+    {
+        healthPoint = Mathf.Min(healthPoint + delta, maxHealthPoint);
+        HealthUI.instance.UpdateUI();
+    }
+
     public void UpdateExp(int delta = default)
     {
         curExp = Mathf.Min(curExp + delta, maxExp);
@@ -540,7 +548,8 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
                                     || !isOnGround && Input.GetKeyDown(spellKey));
 
     public bool recoverTrigger => curExp >= 3
-                                  && isOnGround && Input.GetKey(spellKey) && Time.time > spellPreparationExpireTime;
+                                  && isOnGround && Input.GetKey(spellKey) && Time.time > spellPreparationExpireTime &&
+                                  canRecover;
 
     public bool superDashTrigger => hasSuperDashAbility && Input.GetKeyDown(superDashKey);
 
@@ -1214,12 +1223,12 @@ public class PlayerRecover : IState
 
     public void OnEnter()
     {
+        Debug.Log(123);
         m.recoverProcessAnim.speed = m.recoverSpeed;
         m.recoverBurstAnim.speed = m.recoverSpeed;
         m.recoverProcessAnim.Play("RecoverProcess");
         m.rigidbody.velocity = Vector2.zero;
     }
-
 
     public void OnUpdate()
     {
@@ -1237,9 +1246,7 @@ public class PlayerRecover : IState
 
         m.recoverBurstAnim.Play("RecoverBurst");
         m.UpdateExp(-3);
-
-        m.healthPoint = Mathf.Min(m.healthPoint + 1, m.maxHealthPoint);
-        HealthUI.instance.UpdateUI();
+        m.Heal(1);
         m.TransitionState(StateType.Idle);
     }
 
@@ -1249,6 +1256,7 @@ public class PlayerRecover : IState
 
     public void OnExit()
     {
+        m.canRecover = false;
     }
 }
 

@@ -49,3 +49,11 @@ public enum GameStateType
     PausePlayer
 }
 
+public enum EnemyEggType
+{
+    Zombie,
+    Hoglin,
+    Spider,
+    Slime,
+}
+

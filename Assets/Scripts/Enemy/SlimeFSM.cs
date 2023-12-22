@@ -56,6 +56,7 @@ public class SlimeFSM : GroundEnemyFSM
         {
             var force = Random.insideUnitCircle * emitForce;
             var slime = Instantiate(subSlimePrefab, transform.position, Quaternion.identity);
+            slime.GetComponent<SlimeFSM>().canBeLooted = canBeLooted;
             slime.AddForce(force, ForceMode2D.Impulse);
             slime.AddForce(rigidbody.velocity, ForceMode2D.Impulse);  // 带上父物体的惯性
         }

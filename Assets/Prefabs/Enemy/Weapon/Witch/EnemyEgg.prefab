@@ -99,15 +99,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee82c8fc6cdf3524eb8c10742836fbe7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  spriteToEnemyPrefabs:
-  - sprite: {fileID: 21300000, guid: 01124653f197b4a4898b7c90d84f85f9, type: 3}
-    enemy: {fileID: 3281618593885296657, guid: fcde48204c0d8cc4a8e1094f4d25aec1, type: 3}
-  - sprite: {fileID: 21300000, guid: 2d6c17fa95c2f1a40832b1a5a6587513, type: 3}
-    enemy: {fileID: 5699097600956990455, guid: e0a2e8033e6ffdf44a058693959a74a5, type: 3}
-  - sprite: {fileID: 21300000, guid: af5fa5dbcfc1b1f46aaf2a323c428d7a, type: 3}
-    enemy: {fileID: 2298696808606079251, guid: b1b795b6e9411de4da03bfe5fd31aaeb, type: 3}
-  - sprite: {fileID: 21300000, guid: b8b6b09e706380145a89287deee8d736, type: 3}
-    enemy: {fileID: 1088047554521230449, guid: d4dcae9b7e8c2ed4ca4d7aea76ac7aa0, type: 3}
+  enemyEggInfos:
+  - type: 0
+    enemy: {fileID: 1088047554521230462, guid: d4dcae9b7e8c2ed4ca4d7aea76ac7aa0, type: 3}
+    sprite: {fileID: 21300000, guid: b8b6b09e706380145a89287deee8d736, type: 3}
+  - type: 1
+    enemy: {fileID: 3281618593885296663, guid: fcde48204c0d8cc4a8e1094f4d25aec1, type: 3}
+    sprite: {fileID: 21300000, guid: 01124653f197b4a4898b7c90d84f85f9, type: 3}
+  - type: 2
+    enemy: {fileID: 2298696808606079276, guid: b1b795b6e9411de4da03bfe5fd31aaeb, type: 3}
+    sprite: {fileID: 21300000, guid: af5fa5dbcfc1b1f46aaf2a323c428d7a, type: 3}
+  - type: 3
+    enemy: {fileID: 164517289176687216, guid: c242123daf620f741afc22d6d9ac977b, type: 3}
+    sprite: {fileID: 21300000, guid: ffd77bad8b929e44fa25474bab936946, type: 3}
 --- !u!58 &3091130906358144608
 CircleCollider2D:
   m_ObjectHideFlags: 0

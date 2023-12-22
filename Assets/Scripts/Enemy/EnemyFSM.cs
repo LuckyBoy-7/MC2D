@@ -7,6 +7,7 @@ using Random = UnityEngine.Random;
 
 public class EnemyFSM : FSM
 {
+    public bool isBoss;
     public bool canBeLooted = true;
     public bool canBeKnockedBack = true;
     [Header("Currency")] public EmeraldEmitter emeraldEmitterPrefab;
@@ -15,6 +16,8 @@ public class EnemyFSM : FSM
     [Header("Health")] public int maxHealthPoint = 5;
     public int healthPoint; // 还要调试用的
     public SpriteRenderer hurtMask;
+    public float startInvincibleTime = 0.1f;
+    public float startInvincibleExpireTime ;
 
 
     [Header("Movement")] public Rigidbody2D rigidbody;
@@ -27,11 +30,19 @@ public class EnemyFSM : FSM
     public float roarHurtElapse { get; set; } // 用于记录上吼下砸造成的连续伤害信息
     public float dropHurtElapse { get; set; }
     public float knockedBackForceMultiplier = 1;
+    [Header("Reset")] private Vector3 origPos;
+    public Transform spawnPoint;
 
     public event Action onKill;
 
     protected virtual void Start()
     {
+        startInvincibleExpireTime = Time.time + startInvincibleTime;
+        origPos = transform.position;
+        if (spawnPoint != null)
+            origPos = spawnPoint.position;
+        transform.position = origPos;
+
         healthPoint = maxHealthPoint;
     }
 
@@ -65,20 +76,28 @@ public class EnemyFSM : FSM
         healthPoint = Mathf.Min(healthPoint + healPoint, maxHealthPoint);
     }
 
-
+    public virtual void Reset()
+    {
+        transform.position = origPos;
+        Debug.Log(origPos);
+        Heal(9999);
+    }
 
     private IEnumerator FadeTo(float target, float duration)
     {
         float speed = Mathf.Abs(target - hurtMask.color.a) / duration;
         while (hurtMask.color.a != target)
         {
-            hurtMask.color = hurtMask.color.WithAlpha(Mathf.MoveTowards(hurtMask.color.a, target, speed * Time.deltaTime));
+            hurtMask.color =
+                hurtMask.color.WithAlpha(Mathf.MoveTowards(hurtMask.color.a, target, speed * Time.deltaTime));
             yield return null;
         }
     }
 
     public virtual void Attacked(int damage, Vector2 attackForceVec = default) // 被击打的方向加力度
     {
+        if (Time.time <= startInvincibleExpireTime)
+            return;
         TakeDamage(damage);
 
         if (canBeKnockedBack)

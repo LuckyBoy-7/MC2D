@@ -4,36 +4,45 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [Serializable]
-public class SpritePrefabPair
+public struct EnemyEggInfo
 {
+    public EnemyEggType type;
+    public EnemyFSM enemy;
     public Sprite sprite;
-    public GameObject enemy;
 }
 
 
 public class EnemyEgg : MonoBehaviour
 {
-    public List<SpritePrefabPair> spriteToEnemyPrefabs;
-    private Sprite sprite;
+    public List<EnemyEggInfo> enemyEggInfos;
+    private EnemyEggType type;
     private SpriteRenderer spriteRenderer;
+    private Rigidbody2D rigidbody;
 
     private void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
+        rigidbody = GetComponent<Rigidbody2D>();
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.gameObject.layer == LayerMask.NameToLayer("Platform"))
         {
-            Instantiate(spriteToEnemyPrefabs.Find(pair => pair.sprite == sprite).enemy, transform.position, Quaternion.identity, transform.parent);
+            Instantiate(enemyEggInfos.Find(info => info.type == type).enemy, transform.position, Quaternion.identity,
+                transform.parent).canBeLooted = false;  // 怪物蛋里的怪没有钱
             Destroy(gameObject);
         }
     }
 
-    public void Init(Sprite sprite)
+    public void Init(EnemyEggType type)
     {
-        this.sprite = sprite;
-        spriteRenderer.sprite = sprite;
+        this.type = type;
+        spriteRenderer.sprite = enemyEggInfos.Find(info => info.type == type).sprite;
+    }
+
+    public void Pushed(Vector2 force)
+    {
+        rigidbody.AddForce(force, ForceMode2D.Impulse);
     }
 }

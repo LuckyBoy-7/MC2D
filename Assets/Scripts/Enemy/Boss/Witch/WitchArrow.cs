@@ -3,6 +3,7 @@ using System.Collections;
 using DG.Tweening;
 using Unity.VisualScripting.Dependencies.NCalc;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class WitchArrow : MonoBehaviour
 {
@@ -13,7 +14,7 @@ public class WitchArrow : MonoBehaviour
     public float rotateDuration;
     public float remainTimeAfterShoot;
     private BoxCollider2D box;
-    public Action onShootDown;
+    public Action onShootDone;
 
     private void Awake()
     {
@@ -38,21 +39,21 @@ public class WitchArrow : MonoBehaviour
 
     private IEnumerator _Shoot()
     {
-        Vector3 playerPos = PlayerFSM.instance.transform.position;
-        Vector3 targetPos = playerPos + (playerPos - transform.position).normalized * reachBehindPlayerDistance;
-
+        // 快速自转n圈
         var origAngle = Vector3.SignedAngle(Vector3.right, transform.right, Vector3.forward);
         transform.DORotate(new Vector3(0, 0, origAngle + 360 * rotateCircles), rotateDuration,
             RotateMode.FastBeyond360).SetEase(Ease.Linear);
-
         yield return new WaitForSeconds(rotateDuration);
+        // 瞄准player射出
         box.enabled = true;
+        Vector3 playerPos = PlayerFSM.instance.transform.position;
+        Vector3 targetPos = playerPos + (playerPos - transform.position).normalized * reachBehindPlayerDistance;
         transform.rotation =
             Quaternion.LookRotation(Vector3.forward, Quaternion.Euler(0, 0, 90) * (playerPos - transform.position));
-
         transform.DOMove(targetPos, reachDuration);
         yield return new WaitForSeconds(reachDuration);
-        onShootDown?.Invoke();
+        //
+        onShootDone?.Invoke();
         box.enabled = false;
         yield return new WaitForSeconds(remainTimeAfterShoot);
         StartCoroutine(Shoot());

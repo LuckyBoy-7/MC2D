@@ -20,6 +20,7 @@ TagManager:
   - DripStone
   - OneWaySlab
   - Damageable
+  - IronBars
   layers:
   - Default
   - TransparentFX
