@@ -64,7 +64,8 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public float wallWolfJumpBufferExpireTime;
 
 
-    [Header("RaycastCheck")] public Collider2D hitBoxCollider;
+    [Header("RaycastCheck")] public Collider2D physicalBoxCollider;
+    public Collider2D hitBoxCollider;
     public float boxLeftRightCastDist;
     public float wallCheckBoxHeight;
     public float boxDownCastDist;
@@ -316,6 +317,8 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
             dashBufferExpireTime = Time.time + dashBufferTime;
         if (Input.GetKeyDown(spellKey))
             spellPreparationExpireTime = Time.time + spellPreparationTime;
+        else if (Input.GetKeyUp(spellKey))
+            canRecover = true;
         if (isOnGround)
         {
             wolfJumpBufferExpireTime = Time.time + wolfJumpBufferTime;
@@ -404,7 +407,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
             new Vector2(boxLeftRightCastDist, wallCheckBoxHeight));
         // Hit Box
         Gizmos.color = Color.red;
-        Gizmos.DrawWireCube(transform.position, hitBoxCollider.bounds.size);
+        Gizmos.DrawWireCube(transform.position, physicalBoxCollider.bounds.size);
     }
 
     public void UpdateKeyDownDirection()
@@ -1082,7 +1085,7 @@ public class PlayerDrop : IState
     private void UpdateCollisionWithTrapDoor()
     {
         List<Collider2D> res = new();
-        m.hitBoxCollider.OverlapCollider(new ContactFilter2D(), res);
+        m.physicalBoxCollider.OverlapCollider(new ContactFilter2D(), res);
         foreach (var other in res)
         {
             if (!other.CompareTag("TrapDoor"))

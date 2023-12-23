@@ -33,5 +33,9 @@ public enum StateType
     Wait,
     Guard,
     // Boss
-    Wander
+    Wander,
+    Crush,
+    Vomit,
+    Throw,
+    WideExplosion,
 }

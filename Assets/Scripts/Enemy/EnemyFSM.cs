@@ -142,6 +142,10 @@ public class EnemyFSM : FSM
         }
     }
 
+    #region Velocity
+
+    
+
     public void LerpVelocityX(float to)
     {
         var newX = Mathf.MoveTowards(rigidbody.velocity.x, to, xVelocityChangeSpeed * Time.fixedDeltaTime);
@@ -165,6 +169,24 @@ public class EnemyFSM : FSM
         LerpVelocityX(x);
         LerpVelocityY(y);
     }
+    
+    public void SetVelocityX(float to)
+    {
+        rigidbody.velocity = new Vector2(to, rigidbody.velocity.y);
+    }
+    public void SetVelocityY(float to)
+    {
+        rigidbody.velocity = new Vector2(rigidbody.velocity.x, to);
+    }
+
+    public void SetVelocity(Vector2 velocity)
+    {
+        rigidbody.velocity = velocity;
+    }
+
+    public bool isMovingDown => rigidbody.velocity.y <= -1e-3;
+
+    #endregion
 }
 
 public class GroundEnemyFSM : EnemyFSM
@@ -174,7 +196,6 @@ public class GroundEnemyFSM : EnemyFSM
     public LayerMask groundLayer;
     [Header("Fall")] public float maxFallingSpeed;
     [Header("Movement")] public int facingDirection; // x方向
-
 
     protected override void Update()
     {
