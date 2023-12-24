@@ -32,7 +32,7 @@ public class EnemyFSM : FSM
     public float knockedBackForceMultiplier = 1;
     [Header("Reset")] private Vector3 origPos;
     public Transform spawnPoint;
-    public float origGravity;
+    private float origGravity;
 
     public event Action onKill;
 
@@ -118,6 +118,8 @@ public class EnemyFSM : FSM
 
     private void OnTriggerStay2D(Collider2D other)
     {
+        if (!hitBoxCollider.IsTouching(other))
+            return;
         if (other.CompareTag("PlayerRoar"))
         {
             PlayerFSM player = PlayerFSM.instance;
@@ -250,6 +252,10 @@ public class GroundEnemyFSM : EnemyFSM
     {
         facingDirection = (int)Mathf.Sign(PlayerFSM.instance.transform.position.x - transform.position.x);
     }
+    public void LookBackwardsPlayer()
+    {
+        facingDirection = -(int)Mathf.Sign(PlayerFSM.instance.transform.position.x - transform.position.x);
+    }
 
     #region PhysicsCheck
 
@@ -301,6 +307,8 @@ public class GroundEnemyFSM : EnemyFSM
                 new Vector2(raycastDist, height * 0.95f), 0, groundLayer);
         }
     }
+
+    public bool isHittingPlatform => hitBoxCollider.IsTouchingLayers(1 << LayerMask.NameToLayer("Platform"));
 
 
     public bool isOnGround

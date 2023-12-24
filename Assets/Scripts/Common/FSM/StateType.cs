@@ -39,4 +39,9 @@ public enum StateType
     Throw,
     ThrowOne,
     WideExplosion,
+    // Him
+    GroundCrush,
+    AirCrush,
+    Lash,
+    StepBack,
 }
