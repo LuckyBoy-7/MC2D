@@ -84,7 +84,8 @@ public class PlayerAttack : Singleton<PlayerAttack>
                     StateType.Drop,
                     StateType.Roar,
                     StateType.Recover,
-                    StateType.SuperDash
+                    StateType.SuperDash,
+                    StateType.Dash
                 }.Contains(
                     PlayerFSM.instance.currentStateType))
                 return;

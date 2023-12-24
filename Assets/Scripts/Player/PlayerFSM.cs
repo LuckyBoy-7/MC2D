@@ -1310,7 +1310,6 @@ public class PlayerSuperDash : IState
         m.rigidbody.gravityScale = 0;
     }
 
-
     public void OnUpdate()
     {
         readyElapse += Time.deltaTime;
@@ -1340,10 +1339,13 @@ public class PlayerSuperDash : IState
         }
         else if (isDashing)
         {
-            if (Input.GetKeyUp(m.jumpKey) || Input.GetKeyUp(m.dashKey) || Input.GetKeyUp(m.superDashKey) ||
-                m.isHittingWall)
+            if (Input.GetKeyUp(m.jumpKey) || Input.GetKeyUp(m.dashKey) || Input.GetKeyUp(m.superDashKey))
             {
                 isOver = true;
+            }
+            else if (m.isHittingWall)
+            {
+                m.TransitionState(StateType.WallSlide);
             }
         }
     }
