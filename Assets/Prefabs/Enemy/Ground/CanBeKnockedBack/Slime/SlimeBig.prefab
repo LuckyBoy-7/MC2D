@@ -118,20 +118,24 @@ MonoBehaviour:
   showHurtEffectTime: 0.3
   knockedBackForceMultiplier: 0.3
   spawnPoint: {fileID: 0}
+  origGravity: 0
   groundLayer:
     serializedVersion: 2
     m_Bits: 128
   maxFallingSpeed: 12
   facingDirection: 1
-  playerDetectionRadius: 12
+  playerDetectionRadius: 15.6
   viewLayer:
     serializedVersion: 2
     m_Bits: 384
   jumpCoolDown: 1
   jumpForce: 5
   jumpForceYCompensation: 2
-  subSlimePrefab: {fileID: 164517289176687219, guid: c242123daf620f741afc22d6d9ac977b, type: 3}
+  subSlimePrefab: {fileID: 164517289176687216, guid: c242123daf620f741afc22d6d9ac977b, type: 3}
   emitForce: 23
+  emitAngle: 70
+  beSuckedProtectionTime: 0.1
+  beSuckedProtectionExpireTime: 0
 --- !u!50 &677533075262814208
 Rigidbody2D:
   serializedVersion: 4
@@ -145,13 +149,13 @@ Rigidbody2D:
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
   m_Mass: 1
-  m_LinearDrag: 2
+  m_LinearDrag: 0
   m_AngularDrag: 0
   m_GravityScale: 4
   m_Material: {fileID: 0}
   m_Interpolate: 0
   m_SleepingMode: 1
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
   m_Constraints: 4
 --- !u!61 &677533075262814209
 BoxCollider2D:

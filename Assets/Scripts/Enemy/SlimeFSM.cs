@@ -1,7 +1,11 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Serialization;
+using Random = UnityEngine.Random;
 
 public class SlimeFSM : GroundEnemyFSM
 {
@@ -10,12 +14,19 @@ public class SlimeFSM : GroundEnemyFSM
     public float jumpCoolDown;
     public float jumpForce;
     public float jumpForceYCompensation;
-    public Rigidbody2D subSlimePrefab;
+    public SlimeFSM subSlimePrefab;
     public float emitForce;
+    public float emitAngle = 70;
+
+    public float beSuckedProtectionTime = 0.1f; // 防止一生成就被slimeBoss Suck了
+    public float beSuckedProtectionExpireTime;
+
+    public bool canBeSucked => Time.time > beSuckedProtectionExpireTime;
 
 
     protected override void Start()
     {
+        beSuckedProtectionExpireTime = Time.time + beSuckedProtectionTime;
         onKill += () =>
         {
             if (subSlimePrefab != null)
@@ -54,12 +65,35 @@ public class SlimeFSM : GroundEnemyFSM
     {
         for (int i = 0; i < num; i++)
         {
-            var force = Random.insideUnitCircle * emitForce;
+            // 获得抛射角度和速度
+            var half = emitAngle / 2;
+            var angle = Random.Range(90 - half, 90 + half);
+            Vector2 dir = Quaternion.Euler(0, 0, angle) * Vector3.right;
+
             var slime = Instantiate(subSlimePrefab, transform.position, Quaternion.identity);
-            slime.GetComponent<SlimeFSM>().canBeLooted = canBeLooted;
-            slime.AddForce(force, ForceMode2D.Impulse);
-            slime.AddForce(rigidbody.velocity, ForceMode2D.Impulse);  // 带上父物体的惯性
+            slime.canBeLooted = canBeLooted;
+            slime.SetVelocity(dir * emitForce);
         }
+    }
+
+    public void PushedTo(Vector2 targetPos, float duration)
+    {
+        float x1, x2, y1, y2, t, vx, vy, g;
+        g = Physics2D.gravity.magnitude * rigidbody.gravityScale;
+        x1 = transform.position.x;
+        y1 = transform.position.y;
+        x2 = targetPos.x;
+        y2 = targetPos.y;
+        t = duration;
+
+        vx = (x2 - x1) / t;
+        vy = (y2 - y1 + 1f / 2 * g * t * t) / t;
+        SetVelocity(vx, vy);
+    }
+
+    public void PushedToPlayer(float duration)
+    {
+        PushedTo(PlayerFSM.instance.transform.position, duration);
     }
 }
 

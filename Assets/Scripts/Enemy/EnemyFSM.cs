@@ -17,7 +17,7 @@ public class EnemyFSM : FSM
     public int healthPoint; // 还要调试用的
     public SpriteRenderer hurtMask;
     public float startInvincibleTime = 0.1f;
-    public float startInvincibleExpireTime ;
+    public float startInvincibleExpireTime;
 
 
     [Header("Movement")] public Rigidbody2D rigidbody;
@@ -32,6 +32,7 @@ public class EnemyFSM : FSM
     public float knockedBackForceMultiplier = 1;
     [Header("Reset")] private Vector3 origPos;
     public Transform spawnPoint;
+    public float origGravity;
 
     public event Action onKill;
 
@@ -44,6 +45,7 @@ public class EnemyFSM : FSM
         transform.position = origPos;
 
         healthPoint = maxHealthPoint;
+        origGravity = rigidbody.gravityScale;
     }
 
     protected virtual void Update()
@@ -71,7 +73,7 @@ public class EnemyFSM : FSM
         }
     }
 
-    protected void Heal(int healPoint)
+    public void Heal(int healPoint)
     {
         healthPoint = Mathf.Min(healthPoint + healPoint, maxHealthPoint);
     }
@@ -79,7 +81,7 @@ public class EnemyFSM : FSM
     public virtual void Reset()
     {
         transform.position = origPos;
-        Debug.Log(origPos);
+        DOTween.Complete(hurtMask);
         Heal(9999);
     }
 
@@ -109,7 +111,8 @@ public class EnemyFSM : FSM
         onKill?.Invoke();
         if (canBeLooted)
             Instantiate(emeraldEmitterPrefab, transform.position, Quaternion.identity).num = ownEmeraldNumber;
-        Destroy(gameObject);
+        // Destroy(gameObject);
+        gameObject.SetActive(false);
     }
 
 
@@ -142,9 +145,26 @@ public class EnemyFSM : FSM
         }
     }
 
+
     #region Velocity
 
-    
+    public void SetAfloat()
+    {
+        rigidbody.gravityScale = 0;
+        rigidbody.bodyType = RigidbodyType2D.Kinematic;
+    }
+
+    public void SetGravity(float to)
+    {
+        rigidbody.gravityScale = to;
+    }
+
+    public void ResetGravity()
+    {
+        rigidbody.bodyType = RigidbodyType2D.Dynamic;
+        rigidbody.gravityScale = origGravity;
+    }
+
 
     public void LerpVelocityX(float to)
     {
@@ -169,11 +189,12 @@ public class EnemyFSM : FSM
         LerpVelocityX(x);
         LerpVelocityY(y);
     }
-    
+
     public void SetVelocityX(float to)
     {
         rigidbody.velocity = new Vector2(to, rigidbody.velocity.y);
     }
+
     public void SetVelocityY(float to)
     {
         rigidbody.velocity = new Vector2(rigidbody.velocity.x, to);
@@ -184,7 +205,18 @@ public class EnemyFSM : FSM
         rigidbody.velocity = velocity;
     }
 
-    public bool isMovingDown => rigidbody.velocity.y <= -1e-3;
+    public void SetVelocity(float vx, float vy)
+    {
+        rigidbody.velocity = new Vector2(vx, vy);
+    }
+
+
+    public bool isMovingDown => rigidbody.velocity.y <= 1e-5;
+
+    public void Pushed(Vector2 force)
+    {
+        rigidbody.AddForce(force, ForceMode2D.Impulse);
+    }
 
     #endregion
 }
@@ -213,6 +245,11 @@ public class GroundEnemyFSM : EnemyFSM
     }
 
     public void ReverseFacingDirection() => facingDirection *= -1;
+
+    public void LookTowardsPlayer()
+    {
+        facingDirection = (int)Mathf.Sign(PlayerFSM.instance.transform.position.x - transform.position.x);
+    }
 
     #region PhysicsCheck
 
@@ -275,7 +312,7 @@ public class GroundEnemyFSM : EnemyFSM
                 out Vector3 left, out Vector3 down);
 
             return Physics2D.OverlapBox(center + down * (h + raycastDist / 2),
-                new Vector2(width, height), 0, groundLayer);
+                new Vector2(width * 0.95f, raycastDist), 0, groundLayer);
         }
     }
 

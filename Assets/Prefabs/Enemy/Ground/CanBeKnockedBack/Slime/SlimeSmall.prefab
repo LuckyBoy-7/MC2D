@@ -118,12 +118,13 @@ MonoBehaviour:
   showHurtEffectTime: 0.3
   knockedBackForceMultiplier: 0.3
   spawnPoint: {fileID: 0}
+  origGravity: 0
   groundLayer:
     serializedVersion: 2
     m_Bits: 128
   maxFallingSpeed: 12
   facingDirection: 1
-  playerDetectionRadius: 12
+  playerDetectionRadius: 17.1
   viewLayer:
     serializedVersion: 2
     m_Bits: 384
@@ -145,13 +146,13 @@ Rigidbody2D:
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
   m_Mass: 1
-  m_LinearDrag: 2
+  m_LinearDrag: 0
   m_AngularDrag: 0
   m_GravityScale: 4
   m_Material: {fileID: 0}
   m_Interpolate: 0
   m_SleepingMode: 1
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
   m_Constraints: 4
 --- !u!61 &825042948331763784
 BoxCollider2D:

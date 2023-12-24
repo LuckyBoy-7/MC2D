@@ -47,10 +47,16 @@ public class BossFightController : MonoBehaviour
             if (child.CompareTag("IronBars"))
                 continue;
             var enemy = child.GetComponent<EnemyFSM>();
-            if (enemy && !enemy.isBoss) // 清除小怪
-                Destroy(enemy.gameObject);
-            else
-                child.gameObject.SetActive(false);
+            if (enemy)
+            {
+                if (enemy.isBoss)
+                {
+                    child.gameObject.SetActive(false);
+                    enemy.Reset();
+                }
+                else // 清除小怪
+                    Destroy(enemy.gameObject);
+            }
         }
 
         foreach (var ironBar in ironBars)

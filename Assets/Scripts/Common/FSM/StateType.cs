@@ -37,5 +37,6 @@ public enum StateType
     Crush,
     Vomit,
     Throw,
+    ThrowOne,
     WideExplosion,
 }

@@ -202,6 +202,7 @@ MonoBehaviour:
   showHurtEffectTime: 0.3
   knockedBackForceMultiplier: 1
   spawnPoint: {fileID: 0}
+  origGravity: 0
   groundLayer:
     serializedVersion: 2
     m_Bits: 128
@@ -227,7 +228,7 @@ Rigidbody2D:
   m_Material: {fileID: 0}
   m_Interpolate: 0
   m_SleepingMode: 1
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
   m_Constraints: 4
 --- !u!61 &3281618593885296660
 BoxCollider2D:

@@ -144,7 +144,7 @@ public class CreeperBossMove : IState
 
     public void OnFixedUpdate()
     {
-        m.facingDirection = (int)Mathf.Sign(PlayerFSM.instance.transform.position.x - m.transform.position.x);
+        m.LookTowardsPlayer();
         m.LerpVelocityX(m.facingDirection * m.moveSpeed);
     }
 
@@ -294,7 +294,7 @@ public class CreeperBossJump : IState
 
     public void OnUpdate()
     {
-        if (m.isOnGround)
+        if (m.isOnGround && m.isMovingDown)
             m.TransitionState(StateType.Move);
     }
 
