@@ -80,10 +80,12 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public Vector2 hurtDirection;
     public float hurtDirectionXMultiplier; // 方向加一个维度的缩放配合force就可以构造出360度任意受力情况
     public float hurtForce;
+    public bool absoluteInvincible;  // 绝对无敌，用于下砸那些不好确定无敌时间的无敌判断
     public float invincibleTime;
     public float invincibleExpireTime;
     [Header("Death")] public PlayerDeathParticle deathParticlePrefab;
     public event Action onDie;
+    public event Action onHurt;
 
     [Header("Revive")] public Transform spawnPoint;
     [Header("Recover")] public float recoverSpeed;
@@ -437,6 +439,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 
     public void TakeDamage(int damage)
     {
+        onHurt?.Invoke();
         if (extraHealthPoint > 0)
             extraHealthPoint -= 1;
         else
@@ -478,7 +481,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         PlayerExpUI.instance.UpdatePlayerExpUI();
     }
 
-    public bool isInvincible => Time.time <= invincibleExpireTime;
+    public bool isInvincible => Time.time <= invincibleExpireTime || absoluteInvincible;
 
     public void PlayAttackEffect(Vector3 position) => Instantiate(attackEffect, position, Quaternion.identity);
 
@@ -1069,12 +1072,14 @@ public class PlayerDrop : IState
         elapse += Time.deltaTime;
         if (elapse < m.dropWindupTime)
             return;
+        m.absoluteInvincible = true;
         // 开始下砸
         m.rigidbody.velocity = Vector2.down * m.dropSpeed;
         UpdateCollisionWithTrapDoor();
 
         if (m.isOnGround)
         {
+            m.absoluteInvincible = false;
             isFirstOnGround = true;
             dropPrefab = PlayerFSM.Instantiate(m.dropPrefab, m.transform);
             dropPrefab.transform.position += Vector3.down * 0.5f;
