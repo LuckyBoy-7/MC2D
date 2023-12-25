@@ -164,8 +164,8 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     {
         hasAbilityDic[type] = true;
         GuideManager.instance.Show(type);
+        PlayerInfoUI.instance.UnlockInfo(type);
     }
-
 
     void Start()
     {
@@ -232,6 +232,12 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     {
         if (!isDebug)
             return;
+
+        if (Input.GetKeyDown(KeyCode.Y))
+        {
+            PlayerAttack.instance.UpgradeSword();
+        }
+        
         curExp = maxExp;
         UpdateExp();
 
@@ -241,7 +247,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
             invincibleExpireTime = Time.time + invincibleTime;
 
         if (isOverPowerDebug)
-            PlayerAttack.instance.attackDamage = 10;
+            PlayerAttack.instance.attackDamages[0] = 10;
         if (isAllAbilityDebug)
         {
             hasAbilityDic[AbilityType.Dash] = hasDashAbility;

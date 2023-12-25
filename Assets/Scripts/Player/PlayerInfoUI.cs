@@ -11,17 +11,23 @@ using UnityEngine.UI;
 [Serializable]
 public class ItemInfo
 {
-    public Image image;
-    public string name;
-    [TextArea] public string description;
-    public InventoryType type;
-    public bool isUnlocked;
+    public AbilityType type; // 相当于tag
+    public bool isUnlocked; // 物体显隐状态
+    public Image image; // 物体对那个Image的位置 
+    public Sprite[] sprites; // 物体对应的多个sprites，比如剑就有好几种，升级的时候可以切换一个
+    [HideInInspector] public int spriteIdx; // 物体对应的多个sprites，比如剑就有好几种，升级的时候可以切换一个
+
+
+    public string[] name; // 右边侧边栏对物体介绍的名字
+    [HideInInspector] public int nameIdx;
+    [TextArea] public string[] description; //
+    [HideInInspector] public int descriptionIdx;
 }
 
-public class PlayerInfoUI : MonoBehaviour
+public class PlayerInfoUI : Singleton<PlayerInfoUI>
 {
     public List<ItemInfo> itemInfos;
-    public List<Image> images;
+    public List<Image> images; // 相当于决定了selectionFrame移动的顺序
     public Text nameText;
     public Text descriptionText;
     private int idx;
@@ -30,9 +36,14 @@ public class PlayerInfoUI : MonoBehaviour
     public float selectFrameScaleCompensation;
     public float animationDuration;
 
+    private void OnEnable()
+    {
+        UpdateShowHideState();  // 更新player技能的获取状态
+    }
+
     private void Start()
     {
-        Canvas.ForceUpdateCanvases();
+        Canvas.ForceUpdateCanvases(); // 因为layout更新不及时
         UpdateUI();
     }
 
@@ -48,11 +59,10 @@ public class PlayerInfoUI : MonoBehaviour
     }
 
     /// <summary>
-    /// 主要更新SelectFrame和未获得物品的显隐情况
+    /// 主要更新SelectFrame和未获得物品的文本信息
     /// </summary>
     public void UpdateUI()
     {
-        UpdateShowHideState();
         MoveSelectionFrame();
         UpdateText();
     }
@@ -64,8 +74,8 @@ public class PlayerInfoUI : MonoBehaviour
         descriptionText.text = "???";
         if (info.isUnlocked) // 解锁了才显示
         {
-            nameText.text = info.name;
-            descriptionText.text = info.description;
+            nameText.text = info.name[info.nameIdx];
+            descriptionText.text = info.description[info.descriptionIdx];
         }
     }
 
@@ -90,5 +100,20 @@ public class PlayerInfoUI : MonoBehaviour
         }
     }
 
+    public void UpdateItemInfoByType(AbilityType type)
+    {
+        ItemInfo info = GetItemInfoByType(type);
+        info.image.sprite = info.sprites[++info.spriteIdx];
+        nameText.text = info.name[++info.nameIdx];
+        descriptionText.text = info.description[++info.descriptionIdx];
+    }
+    
+    public void UnlockInfo(AbilityType type)
+    {
+        ItemInfo info = GetItemInfoByType(type);
+        info.isUnlocked = true;
+    }
+
     private ItemInfo GetItemInfoByImage() => itemInfos.Find(item => item.image == images[idx]);
+    private ItemInfo GetItemInfoByType(AbilityType type) => itemInfos.Find(item => item.type == type);
 }

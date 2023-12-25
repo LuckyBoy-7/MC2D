@@ -7,7 +7,9 @@ using Random = UnityEngine.Random;
 
 public class PlayerAttack : Singleton<PlayerAttack>
 {
-    [Header("Attack")] public Animator attackRight;
+    [Header("Attack")] public List<int> attackDamages = new();
+    public int attackDamagesIdx;
+    public Animator attackRight;
     public Animator attackDown;
     public Animator attackUp;
     public float attackCoolDown;
@@ -17,7 +19,6 @@ public class PlayerAttack : Singleton<PlayerAttack>
     public float attackDownForceMultiplier;
     public float attackBufferTime;
     public float attackBufferExpireTime;
-    public int attackDamage;
     public int expAmountExtractedByAttack = 1;
 
     private PlayerFSM m;
@@ -141,7 +142,7 @@ public class PlayerAttack : Singleton<PlayerAttack>
             if (!other.CompareTag("Enemy"))
                 continue;
 
-            other.GetComponent<EnemyFSM>().Attacked(attackDamage, attackDirection[currentAttack] * attackForce);
+            other.GetComponent<EnemyFSM>().Attacked(attackDamages[attackDamagesIdx], attackDirection[currentAttack] * attackForce);
             if (!hasAttackedEnemy) // 第一个打到的敌人 
             {
                 m.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position)); // 在第一个打到的敌人上播放特效
@@ -173,5 +174,11 @@ public class PlayerAttack : Singleton<PlayerAttack>
                 -attackDirection[currentAttack].y * (attackForce * attackDownForceMultiplier));
             m.dashCoolDownExpireTime = -1; // 下劈立即刷新dash，怪不得下劈完冲不出去，我还以为是动画播的太慢了
         }
+    }
+
+    public void UpgradeSword()
+    {
+        attackDamagesIdx += 1;
+        PlayerInfoUI.instance.UpdateItemInfoByType(AbilityType.Attack);
     }
 }

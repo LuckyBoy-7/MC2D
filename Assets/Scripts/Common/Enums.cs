@@ -22,18 +22,6 @@ public enum AbilityType
     WallSlide
 }
 
-public enum InventoryType
-{
-    Dash,
-    Sword,
-    Heal,
-    Arrow,
-    Drop,
-    Roar,
-    WallSlide,
-    DoubleJump,
-    SuperDash
-}
 
 public enum SwordType
 {
