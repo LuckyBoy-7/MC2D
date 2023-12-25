@@ -52,7 +52,7 @@ public class Portal : MonoBehaviour
             return;
         HintUI.instance.ChangeText(hasUnlocked ? unLockedHintContent : lockedHintContent);
         HintUI.instance.FadeIn();
-        HintUI.instance.SetFixedPos(hintTransform.position);
+        HintUI.instance.SetFixedPoint(hintTransform);
         isPlayerInArea = true;
         currentPortal = name;
     }

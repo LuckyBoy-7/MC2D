@@ -6,6 +6,7 @@ using DG.Tweening;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
+using UnityEngine.UI;
 using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
 
@@ -16,6 +17,18 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public bool isInvincibleDebug;
     public bool isOverPowerDebug;
     public bool isAllAbilityDebug;
+
+    [Header("Debug")] [Header("Abilities")]
+    public bool hasDashAbility;
+
+    public bool hasRoarAbility;
+    public bool hasDoubleJumpAbility;
+    public bool hasSuperDashAbility;
+    public bool hasDropAbility;
+    public bool hasReleaseArrowAbility;
+    public bool hasWallSlideAbility;
+    public bool hasHealAbility;
+
     [Header("Currency")] public int curEmeraldNumber;
     [Header("Collectable")] public int strawberryNumber;
     [Header("Health")] public int maxHealthPoint;
@@ -80,7 +93,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public Vector2 hurtDirection;
     public float hurtDirectionXMultiplier; // 方向加一个维度的缩放配合force就可以构造出360度任意受力情况
     public float hurtForce;
-    public bool absoluteInvincible;  // 绝对无敌，用于下砸那些不好确定无敌时间的无敌判断
+    public bool absoluteInvincible; // 绝对无敌，用于下砸那些不好确定无敌时间的无敌判断
     public float invincibleTime;
     public float invincibleExpireTime;
     [Header("Death")] public PlayerDeathParticle deathParticlePrefab;
@@ -139,13 +152,19 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public KeyCode spellKey = KeyCode.Q;
     public KeyCode superDashKey = KeyCode.W;
 
-    [Header("States")] public bool hasDashAbility;
-    public bool hasRoarAbility;
-    public bool hasDoubleJumpAbility;
-    public bool hasSuperDashAbility;
-    public bool hasDropAbility;
-    public bool hasReleaseArrowAbility;
-    public bool hasWallSlideAbility;
+    [Header("States")] public Dictionary<AbilityType, bool> hasAbilityDic = new();
+
+    public bool hasAbility(AbilityType type)
+    {
+        hasAbilityDic[type] = hasAbilityDic.GetValueOrDefault(type, false);
+        return hasAbilityDic[type];
+    }
+
+    public void UnlockAbility(AbilityType type)
+    {
+        hasAbilityDic[type] = true;
+        GuideManager.instance.Show(type);
+    }
 
 
     void Start()
@@ -220,17 +239,19 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         canDash = true;
         if (isInvincibleDebug)
             invincibleExpireTime = Time.time + invincibleTime;
+
         if (isOverPowerDebug)
             PlayerAttack.instance.attackDamage = 10;
         if (isAllAbilityDebug)
         {
-            hasDashAbility = true;
-            hasRoarAbility = true;
-            hasDoubleJumpAbility = true;
-            hasSuperDashAbility = true;
-            hasDropAbility = true;
-            hasReleaseArrowAbility = true;
-            hasWallSlideAbility = true;
+            hasAbilityDic[AbilityType.Dash] = hasDashAbility;
+            hasAbilityDic[AbilityType.Roar] = hasRoarAbility;
+            hasAbilityDic[AbilityType.DoubleJump] = hasDoubleJumpAbility;
+            hasAbilityDic[AbilityType.SuperDash] = hasSuperDashAbility;
+            hasAbilityDic[AbilityType.Drop] = hasDropAbility;
+            hasAbilityDic[AbilityType.ReleaseArrow] = hasReleaseArrowAbility;
+            hasAbilityDic[AbilityType.WallSlide] = hasWallSlideAbility;
+            hasAbilityDic[AbilityType.Heal] = hasHealAbility;
         }
 
         if (Input.GetKeyDown(KeyCode.U))
@@ -529,7 +550,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 
     #region StateTransitionTrigger
 
-    public bool wallSlideTrigger => hasWallSlideAbility && (
+    public bool wallSlideTrigger => hasAbility(AbilityType.WallSlide) && (
         (isOnLeftWall && Input.GetKey(leftKey) &&
          rigidbody.velocity.x <= 1e-3 // 不然蹬墙跳一出去就就又变成wallSlide状态了，且下落状态才能trigger  
          || isOnRightWall && Input.GetKey(rightKey) && rigidbody.velocity.x >= -1e-3));
@@ -540,9 +561,10 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public bool wallJumpTrigger => // 就是尝试跳跃后，如果在墙上或不在墙上但是狼跳还在
         Time.time <= jumpBufferExpireTime && Time.time <= wallWolfJumpBufferExpireTime;
 
-    public bool doubleJumpTrigger => hasDoubleJumpAbility && Time.time <= jumpBufferExpireTime && canDoubleJump;
+    public bool doubleJumpTrigger =>
+        hasAbility(AbilityType.DoubleJump) && Time.time <= jumpBufferExpireTime && canDoubleJump;
 
-    public bool dashTrigger => hasDashAbility &&
+    public bool dashTrigger => hasAbility(AbilityType.Dash) &&
                                Time.time <= dashBufferExpireTime && Time.time >= dashCoolDownExpireTime && canDash;
 
     public bool moveTrigger => Input.GetKey(leftKey) || Input.GetKey(rightKey);
@@ -553,11 +575,12 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
                                 && (isOnGround && Input.GetKeyUp(spellKey) && Time.time <= spellPreparationExpireTime
                                     || !isOnGround && Input.GetKeyDown(spellKey));
 
-    public bool recoverTrigger => curExp >= 3
-                                  && isOnGround && Input.GetKey(spellKey) && Time.time > spellPreparationExpireTime &&
-                                  canRecover;
+    public bool recoverTrigger => curExp >= 3 && hasAbility(AbilityType.Heal)
+                                              && isOnGround && Input.GetKey(spellKey) &&
+                                              Time.time > spellPreparationExpireTime &&
+                                              canRecover;
 
-    public bool superDashTrigger => hasSuperDashAbility && Input.GetKeyDown(superDashKey);
+    public bool superDashTrigger => hasAbility(AbilityType.SuperDash) && Input.GetKeyDown(superDashKey);
 
     #endregion
 
@@ -975,11 +998,11 @@ public class PlayerSpell : IState
     {
         m.UpdateExp(-3);
 
-        if (Input.GetKey(m.downKey) && m.hasDropAbility)
+        if (Input.GetKey(m.downKey) && m.hasAbility(AbilityType.Drop))
             m.TransitionState(StateType.Drop);
-        else if (Input.GetKey(m.upKey) && m.hasRoarAbility)
+        else if (Input.GetKey(m.upKey) && m.hasAbility(AbilityType.Roar))
             m.TransitionState(StateType.Roar);
-        else if (m.hasReleaseArrowAbility)
+        else if (m.hasAbility(AbilityType.ReleaseArrow))
             m.TransitionState(StateType.ReleaseArrow);
         else
             m.TransitionState(m.preStateType);

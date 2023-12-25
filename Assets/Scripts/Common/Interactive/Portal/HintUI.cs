@@ -11,7 +11,7 @@ public class HintUI : Singleton<HintUI>
     public Text hintText;
     public float fadeDuration;
 
-    private Vector3 fixedPos;
+    private Transform fixedPoint;
 
 
     public void ChangeText(string newText, float duration)
@@ -25,7 +25,8 @@ public class HintUI : Singleton<HintUI>
 
     private void Update()
     {
-        transform.position = Camera.main.WorldToScreenPoint(fixedPos);
+        if (fixedPoint)
+            transform.position = Camera.main.WorldToScreenPoint(fixedPoint.position);
     }
 
     public void ChangeText(string newText)
@@ -45,8 +46,8 @@ public class HintUI : Singleton<HintUI>
         canvasGroup.DOFade(0, fadeDuration * canvasGroup.alpha).SetId("HintUIFade");
     }
 
-    public void SetFixedPos(Vector3 pos)
+    public void SetFixedPoint(Transform point)
     {
-        fixedPos = pos;
+        fixedPoint = point;
     }
 }

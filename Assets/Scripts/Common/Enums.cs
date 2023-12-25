@@ -7,17 +7,19 @@ public enum Enums
 }
 
 
-public enum InputType
+public enum AbilityType
 {
     Move,
     Jump,
     Dash,
     Attack,
     Heal,
-    Arrow,
+    ReleaseArrow,
     Drop,
     Roar,
-    SuperDash
+    SuperDash,
+    DoubleJump,
+    WallSlide
 }
 
 public enum InventoryType

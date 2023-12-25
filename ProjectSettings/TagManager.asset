@@ -58,6 +58,9 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Light
+    uniqueID: 1545588495
+    locked: 0
   - name: Item
     uniqueID: 3974145925
     locked: 0

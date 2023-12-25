@@ -27,7 +27,7 @@ public class Bed : MonoBehaviour
             return;
         HintUI.instance.ChangeText(hintContent);
         HintUI.instance.FadeIn();
-        HintUI.instance.SetFixedPos(hintTransform.position);
+        HintUI.instance.SetFixedPoint(hintTransform);
         isPlayerInArea = true;
     }
 

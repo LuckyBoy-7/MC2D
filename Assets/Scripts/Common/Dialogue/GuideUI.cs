@@ -25,6 +25,9 @@ public class GuideUI : Singleton<GuideUI>
     public Text combinedText2;
     public Text combinedButtonText1;
     public Text combinedButtonText2;
+    [Header("NoButton")] 
+    public GameObject textWithoutButtonGameObject;
+    public Text textWithoutButton;
 
     private CanvasGroup canvasGroup;
     private GameObject curPanel;
@@ -79,6 +82,16 @@ public class GuideUI : Singleton<GuideUI>
         combinedButtonText1.text = key1.ToString();
         combinedButtonText2.text = key2.ToString();
         combinedGameObject.SetActive(true);
+        Fade();
+    }
+    
+    /// <summary>
+    /// Combined
+    /// </summary>
+    public void ShowContents(string text)
+    {
+        textWithoutButton.text = text;
+        textWithoutButtonGameObject.SetActive(true);
         Fade();
     }
 
