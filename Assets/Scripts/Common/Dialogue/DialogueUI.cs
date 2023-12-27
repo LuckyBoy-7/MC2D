@@ -17,6 +17,7 @@ public class DialogueUI : Singleton<DialogueUI>
 
     public CanvasGroup canvasGroup;
     public GameObject dialoguePanel;
+    public Action onDialogueOver;
 
     private void Update()
     {
@@ -24,24 +25,32 @@ public class DialogueUI : Singleton<DialogueUI>
             isSkipping = true;
     }
 
-    public void ShowDialogue(Dialogue_SO dialogue_SO)
+    public void ShowDialogues(params Dialogue_SO[] dialogue_SOList)
     {
-        if (dialogue_SO.contents.Count == 0)  // 保险措施
-            return;
-        dialoguePanel.SetActive(true);
-        StartCoroutine(_ShowDialogue(dialogue_SO));
+        StartCoroutine(_ShowDialogues(dialogue_SOList));
     }
 
-    private IEnumerator _ShowDialogue(Dialogue_SO dialogue_SO)
+    public IEnumerator _ShowDialogues(params Dialogue_SO[] dialogue_SOList)
+    {
+        foreach (var dialogueSo in dialogue_SOList)
+        {
+            yield return StartCoroutine(ShowDialogue(dialogueSo));
+        }
+        onDialogueOver?.Invoke();
+        onDialogueOver -= ChoiceUI.instance.Show;
+    }
+
+    private IEnumerator ShowDialogue(Dialogue_SO dialogue_SO)
     {
         yield return OpenPanel();
-        foreach (var content in dialogue_SO.contents)
+            foreach (var content in dialogue_SO.contents)
         {
             yield return ShowCharOneByOne(content);
             while (!Input.GetKeyDown(PlayerFSM.instance.jumpKey))
                 yield return null;
         }
-        ClosePanel();
+
+        yield return ClosePanel();
     }
 
     private IEnumerator ShowCharOneByOne(string str)
@@ -63,6 +72,7 @@ public class DialogueUI : Singleton<DialogueUI>
 
     private IEnumerator OpenPanel()
     {
+        dialoguePanel.SetActive(true);
         GameManager.instance.state = GameStateType.PausePlayer;
 
         // 伸缩
@@ -76,7 +86,7 @@ public class DialogueUI : Singleton<DialogueUI>
         yield return new WaitForSeconds(openPanelDuration);
     }
 
-    private void ClosePanel()
+    private IEnumerator ClosePanel()
     {
         // 伸缩
         var scale = transform.localScale;
@@ -92,5 +102,6 @@ public class DialogueUI : Singleton<DialogueUI>
                 GameManager.instance.state = GameStateType.Play;
             }
         );
+        yield return new WaitForSeconds(openPanelDuration);
     }
 }

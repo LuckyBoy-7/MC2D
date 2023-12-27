@@ -64,7 +64,7 @@ public class Villager : Singleton<Villager>
         if (isFirstSee)
         {
             isFirstSee = false;
-            DialogueUI.instance.ShowDialogue(firstSeeDialogue);
+            DialogueUI.instance.ShowDialogues(firstSeeDialogue);
             return;
         }
             
@@ -75,13 +75,13 @@ public class Villager : Singleton<Villager>
             if (unlockedState == false)
                 continue;
             found = true;
-            DialogueUI.instance.ShowDialogue(dialogues[stateType]);
+            DialogueUI.instance.ShowDialogues(dialogues[stateType]);
             break;
         }
 
         if (!found)
         {
-            DialogueUI.instance.ShowDialogue(emptyDialogue[Random.Range(0, emptyDialogue.Length)]);
+            DialogueUI.instance.ShowDialogues(emptyDialogue[Random.Range(0, emptyDialogue.Length)]);
         }
     }
 
