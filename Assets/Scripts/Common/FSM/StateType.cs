@@ -44,4 +44,8 @@ public enum StateType
     AirCrush,
     Lash,
     StepBack,
+    GroundSpike,
+    ShootSpike,
+    BurstSpike,
+    SingExplode
 }

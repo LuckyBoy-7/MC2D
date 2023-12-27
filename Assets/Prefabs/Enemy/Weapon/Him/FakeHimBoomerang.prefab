@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 2586703244025817780}
   - component: {fileID: 2586703244025817779}
   m_Layer: 10
-  m_Name: HimBoomerang
+  m_Name: FakeHimBoomerang
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

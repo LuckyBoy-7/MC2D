@@ -64,6 +64,7 @@ public class EnemyFSM : FSM
 
         if (hurtCoroutine != null)
             StopCoroutine(hurtCoroutine); // 因为两次击打时间可能很接近，所以可能还在淡出enemy就已经死了
+
         if (healthPoint <= 0) // 伤害可能会溢出
             Kill();
         else
@@ -106,7 +107,7 @@ public class EnemyFSM : FSM
             rigidbody.velocity = attackForceVec * knockedBackForceMultiplier;
     }
 
-    public void Kill()
+    public virtual void Kill()
     {
         onKill?.Invoke();
         if (canBeLooted)
@@ -114,7 +115,6 @@ public class EnemyFSM : FSM
         // Destroy(gameObject);
         gameObject.SetActive(false);
     }
-
 
     private void OnTriggerStay2D(Collider2D other)
     {
@@ -148,6 +148,25 @@ public class EnemyFSM : FSM
     }
 
 
+    #region Position
+
+    public void SetPosition(float x, float y)
+    {
+        rigidbody.MovePosition(new Vector2(x, y));
+    }
+
+    public void SetPositionX(float x)
+    {
+        rigidbody.MovePosition(new Vector3(x, transform.position.y));
+    }
+
+    public void SetPositionY(float y)
+    {
+        rigidbody.MovePosition(new Vector3(transform.position.x, y));
+    }
+
+    #endregion
+
     #region Velocity
 
     public void SetAfloat()
@@ -160,6 +179,7 @@ public class EnemyFSM : FSM
     {
         rigidbody.gravityScale = to;
     }
+
 
     public void ResetGravity()
     {
@@ -212,7 +232,6 @@ public class EnemyFSM : FSM
         rigidbody.velocity = new Vector2(vx, vy);
     }
 
-
     public bool isMovingDown => rigidbody.velocity.y <= 1e-5;
 
     public void Pushed(Vector2 force)
@@ -252,6 +271,7 @@ public class GroundEnemyFSM : EnemyFSM
     {
         facingDirection = (int)Mathf.Sign(PlayerFSM.instance.transform.position.x - transform.position.x);
     }
+
     public void LookBackwardsPlayer()
     {
         facingDirection = -(int)Mathf.Sign(PlayerFSM.instance.transform.position.x - transform.position.x);

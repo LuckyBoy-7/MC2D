@@ -96,6 +96,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public bool absoluteInvincible; // 绝对无敌，用于下砸那些不好确定无敌时间的无敌判断
     public float invincibleTime;
     public float invincibleExpireTime;
+    
     [Header("Death")] public PlayerDeathParticle deathParticlePrefab;
     public event Action onDie;
     public event Action onHurt;
