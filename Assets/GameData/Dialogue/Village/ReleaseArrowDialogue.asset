@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69703bb0c3476a347a3a5ff61330bd4e, type: 3}
+  m_Name: ReleaseArrowDialogue
+  m_EditorClassIdentifier: 
+  contents:
+  - "\u8FD9\u628A\u7BAD......"
+  - "\u8001\u4F34\u513F\uFF0C\u6211\u7684\u8001\u4F34\u513FTOT"
+  - ......
+  - "\u4EE3\u6211......\u4EE3\u6211\u5411\u5979\u95EE\u597D......"

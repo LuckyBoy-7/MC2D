@@ -166,6 +166,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         hasAbilityDic[type] = true;
         GuideManager.instance.Show(type);
         PlayerInfoUI.instance.UnlockInfo(type);
+        Villager.instance.UnlockDialogue(type);
     }
 
     void Start()

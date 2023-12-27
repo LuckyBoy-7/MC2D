@@ -3,65 +3,57 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using DG.Tweening;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
-public class DialogueUI : MonoBehaviour
+public class DialogueUI : Singleton<DialogueUI>
 {
-    public float openPanelTime;
+    public float openPanelDuration;
     public Text text;
     public float showEachCharTimeGap;
-    private int idx;
-    private bool isBreaking;
-    private CanvasGroup canvasGroup;
+    private bool isSkipping;
 
-    protected void Awake()
-    {
-        canvasGroup = GetComponent<CanvasGroup>();
-    }
+    public CanvasGroup canvasGroup;
+    public GameObject dialoguePanel;
 
     private void Update()
     {
         if (Input.GetKeyDown(PlayerFSM.instance.jumpKey))
-            isBreaking = true;
+            isSkipping = true;
     }
 
     public void ShowDialogue(Dialogue_SO dialogue_SO)
     {
-        gameObject.SetActive(true);
+        if (dialogue_SO.contents.Count == 0)  // 保险措施
+            return;
+        dialoguePanel.SetActive(true);
         StartCoroutine(_ShowDialogue(dialogue_SO));
     }
 
     private IEnumerator _ShowDialogue(Dialogue_SO dialogue_SO)
     {
-        yield return StartCoroutine(OpenPanel());
-        yield return StartCoroutine(ShowCharOneByOne(dialogue_SO.contents[idx++]));
-        while (true)
+        yield return OpenPanel();
+        foreach (var content in dialogue_SO.contents)
         {
-            yield return null;
-            if (Input.GetKeyDown(PlayerFSM.instance.jumpKey))
-            {
-                if (idx < dialogue_SO.contents.Count)
-                {
-                    yield return StartCoroutine(ShowCharOneByOne(dialogue_SO.contents[idx++]));
-                }
-                else
-                {
-                    ClosePanel();
-                }
-            }
+            yield return ShowCharOneByOne(content);
+            while (!Input.GetKeyDown(PlayerFSM.instance.jumpKey))
+                yield return null;
         }
+        ClosePanel();
     }
 
     private IEnumerator ShowCharOneByOne(string str)
     {
-        isBreaking = false;
+        isSkipping = false;
+
         StringBuilder s = new();
         foreach (var ch in str)
         {
             s.Append(ch);
             text.text = s.ToString();
-            if (isBreaking)
+            if (isSkipping)
                 break;
             yield return new WaitForSeconds(showEachCharTimeGap);
         }
@@ -72,28 +64,33 @@ public class DialogueUI : MonoBehaviour
     private IEnumerator OpenPanel()
     {
         GameManager.instance.state = GameStateType.PausePlayer;
-        var origScale = transform.localScale;
-        transform.localScale = new Vector3(origScale.x, 0, origScale.z);
-        transform.DOScaleY(1, openPanelTime);
 
+        // 伸缩
+        var scale = transform.localScale;
+        transform.localScale = new Vector3(scale.x, 0, scale.z);
+        transform.DOScaleY(1, openPanelDuration);
+
+        // 淡入
         canvasGroup.alpha = 0;
-        canvasGroup.DOFade(1, openPanelTime);
-        yield return new WaitForSeconds(openPanelTime);
+        canvasGroup.DOFade(1, openPanelDuration);
+        yield return new WaitForSeconds(openPanelDuration);
     }
 
     private void ClosePanel()
     {
-        var origScale = transform.localScale;
-        transform.localScale = new Vector3(origScale.x, 1, origScale.z);
-        transform.DOScaleY(0, openPanelTime).OnComplete(() =>
+        // 伸缩
+        var scale = transform.localScale;
+        transform.localScale = new Vector3(scale.x, 1, scale.z);
+        transform.DOScaleY(0, openPanelDuration);
+
+        // 淡出
+        canvasGroup.alpha = 1;
+        canvasGroup.DOFade(0, openPanelDuration).OnComplete(() =>
             {
                 text.text = "";
-                gameObject.SetActive(false);
+                dialoguePanel.SetActive(false);
                 GameManager.instance.state = GameStateType.Play;
             }
         );
-
-        canvasGroup.alpha = 1;
-        canvasGroup.DOFade(0, openPanelTime);
     }
 }

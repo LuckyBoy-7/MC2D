@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69703bb0c3476a347a3a5ff61330bd4e, type: 3}
+  m_Name: SuperDashDialogue
+  m_EditorClassIdentifier: 
+  contents:
+  - "\u6211\u7684\u5929"
+  - "\u90A3\u4F60\u4E0D\u662F\u60F3\u53BB\u54EA\u91CC\u90FD\u884C\u5566"
