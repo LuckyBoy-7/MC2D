@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using DG.Tweening;
+using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -18,6 +19,7 @@ public class EnemyFSM : FSM
     public SpriteRenderer hurtMask;
     public float startInvincibleTime = 0.1f;
     public float startInvincibleExpireTime;
+    [Header("Particle")] public GameObject deathParticle;
 
 
     [Header("Movement")] public Rigidbody2D rigidbody;
@@ -114,6 +116,7 @@ public class EnemyFSM : FSM
             Instantiate(emeraldEmitterPrefab, transform.position, Quaternion.identity).num = ownEmeraldNumber;
         // Destroy(gameObject);
         gameObject.SetActive(false);
+        Instantiate(deathParticle, transform.position, quaternion.identity);
     }
 
     private void OnTriggerStay2D(Collider2D other)

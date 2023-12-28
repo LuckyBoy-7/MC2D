@@ -489,6 +489,7 @@ MonoBehaviour:
   hurtMask: {fileID: 3887104437992597077}
   startInvincibleTime: 0.1
   startInvincibleExpireTime: 0
+  deathParticle: {fileID: 2211971193389742121, guid: 4ab24fb44f2ac6a489e979dc1ec3d91e, type: 3}
   rigidbody: {fileID: 3887104437679321914}
   xVelocityChangeSpeed: 100
   yVelocityChangeSpeed: 100

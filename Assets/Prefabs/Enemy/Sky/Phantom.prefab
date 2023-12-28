@@ -101,6 +101,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e093fcc2a2e895749af28cc5535dc1de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isBoss: 0
   canBeLooted: 1
   canBeKnockedBack: 1
   emeraldEmitterPrefab: {fileID: 7434508363890164307, guid: 5135224466e9b204ea19ad01e00c1bda, type: 3}
@@ -108,18 +109,23 @@ MonoBehaviour:
   maxHealthPoint: 2
   healthPoint: 2
   hurtMask: {fileID: 5643705198150407640}
+  startInvincibleTime: 0.1
+  startInvincibleExpireTime: 0
+  deathParticle: {fileID: 2211971193389742121, guid: 4ab24fb44f2ac6a489e979dc1ec3d91e, type: 3}
   rigidbody: {fileID: 5643705197914635138}
   xVelocityChangeSpeed: 20
   yVelocityChangeSpeed: 20
   hitBoxCollider: {fileID: 5643705197914635137}
   showHurtEffectTime: 0.3
   knockedBackForceMultiplier: 0.3
+  spawnPoint: {fileID: 0}
   playerInDetectionRadius: 7.8
   playerOutDetectionRadius: 16.64
   viewLayer:
     serializedVersion: 2
     m_Bits: 384
   attackCoolDown: 0
+  keepDistanceCompensationY: 3
   idleRadius: 0
   keepDistance: 0
   targetPos: {x: 388.57956, y: 86.51495}
@@ -257,7 +263,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 442469903
-  m_SortingLayer: 2
+  m_SortingLayer: 6
   m_SortingOrder: 9999
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 0}
