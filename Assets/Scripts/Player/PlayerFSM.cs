@@ -96,7 +96,9 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public bool absoluteInvincible; // 绝对无敌，用于下砸那些不好确定无敌时间的无敌判断
     public float invincibleTime;
     public float invincibleExpireTime;
-    
+
+    public bool isFirstTakeHurt = true;
+
     [Header("Death")] public PlayerDeathParticle deathParticlePrefab;
     public event Action onDie;
     public event Action onHurt;
@@ -239,7 +241,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         {
             PlayerAttack.instance.UpgradeSword();
         }
-        
+
         curExp = maxExp;
         UpdateExp();
 
@@ -468,6 +470,12 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 
     public void TakeDamage(int damage)
     {
+        if (isFirstTakeHurt)
+        {
+            isFirstTakeHurt = false;
+            UnlockAbility(AbilityType.Heal);
+        }
+
         onHurt?.Invoke();
         if (extraHealthPoint > 0)
             extraHealthPoint -= 1;
@@ -586,7 +594,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public bool recoverTrigger => curExp >= 3 && hasAbility(AbilityType.Heal)
                                               && isOnGround && Input.GetKey(spellKey) &&
                                               Time.time > spellPreparationExpireTime &&
-                                              canRecover;
+                                              canRecover && hasHealAbility;
 
     public bool superDashTrigger => hasAbility(AbilityType.SuperDash) && Input.GetKeyDown(superDashKey);
 

@@ -2367,9 +2367,21 @@ CompositeCollider2D:
   m_EdgeRadius: 0
   m_ColliderPaths:
   - m_Collider: {fileID: 503361751}
-    m_ColliderPaths: []
+    m_ColliderPaths:
+    - - X: -2860000000
+        Y: -75555552
+      - X: -2880000000
+        Y: -75555552
+      - X: -2880000000
+        Y: -80000000
+      - X: -2860000000
+        Y: -80000000
   m_CompositePaths:
-    m_Paths: []
+    m_Paths:
+    - - {x: -286.00003, y: -8}
+      - {x: -286.00003, y: -7.5555553}
+      - {x: -288, y: -7.555585}
+      - {x: -287.99997, y: -8}
   m_VertexDistance: 0.0005
   m_OffsetDistance: 0.00005
 --- !u!50 &503361750
@@ -2479,36 +2491,56 @@ Tilemap:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 503361747}
   m_Enabled: 1
-  m_Tiles: {}
+  m_Tiles:
+  - first: {x: -288, y: -8, z: 0}
+    second:
+      serializedVersion: 2
+      m_TileIndex: 0
+      m_TileSpriteIndex: 0
+      m_TileMatrixIndex: 0
+      m_TileColorIndex: 0
+      m_TileObjectToInstantiateIndex: 65535
+      dummyAlignment: 0
+      m_AllTileFlags: 1073741825
+  - first: {x: -287, y: -8, z: 0}
+    second:
+      serializedVersion: 2
+      m_TileIndex: 0
+      m_TileSpriteIndex: 0
+      m_TileMatrixIndex: 0
+      m_TileColorIndex: 0
+      m_TileObjectToInstantiateIndex: 65535
+      dummyAlignment: 0
+      m_AllTileFlags: 1073741825
   m_AnimatedTiles: {}
   m_TileAssetArray:
-  - m_RefCount: 0
-    m_Data: {fileID: 0}
+  - m_RefCount: 2
+    m_Data: {fileID: 11400000, guid: b04c7ef178908fb42b744a156684ff7d, type: 2}
   m_TileSpriteArray:
-  - m_RefCount: 0
-    m_Data: {fileID: 0}
+  - m_RefCount: 2
+    m_Data: {fileID: 21300000, guid: 02a01180f9693904db4c5a7bf1e0d9d6, type: 3}
   m_TileMatrixArray:
-  - m_RefCount: 0
+  - m_RefCount: 2
     m_Data:
-      e00: 6.8582854e-32
+      e00: 1
       e01: 0
-      e02: 1.6643015e+10
-      e03: 1.6643015e+10
-      e10: 7.09e-43
-      e11: 0
-      e12: 7.09e-43
-      e13: 7.09e-43
-      e20: -29922.875
-      e21: 1e-45
-      e22: -7.5002886e-29
-      e23: 2.8805027e-29
-      e30: 4.5904e-41
+      e02: 0
+      e03: 0
+      e10: 0
+      e11: 1
+      e12: 0
+      e13: 0
+      e20: 0
+      e21: 0
+      e22: 1
+      e23: 0
+      e30: 0
       e31: 0
-      e32: 7.09e-43
-      e33: 7.13e-43
+      e32: 0
+      e33: 1
   m_TileColorArray:
-  - m_RefCount: 0
-    m_Data: {r: 3.9298e-41, g: 3.9298e-41, b: 3.9298e-41, a: 3.9298e-41}
+  - m_RefCount: 2
+    m_Data: {r: 1, g: 1, b: 1, a: 1}
   m_TileObjectToInstantiateArray: []
   m_AnimationFrameRate: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -6305,7 +6337,7 @@ MonoBehaviour:
   isDebug: 1
   isInvincibleDebug: 0
   isOverPowerDebug: 0
-  isAllAbilityDebug: 1
+  isAllAbilityDebug: 0
   hasDashAbility: 1
   hasRoarAbility: 1
   hasDoubleJumpAbility: 1
@@ -6316,7 +6348,7 @@ MonoBehaviour:
   hasHealAbility: 1
   curEmeraldNumber: 0
   strawberryNumber: 0
-  maxHealthPoint: 1
+  maxHealthPoint: 4
   healthPoint: 1
   extraHealthPoint: 0
   cinemachineConfiner2D: {fileID: 57801085}
@@ -6376,6 +6408,7 @@ MonoBehaviour:
   absoluteInvincible: 0
   invincibleTime: 1
   invincibleExpireTime: -1
+  isFirstTakeHurt: 1
   deathParticlePrefab: {fileID: 7462208647617033378, guid: 6e59e5f684a7b024ca162696c563ff20, type: 3}
   spawnPoint: {fileID: 0}
   recoverSpeed: 0.8
