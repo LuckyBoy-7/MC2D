@@ -99,14 +99,15 @@ public class EnemyFSM : FSM
         }
     }
 
-    public virtual void Attacked(int damage, Vector2 attackForceVec = default) // 被击打的方向加力度
+    public virtual bool Attacked(int damage, Vector2 attackForceVec = default) // 被击打的方向加力度
     {
         if (Time.time <= startInvincibleExpireTime)
-            return;
+            return false;
         TakeDamage(damage);
 
         if (canBeKnockedBack)
             rigidbody.velocity = attackForceVec * knockedBackForceMultiplier;
+        return true;
     }
 
     public virtual void Kill()

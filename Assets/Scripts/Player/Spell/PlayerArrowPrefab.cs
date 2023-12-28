@@ -1,12 +1,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using UnityEngine;
 
 public class PlayerArrowPrefab : MonoBehaviour
 {
     public float destroyDelay;
     private Rigidbody2D rigidbody;
+    public GameObject effect;
 
     private void Awake()
     {
@@ -22,7 +24,7 @@ public class PlayerArrowPrefab : MonoBehaviour
     {
         if (directX < 0)
         {
-            var scale=transform.localScale;
+            var scale = transform.localScale;
             transform.localScale = new Vector3(-scale.x, scale.y, scale.z);
         }
 
@@ -32,6 +34,10 @@ public class PlayerArrowPrefab : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Enemy"))
-            other.GetComponent<EnemyFSM>().Attacked(PlayerFSM.instance.arrowDamage);
+        {
+            bool success = other.GetComponent<EnemyFSM>().Attacked(PlayerFSM.instance.arrowDamage);
+            if (success)
+                Instantiate(effect, other.transform.position, Quaternion.identity);
+        }
     }
 }

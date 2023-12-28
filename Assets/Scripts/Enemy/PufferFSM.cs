@@ -22,11 +22,12 @@ public class PufferFSM : GroundEnemyFSM
         TransitionState(StateType.Move);
     }
 
-    public override void Attacked(int damage, Vector2 attackForceVec = default) // 被击打的方向加力度
+    public override bool Attacked(int damage, Vector2 attackForceVec = default) // 被击打的方向加力度
     {
         if (currentState == states[StateType.Guard])
-            return;
+            return false;
         TakeDamage(damage);
+        return true;
     }
 
     private void OnDrawGizmos()

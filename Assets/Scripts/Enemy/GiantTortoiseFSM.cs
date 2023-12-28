@@ -33,12 +33,14 @@ public class GiantTortoiseFSM : GroundEnemyFSM
         Gizmos.DrawLine(bottomRight, bottomRight + transformDown * cliffCheckDownRaycastDist);
     }
 
-    public override void Attacked(int damage, Vector2 attackForceVec = default)
+    public override bool Attacked(int damage, Vector2 attackForceVec = default)
     {
         if (Mathf.Sign(PlayerFSM.instance.transform.position.x - transform.position.x) == Mathf.Sign(facingDirection))
         {
-            base.Attacked(damage, attackForceVec);
+            return base.Attacked(damage, attackForceVec);
         }
+
+        return false;
     }
 }
 

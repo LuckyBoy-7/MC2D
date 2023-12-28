@@ -47,6 +47,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   destroyDelay: 5
+  effect: {fileID: 904827103004147797, guid: 4f60878c6fadf5546b22d4f0361644e2, type: 3}
 --- !u!50 &2931061834601992008
 Rigidbody2D:
   serializedVersion: 4
@@ -140,7 +141,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 1598004183
-  m_SortingLayer: 1
+  m_SortingLayer: 9
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: bdf227137532d3545817806411cb0303, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
