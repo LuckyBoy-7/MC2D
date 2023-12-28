@@ -15,6 +15,8 @@ public class FakeHimFSM : GroundEnemyFSM
     public bool unlockLash = true;
     public bool unlockStepBack = true;
 
+    [Header("Appearance")] public SpriteRenderer spriteRenderer;
+    public Sprite fragileSprite;
     [Header("Movement")] public float moveSpeed;
 
     [Header("Prefabs")] public Transform boomerangPrefab;
@@ -110,10 +112,16 @@ public class FakeHimFSM : GroundEnemyFSM
         TransitionState(StateType.Move); // stepBack写在fsm里面
     }
 
-    private void LateUpdate()
+    protected override void Update()
     {
-        Debug.Log(currentState);
+        base.Update();
+        if (healthPoint <= maxHealthPoint / 2)
+            spriteRenderer.sprite = fragileSprite;
     }
+    // private void LateUpdate()
+    // {
+    //     Debug.Log(currentState);
+    // }
 }
 
 public class FakeHimMove : IState

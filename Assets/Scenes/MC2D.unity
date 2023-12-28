@@ -6336,7 +6336,7 @@ MonoBehaviour:
   spriteRenderer: {fileID: 1383788130}
   isDebug: 1
   isInvincibleDebug: 0
-  isOverPowerDebug: 0
+  isOverPowerDebug: 1
   isAllAbilityDebug: 0
   hasDashAbility: 1
   hasRoarAbility: 1
