@@ -5374,6 +5374,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: SlimeBig
       objectReference: {fileID: 0}
+    - target: {fileID: 677533075262814222, guid: 6d813a61d458eac4a93ec839e3891ed2, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6d813a61d458eac4a93ec839e3891ed2, type: 3}
 --- !u!1 &1154287620
@@ -6405,7 +6409,7 @@ MonoBehaviour:
   hasWallSlideAbility: 1
   hasHealAbility: 1
   curEmeraldNumber: 0
-  strawberryNumber: 0
+  strawberryNumber: 3
   maxHealthPoint: 4
   healthPoint: 1
   extraHealthPoint: 0
