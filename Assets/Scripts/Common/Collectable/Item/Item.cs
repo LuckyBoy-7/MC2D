@@ -27,7 +27,7 @@ public class Item : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(PlayerFSM.instance.upKey))
+        if (Input.GetKeyDown(PlayerFSM.instance.upKey) && isInArea)
         {
             HintUI.instance.FadeOut();
             PlayerFSM.instance.UnlockAbility(abilityType);
