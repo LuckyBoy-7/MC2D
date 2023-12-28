@@ -93,16 +93,17 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public Vector2 hurtDirection;
     public float hurtDirectionXMultiplier; // 方向加一个维度的缩放配合force就可以构造出360度任意受力情况
     public float hurtForce;
-    public bool absoluteInvincible; // 绝对无敌，用于下砸那些不好确定无敌时间的无敌判断
+    public bool relativeInvincible; // 绝对无敌，用于下砸那些不好确定无敌时间的无敌判断
     public float invincibleTime;
     public float invincibleExpireTime;
 
     public bool isFirstTakeHurt = true;
 
     [Header("Death")] public PlayerDeathParticle deathParticlePrefab;
-    
+
 
     [Header("Revive")] public Transform spawnPoint;
+    public Transform dangerRespawnPoint;
     [Header("Recover")] public float recoverSpeed;
     public Animator recoverProcessAnim;
     public Animator recoverBurstAnim;
@@ -155,7 +156,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public KeyCode superDashKey = KeyCode.W;
 
     [Header("States")] public Dictionary<AbilityType, bool> hasAbilityDic = new();
-    
+
     public event Action OnDie;
     public event Action OnHurt;
     public event Action OnRevive;
@@ -277,7 +278,6 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         UpdateEmeraldSuck(other);
     }
 
-
     public void UpdateTriggerStay2D(Collider2D other)
     {
         UpdateCollisionHurt(other);
@@ -304,7 +304,6 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         HiddenChannel.instance.FadeTo(1);
     }
 
-
     private void UpdateBoundSwitch(Collider2D other)
     {
         if (!other.CompareTag("Bound"))
@@ -325,9 +324,24 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 
     private void UpdateCollisionHurt(Collider2D other)
     {
+        if (other.CompareTag("Spike") || other.CompareTag("MovingSpike")) // 碰到spike，没话说直接去世
+        {
+            gameObject.SetActive(false);
+            if (healthPoint > 1)
+            {
+                hurtDirection = (transform.position - (Vector3)other.ClosestPoint(transform.position)).normalized;
+                Instantiate(deathParticlePrefab, transform.position, Quaternion.identity).Pushed(hurtDirection);
+            }
+
+            TakeDamage(1);
+
+            return;
+        }
+
         var collisionHurt = other.GetComponent<CollisionHurt>();
         if (!collisionHurt)
             return;
+        hurtDirection = (transform.position - (Vector3)other.ClosestPoint(transform.position)).normalized;
         TryTakeDamage(collisionHurt.collisionHurt, other.transform.position);
     }
 
@@ -492,6 +506,15 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
             Kill();
     }
 
+    public void OnTransitionOver()
+    {
+        gameObject.SetActive(true);
+        if (healthPoint == 0)
+            Revive();
+        else
+            transform.position = dangerRespawnPoint.position;
+    }
+
     private void Kill()
     {
         OnDie?.Invoke();
@@ -499,11 +522,8 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         gameObject.SetActive(false);
     }
 
-    public void TryRevive()
+    public void Revive()
     {
-        if (healthPoint > 0)
-            return;
-        gameObject.SetActive(true);
         if (spawnPoint)
             transform.position = spawnPoint.position;
         Recover();
@@ -522,7 +542,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         PlayerExpUI.instance.UpdatePlayerExpUI();
     }
 
-    public bool isInvincible => Time.time <= invincibleExpireTime || absoluteInvincible;
+    public bool isInvincible => Time.time <= invincibleExpireTime || relativeInvincible;
 
     public void PlayAttackEffect(Vector3 position) => Instantiate(attackEffect, position, Quaternion.identity);
 
@@ -1115,14 +1135,14 @@ public class PlayerDrop : IState
         elapse += Time.deltaTime;
         if (elapse < m.dropWindupTime)
             return;
-        m.absoluteInvincible = true;
+        m.relativeInvincible = true;
         // 开始下砸
         m.rigidbody.velocity = Vector2.down * m.dropSpeed;
         UpdateCollisionWithTrapDoor();
 
         if (m.isOnGround)
         {
-            m.absoluteInvincible = false;
+            m.relativeInvincible = false;
             isFirstOnGround = true;
             dropPrefab = PlayerFSM.Instantiate(m.dropPrefab, m.transform);
             dropPrefab.transform.position += Vector3.down * 0.5f;

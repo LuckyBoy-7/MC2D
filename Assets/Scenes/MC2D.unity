@@ -1808,7 +1808,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &442418855
 RectTransform:
   m_ObjectHideFlags: 0
@@ -6466,12 +6466,13 @@ MonoBehaviour:
   hurtDirection: {x: 0, y: 0}
   hurtDirectionXMultiplier: 2
   hurtForce: 15
-  absoluteInvincible: 0
+  relativeInvincible: 0
   invincibleTime: 1
   invincibleExpireTime: -1
   isFirstTakeHurt: 1
   deathParticlePrefab: {fileID: 7462208647617033378, guid: 6e59e5f684a7b024ca162696c563ff20, type: 3}
   spawnPoint: {fileID: 0}
+  dangerRespawnPoint: {fileID: 0}
   recoverSpeed: 0.8
   recoverProcessAnim: {fileID: 141510256}
   recoverBurstAnim: {fileID: 1014870880}
