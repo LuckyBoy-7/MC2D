@@ -17,12 +17,12 @@ public class PlayerRoarPrefab : MonoBehaviour
 
     private void Start()
     {
-        PlayerFSM.instance.onHurt += Kill;
+        PlayerFSM.instance.OnHurt += Kill;
     }
 
     private void OnDestroy()
     {
-        PlayerFSM.instance.onHurt -= Kill;
+        PlayerFSM.instance.OnHurt -= Kill;
     }
 
     public void Kill()

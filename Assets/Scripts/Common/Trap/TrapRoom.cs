@@ -18,7 +18,6 @@ public class TrapRoomWave
 
 public class TrapRoom : MonoBehaviour
 {
-    // todo: 如果player中途死了，把生成的enemy清除
     public List<IronBar> controlledIronBars;
     public List<TrapRoomWave> waves;
     private bool isTrapping; // 表示当前是否正在困住player，不然player如果在陷阱房死了，就少一个状态
@@ -26,7 +25,7 @@ public class TrapRoom : MonoBehaviour
 
     private void Start()
     {
-        PlayerFSM.instance.onDie += TryReset;
+        PlayerFSM.instance.OnRevive += TryReset;
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -47,7 +46,7 @@ public class TrapRoom : MonoBehaviour
             foreach (var trapRoomEnemyInfo in wave.enemyInfos)
             {
                 var enemy = Instantiate(trapRoomEnemyInfo.enemy, trapRoomEnemyInfo.spawnTransform.position,
-                    Quaternion.identity);
+                    Quaternion.identity, transform);
                 enemy.onKill += () => { deadEnemyNum += 1; };
             }
 
@@ -60,6 +59,7 @@ public class TrapRoom : MonoBehaviour
         foreach (var controlledIronBar in controlledIronBars)
             controlledIronBar.Open();
         isOver = true;
+        isTrapping = false;
     }
 
     public void TryReset()
@@ -70,6 +70,12 @@ public class TrapRoom : MonoBehaviour
             isTrapping = false;
             foreach (var controlledIronBar in controlledIronBars)
                 controlledIronBar.Open();
+            for (int i = 0; i < transform.childCount; i++)
+            {
+                var child = transform.GetChild(i);
+                if (child.GetComponent<EnemyFSM>())
+                    Destroy(child.gameObject);
+            }
         }
     }
 }

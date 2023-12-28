@@ -100,8 +100,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public bool isFirstTakeHurt = true;
 
     [Header("Death")] public PlayerDeathParticle deathParticlePrefab;
-    public event Action onDie;
-    public event Action onHurt;
+    
 
     [Header("Revive")] public Transform spawnPoint;
     [Header("Recover")] public float recoverSpeed;
@@ -156,6 +155,10 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public KeyCode superDashKey = KeyCode.W;
 
     [Header("States")] public Dictionary<AbilityType, bool> hasAbilityDic = new();
+    
+    public event Action OnDie;
+    public event Action OnHurt;
+    public event Action OnRevive;
 
     public bool hasAbility(AbilityType type)
     {
@@ -476,7 +479,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
             UnlockAbility(AbilityType.Heal);
         }
 
-        onHurt?.Invoke();
+        OnHurt?.Invoke();
         if (extraHealthPoint > 0)
             extraHealthPoint -= 1;
         else
@@ -491,7 +494,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 
     private void Kill()
     {
-        onDie?.Invoke();
+        OnDie?.Invoke();
         Instantiate(deathParticlePrefab, transform.position, Quaternion.identity).Pushed(hurtDirection);
         gameObject.SetActive(false);
     }
@@ -504,6 +507,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         if (spawnPoint)
             transform.position = spawnPoint.position;
         Recover();
+        OnRevive?.Invoke();
     }
 
     public void Heal(int delta = default)

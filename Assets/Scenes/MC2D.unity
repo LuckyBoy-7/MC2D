@@ -335,7 +335,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 57801082}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -278.67, y: -4.8, z: -10}
+  m_LocalPosition: {x: -293.40002, y: 10.44, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2828,7 +2828,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 519420028}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -278.67, y: -4.8, z: -10}
+  m_LocalPosition: {x: -293.40002, y: 10.44, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -6369,7 +6369,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1383788127}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -281.25, y: -7, z: 0}
+  m_LocalPosition: {x: -295.98, y: 8.24, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -6410,7 +6410,7 @@ MonoBehaviour:
   hasHealAbility: 1
   curEmeraldNumber: 0
   strawberryNumber: 3
-  maxHealthPoint: 4
+  maxHealthPoint: 2
   healthPoint: 1
   extraHealthPoint: 0
   cinemachineConfiner2D: {fileID: 57801085}
