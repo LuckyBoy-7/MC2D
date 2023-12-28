@@ -18,6 +18,7 @@ public class Bed : MonoBehaviour
         {
             player.Recover();
             player.SetSpawnPoint(transform);
+            RespawnHintUI.instance.Show();
         }
     }
 
