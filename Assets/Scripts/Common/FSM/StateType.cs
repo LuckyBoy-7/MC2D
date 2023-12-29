@@ -49,3 +49,17 @@ public enum StateType
     BurstSpike,
     SingExplode
 }
+
+public enum InputType
+{
+    Inventory,
+    Up,
+    Down,
+    Left,
+    Right,
+    Jump,
+    Attack,
+    Dash,
+    SuperDash,
+    Spell
+}
