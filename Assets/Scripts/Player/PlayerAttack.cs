@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -37,6 +38,16 @@ public class PlayerAttack : Singleton<PlayerAttack>
     public float attackSfxSoundSpeed;
 
     public AudioClip attackSpikeSfxSound;
+
+
+    private void OnDisable()
+    {
+        if (currentAttack)
+        {
+            currentAttack.GetComponent<SpriteRenderer>().sprite = null;
+            currentAttack.GetComponent<PolygonCollider2D>().enabled = false;
+        }
+    }
 
     private void Start()
     {
@@ -134,7 +145,8 @@ public class PlayerAttack : Singleton<PlayerAttack>
             TryPushed();
             // 播放特效
             PlayerFSM.instance.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
-            if (other.CompareTag("Spike") || other.CompareTag("MovingSpike") || other.CompareTag("Boomerang") || other.CompareTag("EnemyArrow"))
+            if (other.CompareTag("Spike") || other.CompareTag("MovingSpike") || other.CompareTag("Boomerang") ||
+                other.CompareTag("EnemyArrow"))
                 AudioManager.instance.Play(attackSpikeSfxSound);
         }
     }

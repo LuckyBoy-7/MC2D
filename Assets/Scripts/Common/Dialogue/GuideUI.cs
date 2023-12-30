@@ -131,6 +131,8 @@ public class GuideUI : Singleton<GuideUI>
             instance.ShowContents("按住", "二段跳", player.jumpKey);
         else if (abilityType == AbilityType.WallSlide)
             instance.ShowContents("蹬墙跳Get");
+        else if (abilityType == AbilityType.Bag)
+            instance.ShowContents("点击", "打开背包", PlayerInfoUI.instance.inventoryKey);
         
     }
 }

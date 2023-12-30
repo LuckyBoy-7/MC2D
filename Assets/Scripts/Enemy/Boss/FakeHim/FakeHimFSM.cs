@@ -324,6 +324,8 @@ public class FakeHimLash : IState
     private bool isJumpOver;
     private AudioSource lashAudioSource;
 
+    private bool canOperate;
+
     public FakeHimLash(FakeHimFSM m)
     {
         this.m = m;
@@ -344,13 +346,21 @@ public class FakeHimLash : IState
                 isJumpOver = true;
                 m.lashAnimator.Play("Lash");
                 lashAudioSource = AudioManager.instance.GetAudioSource(m.lashSfxSound);
+                m.StartCoroutine(WaitForAFrame());
             };
+    }
+
+    private IEnumerator WaitForAFrame()
+    {
+        canOperate = false;
+        yield return new WaitForEndOfFrame();
+        canOperate = true;
     }
 
 
     public void OnUpdate()
     {
-        if (!isJumpOver)
+        if (!isJumpOver || !canOperate)
             return;
         var state = m.lashAnimator.GetCurrentAnimatorStateInfo(0);
         if (!state.IsName("Lash")) // 说明动画播放完毕

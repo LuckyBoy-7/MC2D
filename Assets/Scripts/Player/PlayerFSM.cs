@@ -259,6 +259,13 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
 
     private void TryUpdateDebug()
     {
+        if (Input.GetKey(KeyCode.RightControl) && Input.GetKeyDown(KeyCode.D))
+            isDebug = true;
+        if (Input.GetKey(KeyCode.RightControl) && Input.GetKeyDown(KeyCode.R))
+            transform.position = dangerRespawnPoint.position;
+        if (Input.GetKey(KeyCode.RightControl) && Input.GetKeyDown(KeyCode.H))
+            Heal(1);
+
         if (!isDebug)
             return;
 
@@ -289,8 +296,8 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
             hasAbilityDic[AbilityType.Heal] = hasHealAbility;
         }
 
-        if (Input.GetKeyDown(KeyCode.U))
-            TakeDamage(100);
+        // if (Input.GetKeyDown(KeyCode.U))
+        // TakeDamage(100);
     }
 
     public void UpdateTriggerEnter2D(Collider2D other)

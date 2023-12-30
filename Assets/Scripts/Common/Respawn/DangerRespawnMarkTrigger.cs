@@ -7,6 +7,7 @@ public class DangerRespawnMarkTrigger : MonoBehaviour
 {
     private void OnTriggerEnter2D(Collider2D other)
     {
-        PlayerFSM.instance.dangerRespawnPoint = transform;
+        if (other.CompareTag("Player"))
+            PlayerFSM.instance.dangerRespawnPoint = transform;
     }
 }

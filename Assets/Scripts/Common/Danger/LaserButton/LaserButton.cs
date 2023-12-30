@@ -55,7 +55,16 @@ public class LaserButton : MonoBehaviour
                 if (!hasCausedDamage)
                 {
                     hasCausedDamage = true;
-                    PlayerFSM.instance.TryTakeDamage(1, position);
+
+                    PlayerFSM player = PlayerFSM.instance;
+                    player.gameObject.SetActive(false);
+                    if (player.healthPoint > 1)
+                    {
+                        player.hurtDirection = (player.transform.position - transform.position).normalized;
+                        Instantiate(player.deathParticlePrefab, player.transform.position, Quaternion.identity).Pushed(player.hurtDirection);
+                    }
+
+                    player.TakeDamage(1);
                 }
             }
         }

@@ -19,7 +19,8 @@ public enum AbilityType
     Roar,
     SuperDash,
     DoubleJump,
-    WallSlide
+    WallSlide,
+    Bag
 }
 
 
