@@ -8,6 +8,13 @@ public class Boomerang : MonoBehaviour
     public Vector2 targetDir;
     public float gravity; // 引力
     public Rigidbody2D rigidbody;
+    public AudioClip spinSfxSound;
+    private AudioSource spinAudioSource;
+
+    private void Start()
+    {
+        spinAudioSource = AudioManager.instance.GetAudioSource(spinSfxSound);
+    }
 
     private void FixedUpdate()
     {
@@ -16,6 +23,7 @@ public class Boomerang : MonoBehaviour
 
     private void OnBecameInvisible()
     {
+        Destroy(spinAudioSource);
         Destroy(gameObject, 10f);
     }
 }

@@ -219,6 +219,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c07a61d7537b2747ad7e16d208a44f8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  dripSfxSound: {fileID: 8300000, guid: a880c8fb5ee1c7c4dbf158b064401434, type: 3}
 --- !u!114 &10030547
 MonoBehaviour:
   m_ObjectHideFlags: 0

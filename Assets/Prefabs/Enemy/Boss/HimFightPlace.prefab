@@ -244,6 +244,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveDistance: -2.8
   moveDuration: 0.5
+  closeSfxSound: {fileID: 8300000, guid: 0f0b9772b867a2f4db371747889e7529, type: 3}
 --- !u!1 &2928366269414240672
 GameObject:
   m_ObjectHideFlags: 0
@@ -488,6 +489,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveDistance: -2.8
   moveDuration: 0.5
+  closeSfxSound: {fileID: 8300000, guid: 0f0b9772b867a2f4db371747889e7529, type: 3}
 --- !u!1 &2928366269561997045
 GameObject:
   m_ObjectHideFlags: 0
@@ -1629,12 +1631,19 @@ MonoBehaviour:
   canBeKnockedBack: 0
   emeraldEmitterPrefab: {fileID: 0}
   ownEmeraldNumber: 0
-  maxHealthPoint: 1
+  maxHealthPoint: 111
   healthPoint: 5
   hurtMask: {fileID: 8917518935251930683}
   startInvincibleTime: 0.1
   startInvincibleExpireTime: 0
   deathParticle: {fileID: 2211971193389742121, guid: 4ab24fb44f2ac6a489e979dc1ec3d91e, type: 3}
+  hurtSfxSound:
+  - {fileID: 8300000, guid: 4acb5061e2b592f49970105c35530899, type: 3}
+  - {fileID: 8300000, guid: 2f255318b0b13764c99c72c3c7f6e479, type: 3}
+  - {fileID: 8300000, guid: 94873e17cc656924caa816277280ab76, type: 3}
+  - {fileID: 8300000, guid: 7eb486161901c484fa81859dd45f5d6e, type: 3}
+  deathSfxSound: []
+  alertSfxSound: []
   rigidbody: {fileID: 8917518934997867348}
   xVelocityChangeSpeed: 100
   yVelocityChangeSpeed: 100
@@ -1647,12 +1656,12 @@ MonoBehaviour:
     m_Bits: 128
   maxFallingSpeed: 12
   facingDirection: 1
-  unlockGroundCrush: 0
-  unlockAirCrush: 0
-  unlockStepBack: 0
-  unlockGroundSpike: 0
-  unlockShootSpike: 0
-  unlockBurstSpike: 0
+  unlockGroundCrush: 1
+  unlockAirCrush: 1
+  unlockStepBack: 1
+  unlockGroundSpike: 1
+  unlockShootSpike: 1
+  unlockBurstSpike: 1
   unlockSingExplode: 1
   moveSpeed: 3
   spikePrefab: {fileID: 2660636260280920305, guid: 0e8d126d6cd1aaf48a2e6ecf1df4f1ff, type: 3}
@@ -1666,6 +1675,7 @@ MonoBehaviour:
   groundCrushChargeForceTime: 0.2
   groundCrushAheadDist: 12
   groundCrushAheadDuration: 0.7
+  crushSfxSound: {fileID: 8300000, guid: c651386cecf5f874e8d5ed222c130a3b, type: 3}
   airCrushTriggerThreshold: 1
   airCrushCooldown: 7
   airCrushCooldownExpireTime: -1
@@ -1680,7 +1690,7 @@ MonoBehaviour:
   stepBackCooldownExpireTime: -1
   stepBackForce: {x: 1, y: 3}
   stepBackForceMultiplier: 8
-  groundSpikeTriggerThreshold: 1
+  groundSpikeTriggerThreshold: 0.872
   groundSpikeCooldown: 10
   groundSpikeCooldownExpireTime: -1
   dropGravity: 8
@@ -1693,7 +1703,11 @@ MonoBehaviour:
   groundSpikeStrikeLength: 10
   groundSpikeStrikeDuration: 0.5
   groundSpikeRemainTimeAfterStrike: 0.5
-  shootSpikeTriggerThreshold: 1
+  dropChargeSfxSound: {fileID: 8300000, guid: f040a8f00e3d23d499ac85ceb235877f, type: 3}
+  dropDashSfxSound: {fileID: 8300000, guid: bc8b0ec2f0a3b1447b016b1238fc8fae, type: 3}
+  dropLandSfxSound: {fileID: 8300000, guid: c6c41b29661456647a9741dd798b9ecb, type: 3}
+  dropLandSfxSoundSpeed: 3
+  shootSpikeTriggerThreshold: 0.78
   shootSpikeDetectArea: {fileID: 7254495940756310228}
   shootSpikeCooldown: 10
   shootSpikeCooldownExpireTime: -1
@@ -1703,7 +1717,7 @@ MonoBehaviour:
   shootSpikeNumber: 10
   shootSpikeSpeed: 22
   shootSpikeTimeGap: 0.04
-  burstSpikeTriggerThreshold: 1
+  burstSpikeTriggerThreshold: 0.689
   burstSpikeDetectArea: {fileID: 7254495940032010929}
   burstSpikeCooldown: 10
   burstSpikeCooldownExpireTime: -1
@@ -1713,7 +1727,9 @@ MonoBehaviour:
   burstSpikeSpeed: 30
   burstSpikeWave: 3
   burstSpikeWaveTimeGap: 1
-  singExplodeTriggerThreshold: 1
+  burstSpikeSfxSound: {fileID: 8300000, guid: cd4b42c6b0672ed4b822bea80dd62c8c, type: 3}
+  shootSpikeSfxSound: {fileID: 8300000, guid: 48d61e7830c67e64d8edf48fb08d3ea8, type: 3}
+  singExplodeTriggerThreshold: 0.534
   singExplodeDetectArea: {fileID: 7254495940216089847}
   singExplodeCooldown: 10
   singExplodeCooldownExpireTime: -1
@@ -1729,6 +1745,7 @@ MonoBehaviour:
   singRemainDuration: 0.3
   turnToColor: {r: 0.19970265, g: 0.121110715, b: 0.254717, a: 1}
   singShrinkDuration: 0.5
+  songShrinkSfxSound: {fileID: 8300000, guid: 5d5d9cfb29fe23a4a9619bd0f512bd36, type: 3}
 --- !u!212 &8917518934997867346
 SpriteRenderer:
   m_ObjectHideFlags: 0

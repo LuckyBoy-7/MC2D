@@ -5,6 +5,7 @@ public class DripStone : MonoBehaviour
     private Rigidbody2D rigidbody;
     private BoxCollider2D box;
     private bool isOnGround;
+    public AudioClip dripSfxSound;
 
     private void Awake()
     {
@@ -15,6 +16,7 @@ public class DripStone : MonoBehaviour
     public void Drip()
     {
         rigidbody.bodyType = RigidbodyType2D.Dynamic;
+        AudioManager.instance.Play(dripSfxSound);
     }
 
     private void Update()

@@ -7,6 +7,8 @@ public class Lever : MonoBehaviour, ICanBeAttacked
     public Transform lever;
     public float leverRotateDuration;
     public UnityEvent onAttacked;
+    
+    public AudioClip openSfxSound;
 
     private void OnTriggerEnter2D(Collider2D other)
     {
@@ -23,5 +25,6 @@ public class Lever : MonoBehaviour, ICanBeAttacked
         var dir = Mathf.Sign(transform.position.x - player.transform.position.x);
         lever.DORotate(new Vector3(0, 0, -dir * 30), leverRotateDuration).onComplete += () =>
             lever.DORotate(new Vector3(0, 0, 0), leverRotateDuration);
+        AudioManager.instance.Play(openSfxSound);
     }
 }

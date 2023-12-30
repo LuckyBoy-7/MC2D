@@ -952,7 +952,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1987779515062785905}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.625, y: -8.125, z: 0}
+  m_LocalPosition: {x: 1.5, y: -5, z: 0}
   m_LocalScale: {x: 1.7, y: 1.7, z: 1.7}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -987,6 +987,14 @@ MonoBehaviour:
   startInvincibleTime: 0.1
   startInvincibleExpireTime: 0
   deathParticle: {fileID: 2211971193389742121, guid: 4ab24fb44f2ac6a489e979dc1ec3d91e, type: 3}
+  hurtSfxSound:
+  - {fileID: 8300000, guid: beb8f0e626535d3489743bad290fe17d, type: 3}
+  - {fileID: 8300000, guid: ebc99193aed0c704bb9916cacc579160, type: 3}
+  - {fileID: 8300000, guid: 98c2e146c118a9947b61c3a0c3b4aa68, type: 3}
+  - {fileID: 8300000, guid: 1b51361f3f20e45499025e0d43e6dde1, type: 3}
+  deathSfxSound:
+  - {fileID: 8300000, guid: 4cd362fbed54d6f4e966c3b38eb67a2a, type: 3}
+  alertSfxSound: []
   rigidbody: {fileID: 1987779515062785907}
   xVelocityChangeSpeed: 100
   yVelocityChangeSpeed: 100
@@ -1016,6 +1024,7 @@ MonoBehaviour:
   chargeForceTime: 0.3
   crushAheadDist: 12
   crushAheadDuration: 0.8
+  crushSfxSound: {fileID: 8300000, guid: c651386cecf5f874e8d5ed222c130a3b, type: 3}
   vomitTriggerThreshold: 0.927
   vomitDetectArea: {fileID: 358673105290723629}
   vomitCooldown: 8
@@ -1499,6 +1508,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveDistance: -2.8
   moveDuration: 0.5
+  closeSfxSound: {fileID: 8300000, guid: 0f0b9772b867a2f4db371747889e7529, type: 3}
 --- !u!1 &5257041404251110791
 GameObject:
   m_ObjectHideFlags: 0
@@ -1743,6 +1753,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveDistance: -2.8
   moveDuration: 0.5
+  closeSfxSound: {fileID: 8300000, guid: 0f0b9772b867a2f4db371747889e7529, type: 3}
 --- !u!1 &5257041404357053138
 GameObject:
   m_ObjectHideFlags: 0

@@ -112,6 +112,14 @@ MonoBehaviour:
   startInvincibleTime: 0.1
   startInvincibleExpireTime: 0
   deathParticle: {fileID: 2211971193389742121, guid: 4ab24fb44f2ac6a489e979dc1ec3d91e, type: 3}
+  hurtSfxSound:
+  - {fileID: 8300000, guid: 9dcced5b2a4119a4385ef3f1c9d5eb31, type: 3}
+  - {fileID: 8300000, guid: da55d718b5d43764db239a79fa072eba, type: 3}
+  - {fileID: 8300000, guid: 70aa72d1eaf656a4bb08b94927809747, type: 3}
+  - {fileID: 8300000, guid: 7bbcd5dae1aa54d4f8163f058d1af7cf, type: 3}
+  deathSfxSound:
+  - {fileID: 8300000, guid: bcbffd25ccbea5042aebd01a7c07c9c7, type: 3}
+  alertSfxSound: []
   rigidbody: {fileID: 8989525735570209663}
   xVelocityChangeSpeed: 6
   yVelocityChangeSpeed: 6

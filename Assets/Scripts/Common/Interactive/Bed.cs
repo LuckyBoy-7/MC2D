@@ -10,6 +10,8 @@ public class Bed : MonoBehaviour
     public string hintContent = "休息";
 
     private bool isPlayerInArea;
+    
+    public AudioClip setSfxSound;
 
     private void Update()
     {
@@ -19,6 +21,7 @@ public class Bed : MonoBehaviour
             player.Recover();
             player.SetSpawnPoint(transform);
             RespawnHintUI.instance.Show();
+            AudioManager.instance.Play(setSfxSound);
         }
     }
 

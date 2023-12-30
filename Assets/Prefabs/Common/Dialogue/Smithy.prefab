@@ -167,3 +167,12 @@ MonoBehaviour:
   noDialogue: {fileID: 11400000, guid: 288cbc23e9515f643bcdb5cabfc108e5, type: 2}
   finishedDialogue: {fileID: 11400000, guid: 8b7c9c2e280e500458e61faa7cb3653b, type: 2}
   afterUpgradeDialogue: {fileID: 11400000, guid: 6883cca42a8c6ea41ae10ddf90ae496d, type: 2}
+  yesSfxSound:
+  - {fileID: 8300000, guid: c3ae9fa85a5e4fa4ea328f2fc06f7c1d, type: 3}
+  - {fileID: 8300000, guid: 748c92a4c1c36b549946bfd031e528d4, type: 3}
+  - {fileID: 8300000, guid: 0b948b3fbb1e62741a4b4cb4953fb64d, type: 3}
+  noSfxSound:
+  - {fileID: 8300000, guid: eae16e1f385757446801ada44d2d3004, type: 3}
+  - {fileID: 8300000, guid: f4dc0a76267f719479ab50f74240bbef, type: 3}
+  - {fileID: 8300000, guid: 965e79d0b90083f42a37955c10ecab99, type: 3}
+  upgradeSfxSound: {fileID: 8300000, guid: 9bd82163fe5f3ec42910c154c8d9d7f3, type: 3}

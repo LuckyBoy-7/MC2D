@@ -15,13 +15,21 @@ public class CliffElevator : MonoBehaviour
     private bool isPlayerTakingLift;
     private bool isAwait;
     private bool isLocked = true;
+    public AudioClip moveSfxSound;
+    private AudioSource moveAudioSource;
 
     private void Update()
     {
         if (isLocked)
             return;
         if (isAwait)
+        {
+            if (moveAudioSource)
+                Destroy(moveAudioSource);
             return;
+        }
+        if (!moveAudioSource)
+            moveAudioSource = AudioManager.instance.GetAudioSource(moveSfxSound);
         if (isPlayerTakingLift)
         {
             elapse = 0;

@@ -105,4 +105,32 @@ public class GuideUI : Singleton<GuideUI>
         seq.Append(canvasGroup.DOFade(0, fadeTime));
         seq.Play().onComplete += HideContents;
     }
+    
+    public void Show(AbilityType abilityType)
+    {
+        var player = PlayerFSM.instance;
+        if (abilityType == AbilityType.Move)
+            instance.ShowContents("按住","移动");
+        else if (abilityType == AbilityType.Attack)
+            instance.ShowContents("点击", "攻击", player.attackKey);
+        else if (abilityType == AbilityType.Jump)
+            instance.ShowContents("按住", "跳跃", player.jumpKey);
+        else if (abilityType == AbilityType.Dash)
+            instance.ShowContents("点击", "冲刺", player.dashKey);
+        else if (abilityType == AbilityType.Heal)
+            instance.ShowContents("按住", "治愈", player.spellKey);
+        else if (abilityType == AbilityType.ReleaseArrow)
+            instance.ShowContents("点击", "放箭", player.spellKey);
+        else if (abilityType == AbilityType.Drop)
+            instance.ShowContents("按住", "下砸", player.downKey, player.spellKey);
+        else if (abilityType == AbilityType.Roar)
+            instance.ShowContents("按住", "上吼", player.upKey, player.spellKey);
+        else if (abilityType == AbilityType.SuperDash)
+            instance.ShowContents("按住", "超冲", player.superDashKey);
+        else if (abilityType == AbilityType.DoubleJump)
+            instance.ShowContents("按住", "二段跳", player.jumpKey);
+        else if (abilityType == AbilityType.WallSlide)
+            instance.ShowContents("蹬墙跳Get");
+        
+    }
 }

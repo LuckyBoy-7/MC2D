@@ -104,6 +104,13 @@ MonoBehaviour:
   blinkDuration: 1
   blinkCount: 3
   mask: {fileID: 7196324197512362196}
+  delay: 0
+  protectionTime: 0.1
+  explodeSfxSound:
+  - {fileID: 8300000, guid: 62b6678bf8d38884badaa8ed4c690d94, type: 3}
+  - {fileID: 8300000, guid: 408a38f95cdf839488afd58fd406cd40, type: 3}
+  - {fileID: 8300000, guid: 3344b3d97741b3d459126dd725aaed4b, type: 3}
+  - {fileID: 8300000, guid: 9a7b02bd4f786e64d8d94d16db8767c2, type: 3}
 --- !u!61 &7196324196829714905
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -222,7 +229,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 1598004183
-  m_SortingLayer: 4
+  m_SortingLayer: 9
   m_SortingOrder: -1
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 0}

@@ -21,6 +21,7 @@ public class PortalUI : Singleton<PortalUI>
     private int idx; // 当前frame指向的destination
 
     private bool canOperate;
+    public AudioClip[] teleportSfxSound;
 
 
     private void Update()
@@ -50,6 +51,7 @@ public class PortalUI : Singleton<PortalUI>
         {
             Hide();
             Portal.TeleportTo(unlockedPortals[idx]);
+            AudioManager.instance.Play(teleportSfxSound);
         }
     }
 

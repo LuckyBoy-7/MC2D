@@ -98,6 +98,7 @@ public class SkeletonAttack : IState
 
     public void OnEnter()
     {
+        AudioManager.instance.Play(m.alertSfxSound);
     }
 
     public void OnUpdate()

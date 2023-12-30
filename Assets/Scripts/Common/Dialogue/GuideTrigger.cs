@@ -14,7 +14,7 @@ public class GuideTrigger : MonoBehaviour
             if (hasBeenShown)
                 return;
             hasBeenShown = true;
-            GuideManager.instance.Show(abilityType);
+            GuideUI.instance.Show(abilityType);
         }
     }
 }

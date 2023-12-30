@@ -8,6 +8,8 @@ public class VexFSM : FlyEnemyFSM
     public VexSpike spikePrefab;
     public Transform spikeWeapon;
 
+    public AudioClip[] attackSfxSound;
+
     protected override void Start()
     {
         base.Start();
@@ -16,6 +18,7 @@ public class VexFSM : FlyEnemyFSM
 
     private void Shoot()
     {
+        AudioManager.instance.Play(attackSfxSound);
         var dir = (PlayerFSM.instance.transform.position - spikeWeapon.transform.position).normalized;
         Instantiate(spikePrefab, spikeWeapon.position, spikeWeapon.rotation).SetTrajectory(dir * shootSpeed);
     }

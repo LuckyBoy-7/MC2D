@@ -152,6 +152,7 @@ public class ZombieAlert : IState
     public void OnEnter()
     {
         m.rigidbody.velocity = new Vector2(0, m.rigidbody.velocity.y);
+        AudioManager.instance.Play(m.alertSfxSound);
     }
 
     public void OnUpdate()

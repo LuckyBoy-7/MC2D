@@ -5,6 +5,13 @@ using UnityEngine;
 
 public class Explosion : MonoBehaviour
 {
+    public AudioClip[] explosionSfxSound;
+
+    private void Start()
+    {
+        AudioManager.instance.Play(explosionSfxSound);
+    }
+
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Player"))

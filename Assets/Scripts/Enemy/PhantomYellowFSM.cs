@@ -10,6 +10,9 @@ public class PhantomYellowFSM : FlyEnemyFSM
     public float stabDuration;
     public float stabTriggerRadius;
     private bool isAttackStored; // 可能已经可以攻击了，但是player不在范围内
+    
+    public AudioClip[] attackSfxSound;
+
 
     protected override void Start()
     {
@@ -44,6 +47,7 @@ public class PhantomYellowFSM : FlyEnemyFSM
 
     private IEnumerator _Attack()
     {
+        AudioManager.instance.Play(attackSfxSound);
         isSelfControlMovement = true;
         canBeKnockedBack = false;
         var dir = (PlayerFSM.instance.transform.position - transform.position).normalized;

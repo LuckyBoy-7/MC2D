@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 5670881069977092854}
   m_Layer: 0
   m_Name: SkeletonArrow
-  m_TagString: Damageable
+  m_TagString: EnemyArrow
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -73,6 +73,10 @@ MonoBehaviour:
   massCenter: {fileID: 318403135660328330}
   rigidbody: {fileID: 1221463168070400289}
   activeTime: 10
+  attackSfxSound:
+  - {fileID: 8300000, guid: 742b65b4194e918419f71435f2df810a, type: 3}
+  - {fileID: 8300000, guid: d4f1d9350dedfa444b07bbe1f8f96b2a, type: 3}
+  - {fileID: 8300000, guid: 6dfd96ed2173cf74ba9d67c85709a08c, type: 3}
 --- !u!58 &5908642533634417209
 CircleCollider2D:
   m_ObjectHideFlags: 0

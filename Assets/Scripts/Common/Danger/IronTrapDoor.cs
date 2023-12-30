@@ -15,6 +15,8 @@ public class IronTrapDoor : MonoBehaviour
     private BoxCollider2D collider;
     public float resetTime;
 
+    public AudioClip openSfxSound;
+
     private void Awake()
     {
         collider = GetComponent<BoxCollider2D>();
@@ -47,6 +49,7 @@ public class IronTrapDoor : MonoBehaviour
         doorSide.transform.position = origPos;
         door.DORotate(new Vector3(0, 0, 0), doorOpenDuration);
         collider.enabled = false;
+        AudioManager.instance.Play(openSfxSound);
 
         yield return new WaitForSeconds(resetTime);
         door.DORotate(new Vector3(90, 0, 0), doorOpenDuration).onComplete += () => { collider.enabled = true; };

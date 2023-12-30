@@ -10,6 +10,7 @@ public class SkeletonArrow : MonoBehaviour
     public float activeTime = 10;
 
     private bool isOnPlatform => rigidbody.bodyType == RigidbodyType2D.Kinematic;
+    public AudioClip[] attackSfxSound;
 
     private void Awake()
     {
@@ -18,6 +19,7 @@ public class SkeletonArrow : MonoBehaviour
 
     private void Start()
     {
+        AudioManager.instance.Play(attackSfxSound);
         rigidbody.centerOfMass = massCenter.localPosition;
     }
 

@@ -20,7 +20,9 @@ public class EnemyFSM : FSM
     public float startInvincibleTime = 0.1f;
     public float startInvincibleExpireTime;
     [Header("Particle")] public GameObject deathParticle;
-
+    [Header("Audio")] public AudioClip[] hurtSfxSound;
+    public AudioClip[] deathSfxSound;
+    public AudioClip[] alertSfxSound;
 
     [Header("Movement")] public Rigidbody2D rigidbody;
     public float xVelocityChangeSpeed = 100; // 如果敌人在移动的时候被击飞，此时的移动速度需要lerp
@@ -32,6 +34,8 @@ public class EnemyFSM : FSM
     public float roarHurtElapse { get; set; } // 用于记录上吼下砸造成的连续伤害信息
     public float dropHurtElapse { get; set; }
     public float knockedBackForceMultiplier = 1;
+
+
     [Header("Reset")] private Vector3 origPos;
     public Transform spawnPoint;
     private float origGravity;
@@ -68,11 +72,17 @@ public class EnemyFSM : FSM
             StopCoroutine(hurtCoroutine); // 因为两次击打时间可能很接近，所以可能还在淡出enemy就已经死了
 
         if (healthPoint <= 0) // 伤害可能会溢出
+        {
             Kill();
+            if (deathSfxSound != null && deathSfxSound.Length > 0)
+                AudioManager.instance.Play(deathSfxSound);
+        }
         else
         {
-            hurtMask.color = hurtMask.color.WithAlpha(1);
+            hurtMask.color = new Color(hurtMask.color.r, hurtMask.color.g, hurtMask.color.b, 1);
             hurtCoroutine = StartCoroutine(FadeTo(0, showHurtEffectTime));
+            if (hurtSfxSound != null && hurtSfxSound.Length > 0)
+                AudioManager.instance.Play(hurtSfxSound);
         }
     }
 
@@ -93,8 +103,8 @@ public class EnemyFSM : FSM
         float speed = Mathf.Abs(target - hurtMask.color.a) / duration;
         while (hurtMask.color.a != target)
         {
-            hurtMask.color =
-                hurtMask.color.WithAlpha(Mathf.MoveTowards(hurtMask.color.a, target, speed * Time.deltaTime));
+            var newAlpha = Mathf.MoveTowards(hurtMask.color.a, target, speed * Time.deltaTime);
+            hurtMask.color = new Color(hurtMask.color.r, hurtMask.color.g, hurtMask.color.b, newAlpha);
             yield return null;
         }
     }

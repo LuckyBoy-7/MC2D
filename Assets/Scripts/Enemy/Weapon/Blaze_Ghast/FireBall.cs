@@ -8,6 +8,8 @@ public class FireBall : MonoBehaviour
     public Rigidbody2D rigidbody;
     public Explosion explosionPrefab;
 
+    public AudioClip shootSfxSound;
+
     private void Awake()
     {
         rigidbody = GetComponent<Rigidbody2D>();
@@ -15,6 +17,7 @@ public class FireBall : MonoBehaviour
 
     private void Start()
     {
+        AudioManager.instance.Play(shootSfxSound);
         Destroy(gameObject, 15);
     }
 

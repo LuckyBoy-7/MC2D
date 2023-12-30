@@ -112,6 +112,11 @@ MonoBehaviour:
   startInvincibleTime: 0.1
   startInvincibleExpireTime: 0
   deathParticle: {fileID: 2211971193389742121, guid: 4ab24fb44f2ac6a489e979dc1ec3d91e, type: 3}
+  hurtSfxSound:
+  - {fileID: 8300000, guid: aad1042b155131941bbb6d945dab4e5c, type: 3}
+  deathSfxSound:
+  - {fileID: 8300000, guid: 7ffd0b2924e37f74c96855fc3b6c9dd8, type: 3}
+  alertSfxSound: []
   rigidbody: {fileID: 1397010698701961482}
   xVelocityChangeSpeed: 100
   yVelocityChangeSpeed: 100
@@ -124,7 +129,7 @@ MonoBehaviour:
   viewLayer:
     serializedVersion: 2
     m_Bits: 384
-  attackCoolDown: 1
+  attackCoolDown: 3
   keepDistanceCompensationY: 3
   idleRadius: 1.83
   keepDistance: 10.83
@@ -136,6 +141,7 @@ MonoBehaviour:
   fireBallPrefab: {fileID: 6722204804400820280, guid: 868a9da78aaad3b4eb361d1894ee8bf3, type: 3}
   shootSprite: {fileID: 21300000, guid: 7bec5259003979140bce514ad62593d2, type: 3}
   resetSpriteTime: 0.3
+  chargeSfxSound: {fileID: 8300000, guid: 0f8c3979ad1beb84aa21ea01fbb6c45f, type: 3}
 --- !u!50 &1397010698701961482
 Rigidbody2D:
   serializedVersion: 4

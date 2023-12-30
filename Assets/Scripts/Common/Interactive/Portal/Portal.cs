@@ -18,6 +18,7 @@ public class Portal : MonoBehaviour
 
     public SpriteRenderer[] portalClips; // 做淡出的
     private bool isPlayerInArea;
+    
 
     private void Update()
     {

@@ -112,6 +112,13 @@ MonoBehaviour:
   startInvincibleTime: 0.1
   startInvincibleExpireTime: 0
   deathParticle: {fileID: 2211971193389742121, guid: 4ab24fb44f2ac6a489e979dc1ec3d91e, type: 3}
+  hurtSfxSound:
+  - {fileID: 8300000, guid: 4acb5061e2b592f49970105c35530899, type: 3}
+  - {fileID: 8300000, guid: 2f255318b0b13764c99c72c3c7f6e479, type: 3}
+  - {fileID: 8300000, guid: 94873e17cc656924caa816277280ab76, type: 3}
+  - {fileID: 8300000, guid: 7eb486161901c484fa81859dd45f5d6e, type: 3}
+  deathSfxSound: []
+  alertSfxSound: []
   rigidbody: {fileID: 825042948331763785}
   xVelocityChangeSpeed: 100
   yVelocityChangeSpeed: 100
@@ -136,6 +143,10 @@ MonoBehaviour:
   emitAngle: 70
   beSuckedProtectionTime: 0.1
   beSuckedProtectionExpireTime: 0
+  jumpSfxSound:
+  - {fileID: 8300000, guid: 995f2edf51bc8e048a8cf22f94cc83e6, type: 3}
+  - {fileID: 8300000, guid: 8fd7609fcb1dabc4a81a8770b5e90ffa, type: 3}
+  - {fileID: 8300000, guid: ed88d4218760df345af44fa5568d42d9, type: 3}
 --- !u!50 &825042948331763785
 Rigidbody2D:
   serializedVersion: 4

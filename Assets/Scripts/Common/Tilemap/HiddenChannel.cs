@@ -26,7 +26,8 @@ public class HiddenChannel : Singleton<HiddenChannel>
         var speed = Mathf.Abs(target - tilemap.color.a) / fadeDuration;
         while (Mathf.Abs(target - tilemap.color.a) > 1e-5)
         {
-            tilemap.color = tilemap.color.WithAlpha(Mathf.MoveTowards(tilemap.color.a, target, speed * Time.deltaTime));
+            var newAlpha = Mathf.MoveTowards(tilemap.color.a, target, speed * Time.deltaTime);
+            tilemap.color = new Color(tilemap.color.r, tilemap.color.g, tilemap.color.b, newAlpha);
             yield return null;
         }
     }

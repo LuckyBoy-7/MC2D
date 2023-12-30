@@ -11,6 +11,7 @@ public class GhastFSM : FlyEnemyFSM
     public float resetSpriteTime = 0.3f;
     private Sprite origSprite;
     private SpriteRenderer spriteRenderer;
+    public AudioClip chargeSfxSound;
 
     private void Awake()
     {
@@ -26,6 +27,7 @@ public class GhastFSM : FlyEnemyFSM
 
     private void Shoot()
     {
+        AudioManager.instance.Play(chargeSfxSound);
         var position = transform.position;
         var dir = (PlayerFSM.instance.transform.position - position).normalized;
         var fireBall = Instantiate(fireBallPrefab, position, Quaternion.identity);

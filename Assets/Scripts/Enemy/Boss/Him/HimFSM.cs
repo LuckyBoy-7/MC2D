@@ -36,6 +36,7 @@ public class HimFSM : GroundEnemyFSM
     public float groundCrushChargeForceTime;
     public float groundCrushAheadDist;
     public float groundCrushAheadDuration;
+    public AudioClip crushSfxSound;
 
     [Header("AirCrush")] [Range(0, 1)] public float airCrushTriggerThreshold = 1; // 触发时的血量百分比
     public float airCrushCooldown;
@@ -72,6 +73,10 @@ public class HimFSM : GroundEnemyFSM
     public float groundSpikeStrikeLength;
     public float groundSpikeStrikeDuration;
     public float groundSpikeRemainTimeAfterStrike;
+    public AudioClip dropChargeSfxSound;
+    public AudioClip dropDashSfxSound;
+    public AudioClip dropLandSfxSound;
+    public float dropLandSfxSoundSpeed;
 
     [Header("ShootSpike")] [Range(0, 1)] public float shootSpikeTriggerThreshold = 0.6f;
     public BoxCollider2D shootSpikeDetectArea;
@@ -96,6 +101,8 @@ public class HimFSM : GroundEnemyFSM
     public float burstSpikeSpeed;
     public int burstSpikeWave = 3;
     public float burstSpikeWaveTimeGap = 1;
+    public AudioClip burstSpikeSfxSound;
+    public AudioClip shootSpikeSfxSound;
 
 
     [Header("SingExplode")] [Range(0, 1)] public float singExplodeTriggerThreshold = 0.6f;
@@ -109,6 +116,7 @@ public class HimFSM : GroundEnemyFSM
     public float singRemainDuration;
     public Color turnToColor;
     public float singShrinkDuration;
+    public AudioClip songShrinkSfxSound;
 
     #region Trigger
 
@@ -164,10 +172,10 @@ public class HimFSM : GroundEnemyFSM
         TransitionState(StateType.Move); // stepBack写在fsm里面
     }
 
-    private void LateUpdate()
-    {
-        Debug.Log(currentState);
-    }
+    // private void LateUpdate()
+    // {
+    //     Debug.Log(currentState);
+    // }
 
     public override void Kill()
     {
@@ -249,6 +257,7 @@ public class HimGroundCrush : IState
         s.Append(m.rigidbody.DOMoveX(m.rigidbody.position.x - m.facingDirection * m.groundCrushJumpBackDist,
             m.groundCrushJumpBackDuration));
         s.AppendInterval(m.groundCrushChargeForceTime);
+        s.AppendCallback(() => AudioManager.instance.Play(m.crushSfxSound));
         s.Append(m.rigidbody.DOMoveX(m.rigidbody.position.x + m.facingDirection * m.groundCrushAheadDist,
             m.groundCrushAheadDuration));
         s.AppendCallback(() => m.TransitionState(StateType.Move));
@@ -257,7 +266,6 @@ public class HimGroundCrush : IState
     public void OnUpdate()
     {
     }
-
 
     public void OnFixedUpdate()
     {
@@ -293,6 +301,7 @@ public class HimAirCrush : IState
                 PlayerFSM player = PlayerFSM.instance;
                 var dir = (player.transform.position - m.transform.position).normalized;
                 m.SetVelocity(dir * m.airCrushSpeed);
+                AudioManager.instance.Play(m.crushSfxSound);
             };
     }
 
@@ -363,6 +372,8 @@ public class HimGroundSpike : IState
     private int spawnedSpikeNumber;
     private int killedSpikeNumber;
 
+    private AudioSource dashAudioSource;
+
     public HimGroundSpike(HimFSM m)
     {
         this.m = m;
@@ -399,6 +410,8 @@ public class HimGroundSpike : IState
 
         if (m.isOnGround && !hasSpawnSpikes)
         {
+            if (dashAudioSource)
+                Object.Destroy(dashAudioSource);
             hasSpawnSpikes = true;
             SpawnSpikes();
         }
@@ -414,8 +427,10 @@ public class HimGroundSpike : IState
         m.SetPositionX(targetX);
         m.SetGravity(0);
         m.SetVelocity(0, 0);
+        AudioManager.instance.Play(m.dropChargeSfxSound);
         yield return new WaitForSeconds(m.jumpBeforeDropRemainTime);
         m.SetVelocity(0, -m.dropSpeed);
+        dashAudioSource = AudioManager.instance.GetAudioSource(m.dropChargeSfxSound);
     }
 
     public void OnFixedUpdate()
@@ -430,6 +445,8 @@ public class HimGroundSpike : IState
         m.ResetGravity();
         spawnedSpikeNumber = 0;
         killedSpikeNumber = 0;
+        if (dashAudioSource)
+            Object.Destroy(dashAudioSource);
     }
 
     private void SpawnSpikes()
@@ -471,6 +488,7 @@ public class HimGroundSpike : IState
     {
         yield return new WaitForSeconds(m.groundSpikeWindUpTime); // 前摇，给player的准备时间
 
+        AudioManager.instance.Play(m.dropLandSfxSound, m.dropLandSfxSoundSpeed);
         spike.TurnOnTrigger();
         spike.Resize(m.groundSpikeStrikeLength, m.groundSpikeStrikeDuration);
         yield return new WaitForSeconds(m.groundSpikeStrikeDuration);
@@ -501,7 +519,6 @@ public class HimShootSpike : IState
         m.StartCoroutine(SpawnSpikes());
     }
 
-
     private IEnumerator SpawnSpikes()
     {
         float startAngle;
@@ -525,10 +542,10 @@ public class HimShootSpike : IState
             spike.Resize(m.shootSpikeLength);
             spike.SetDir(angle);
             spike.Pushed(pushedDir * m.shootSpikeSpeed);
+            AudioManager.instance.Play(m.shootSpikeSfxSound);
             yield return new WaitForSeconds(m.shootSpikeTimeGap);
         }
     }
-
 
     public void OnUpdate()
     {
@@ -538,7 +555,6 @@ public class HimShootSpike : IState
             m.TransitionState(StateType.Move);
         }
     }
-
 
     public void OnFixedUpdate()
     {
@@ -579,6 +595,7 @@ public class HimBurstSpike : IState
                 m.StartCoroutine(BurstOne(angle));
             }
 
+            AudioManager.instance.Play(m.burstSpikeSfxSound);
             yield return new WaitForSeconds(m.burstSpikeWaveTimeGap);
         }
 
@@ -596,6 +613,7 @@ public class HimBurstSpike : IState
         yield return new WaitForSeconds(m.burstSpikeWindupTime);
         spike.Pushed(pushedDir * m.burstSpikeSpeed);
         spike.TurnOnTrigger();
+        AudioManager.instance.Play(m.shootSpikeSfxSound);
     }
 
 
@@ -643,6 +661,7 @@ public class HimSingExplode : IState
 
         m.singCircle[i].TurnOnTrigger();
         m.singCircle[i].Resize(0, m.singShrinkDuration);
+        AudioManager.instance.Play(m.songShrinkSfxSound);
         yield return new WaitForSeconds(m.singShrinkDuration);
         m.singCircle[i].TurnOffTrigger();
         m.singCircle[i].Reset();

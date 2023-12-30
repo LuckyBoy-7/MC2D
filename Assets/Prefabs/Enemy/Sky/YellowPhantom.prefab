@@ -190,12 +190,21 @@ MonoBehaviour:
   canBeKnockedBack: 0
   emeraldEmitterPrefab: {fileID: 7434508363890164307, guid: 5135224466e9b204ea19ad01e00c1bda, type: 3}
   ownEmeraldNumber: 8
-  maxHealthPoint: 3
+  maxHealthPoint: 4
   healthPoint: 3
   hurtMask: {fileID: 2476448396316322896}
   startInvincibleTime: 0.1
   startInvincibleExpireTime: 0
   deathParticle: {fileID: 2211971193389742121, guid: 4ab24fb44f2ac6a489e979dc1ec3d91e, type: 3}
+  hurtSfxSound:
+  - {fileID: 8300000, guid: 88af9169662d66b4ea40652c6044e864, type: 3}
+  - {fileID: 8300000, guid: 52974d9096ce33543b33fa6fdcb6d5eb, type: 3}
+  - {fileID: 8300000, guid: 036b3602dd84f6947acc3a9d38ec8652, type: 3}
+  deathSfxSound:
+  - {fileID: 8300000, guid: 201d96e89b0c4b3478533a085eaed038, type: 3}
+  - {fileID: 8300000, guid: d651b4ce37d530342a112f236584f985, type: 3}
+  - {fileID: 8300000, guid: 5bc4b5326ba1b944ab2c20b1d92c4692, type: 3}
+  alertSfxSound: []
   rigidbody: {fileID: 2476448396859266719}
   xVelocityChangeSpeed: 100
   yVelocityChangeSpeed: 100
@@ -219,6 +228,8 @@ MonoBehaviour:
   stabDistance: 5
   stabDuration: 0.5
   stabTriggerRadius: 4.3
+  attackSfxSound:
+  - {fileID: 8300000, guid: f91d6a9ced1bde240a97c3f75f66a5f0, type: 3}
 --- !u!50 &2476448396859266719
 Rigidbody2D:
   serializedVersion: 4

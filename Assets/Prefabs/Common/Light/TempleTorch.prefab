@@ -131,6 +131,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   hasTriggered: 0
+  openSfxSound:
+  - {fileID: 8300000, guid: b31a50b1e31d937489d199e9f487d008, type: 3}
+  - {fileID: 8300000, guid: 18816a773d61ccd4f88a694abf99c457, type: 3}
+  - {fileID: 8300000, guid: 83dd9be95628adb49ba6595cf644f9db, type: 3}
 --- !u!212 &7558031850085145649
 SpriteRenderer:
   m_ObjectHideFlags: 0

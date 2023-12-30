@@ -13,7 +13,7 @@ public class MovingSpike : MonoBehaviour
     private int idx;
     public Color routeMarkColor = Color.red;
     public float routeMarkRadius = 0.3f;
-
+    
     private void OnDrawGizmos()
     {
         if (routes == null)

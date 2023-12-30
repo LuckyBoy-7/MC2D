@@ -31,18 +31,18 @@ public class SilvefishFSM : GroundEnemyFSM
         // cliff
         Gizmos.DrawLine(position, position + transformDown * cliffCheckDownRaycastDist);
 
-        // Hit Box
-        Handles.color = Color.red;
-        Transform center = transform;
-        Matrix4x4 oldMat = Handles.matrix;
-        //获取目标旋转矩阵
-        Matrix4x4 rotationMat = center.localToWorldMatrix;
-        //设置当前为旋转矩阵
-        Handles.matrix = rotationMat;
-        //这里的center是相对目标中心而言，因为旋转cube与目标位置相同所以是zero
-        Handles.DrawWireCube(center: hitBoxCollider.offset, size: hitBoxCollider.size);
-        //重置当前矩阵
-        Handles.matrix = oldMat;
+        // // Hit Box
+        // Handles.color = Color.red;
+        // Transform center = transform;
+        // Matrix4x4 oldMat = Handles.matrix;
+        // //获取目标旋转矩阵
+        // Matrix4x4 rotationMat = center.localToWorldMatrix;
+        // //设置当前为旋转矩阵
+        // Handles.matrix = rotationMat;
+        // //这里的center是相对目标中心而言，因为旋转cube与目标位置相同所以是zero
+        // Handles.DrawWireCube(center: hitBoxCollider.offset, size: hitBoxCollider.size);
+        // //重置当前矩阵
+        // Handles.matrix = oldMat;
     }
 
     public bool isOverMiddleCliff

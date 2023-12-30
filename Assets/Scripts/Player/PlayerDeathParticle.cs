@@ -20,6 +20,7 @@ public class PlayerDeathParticle : MonoBehaviour
     private bool isRealeasing;
     private float elapse;
     private Animator animator;
+    public AudioClip deathSfxSound;
 
     private void Awake()
     {
@@ -40,8 +41,9 @@ public class PlayerDeathParticle : MonoBehaviour
         transform.DOMove(transform.position + dir * pushedForce, pushedDuration);
     }
 
-    public void Release()
+    public void Release()  // 动画调用
     {
+        AudioManager.instance.Play(deathSfxSound);
         isRealeasing = true;
         for (int i = 0; i < particleNum; i++)
         {

@@ -247,3 +247,4 @@ MonoBehaviour:
   shakeCount: 4
   shakeTimeGap: 0.1
   shakeMagnitude: 0.05
+  openSfxSound: {fileID: 8300000, guid: e78e97cdf3efc1c45a20316090e0e3df, type: 3}

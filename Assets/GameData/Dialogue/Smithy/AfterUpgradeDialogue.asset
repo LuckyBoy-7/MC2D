@@ -13,6 +13,5 @@ MonoBehaviour:
   m_Name: AfterUpgradeDialogue
   m_EditorClassIdentifier: 
   contents:
-  - "\u8BD5\u8BD5\u8FD9\u628A\u5251"
   - "\u77A7\uFF01\u6BD4\u4F60\u539F\u6765\u7684\u90A3\u628A\u66F4\u4EAE\u66F4\u575A\u56FA\uFF0C\u4E0D\u662F\u5417"
   - "\u8D76\u7D27\u62FF\u8FC7\u53BB\u8BD5\u4E00\u8BD5\u5427"

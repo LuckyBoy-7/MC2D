@@ -19,6 +19,10 @@ public class Smithy : Singleton<Smithy>
     public Dialogue_SO afterUpgradeDialogue; // 更新完装备后发出的赞叹
 
     public int curCost => emeraldCosts[idx];
+    
+    public AudioClip[] yesSfxSound;
+    public AudioClip[] noSfxSound;
+    public AudioClip upgradeSfxSound;
 
     private void Update()
     {
@@ -78,16 +82,20 @@ public class Smithy : Singleton<Smithy>
             DialogueUI.instance.ShowDialogues(yesDialogue, afterUpgradeDialogue);
             PlayerFSM.instance.curEmeraldNumber -= emeraldCosts[idx++];
             EmeraldUI.instance.UpdatePlayerEmeraldUI();
+            
+            AudioManager.instance.Play(upgradeSfxSound);
         }
         else
         {
             DialogueUI.instance.ShowDialogues(noMoneyDialogue);
         }
+        AudioManager.instance.Play(yesSfxSound);
     }
 
     public void OnChooseNo()
     {
         // Debug.Log("No");
         DialogueUI.instance.ShowDialogues(noDialogue);
+        AudioManager.instance.Play(noSfxSound);
     }
 }

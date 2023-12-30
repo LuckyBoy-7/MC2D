@@ -281,6 +281,13 @@ MonoBehaviour:
   startInvincibleTime: 0.1
   startInvincibleExpireTime: 0
   deathParticle: {fileID: 2211971193389742121, guid: 4ab24fb44f2ac6a489e979dc1ec3d91e, type: 3}
+  hurtSfxSound:
+  - {fileID: 8300000, guid: 4acb5061e2b592f49970105c35530899, type: 3}
+  - {fileID: 8300000, guid: 2f255318b0b13764c99c72c3c7f6e479, type: 3}
+  - {fileID: 8300000, guid: 94873e17cc656924caa816277280ab76, type: 3}
+  - {fileID: 8300000, guid: 7eb486161901c484fa81859dd45f5d6e, type: 3}
+  deathSfxSound: []
+  alertSfxSound: []
   rigidbody: {fileID: 1438845366645860276}
   xVelocityChangeSpeed: 100
   yVelocityChangeSpeed: 100
@@ -303,7 +310,7 @@ MonoBehaviour:
   arrow2: {fileID: 5057502636234675162}
   enemyEggPrefab: {fileID: 3091130906358144611, guid: c82535b6c2b19d54696b8d6dc0f3f97f, type: 3}
   throwForce: 15
-  throwEggTimeGap: 1
+  throwEggTimeGap: 5
   enemyEggTypes: 00000000010000000200000003000000
   throwAngle: 97
 --- !u!50 &1438845366645860276
@@ -419,6 +426,7 @@ MonoBehaviour:
   rotateCircles: 5
   rotateDuration: 0.6
   remainTimeAfterShoot: 2
+  shootSfxSound: {fileID: 8300000, guid: ffd30688e9d22d64e8a948bc32aebbff, type: 3}
 --- !u!61 &5057502636234675167
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -1007,6 +1015,7 @@ MonoBehaviour:
   rotateCircles: 5
   rotateDuration: 0.6
   remainTimeAfterShoot: 2
+  shootSfxSound: {fileID: 8300000, guid: ffd30688e9d22d64e8a948bc32aebbff, type: 3}
 --- !u!61 &9160165328030918009
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -1178,6 +1187,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: IronBars (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 5480458553268437593, guid: 86db9e976dab7d142ad583f6122dd737, type: 3}
+      propertyPath: closeSfxSound
+      value: 
+      objectReference: {fileID: 8300000, guid: 0f0b9772b867a2f4db371747889e7529, type: 3}
     - target: {fileID: 5480458553268437594, guid: 86db9e976dab7d142ad583f6122dd737, type: 3}
       propertyPath: m_RootOrder
       value: 1
@@ -1251,6 +1264,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: IronBars
       objectReference: {fileID: 0}
+    - target: {fileID: 5480458553268437593, guid: 86db9e976dab7d142ad583f6122dd737, type: 3}
+      propertyPath: closeSfxSound
+      value: 
+      objectReference: {fileID: 8300000, guid: 0f0b9772b867a2f4db371747889e7529, type: 3}
     - target: {fileID: 5480458553268437594, guid: 86db9e976dab7d142ad583f6122dd737, type: 3}
       propertyPath: m_RootOrder
       value: 0

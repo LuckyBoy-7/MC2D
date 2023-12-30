@@ -49,6 +49,7 @@ public class SlimeBossFSM : GroundEnemyFSM
     public float jumpCooldownExpireTime;
     public float jumpDuration;
     public float jumpPosDelta; // 跳到player左(右)jumpPosDelta或本身位置
+    public AudioClip[] jumpSfxSound;
 
     [Header("Throw")] [Range(0, 1)] public float throwTriggerThreshold = 0.6f; // 触发时的血量百分比
     public BoxCollider2D throwDetectArea;
@@ -164,6 +165,7 @@ public class SlimeBossMove : IState
             m.LookTowardsPlayer();
             var dir = new Vector2(m.facingDirection * 1, m.moveJumpForceYMultiplier);
             m.SetVelocity(dir * m.moveJumpForce);
+            AudioManager.instance.Play(m.jumpSfxSound);
         }
     }
 
@@ -240,6 +242,7 @@ public class SlimeBossDrop : IState
         vx = (x2 - x1) / t;
         vy = (y2 - y1 + 1f / 2 * g * t * t) / t;
         m.SetVelocity(vx, vy);
+        AudioManager.instance.Play(m.jumpSfxSound);
     }
 
     public void OnUpdate()
@@ -375,6 +378,7 @@ public class SlimeBossJump : IState
         vx = (x2 - x1) / t;
         vy = (y2 - y1 + 1f / 2 * g * t * t) / t;
         m.SetVelocity(vx, vy);
+        AudioManager.instance.Play(m.jumpSfxSound);
     }
 
 

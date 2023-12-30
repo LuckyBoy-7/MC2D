@@ -19,7 +19,7 @@ public class RespawnHintUI : Singleton<RespawnHintUI>
 
     public void Show()
     {
-        text.color = text.color.WithAlpha(1);
+        text.color = new Color(text.color.r, text.color.g, text.color.b, 1);
         DOTween.Kill("RespawnHintUI");
         DOVirtual.DelayedCall(remainDuration, Hide).SetId("RespawnHintUI");
     }

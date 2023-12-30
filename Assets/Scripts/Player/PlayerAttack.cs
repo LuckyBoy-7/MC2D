@@ -33,6 +33,11 @@ public class PlayerAttack : Singleton<PlayerAttack>
 
     public bool isAttacking;
 
+    public AudioClip[] attackSfxSound;
+    public float attackSfxSoundSpeed;
+
+    public AudioClip attackSpikeSfxSound;
+
     private void Start()
     {
         m = PlayerFSM.instance;
@@ -64,6 +69,7 @@ public class PlayerAttack : Singleton<PlayerAttack>
             currentAttack = attackRight;
         currentAttack.transform.localScale = new Vector3(1, direction[Random.Range(0, 2)], 1);
         currentAttack.Play("PlayerAttack");
+        AudioManager.instance.Play(attackSfxSound, attackSfxSoundSpeed);
 
         // 更新向右攻击的方向
         attackDirection[attackRight] = new Vector2(1, 0) * m.facingDirection.x;
@@ -128,6 +134,8 @@ public class PlayerAttack : Singleton<PlayerAttack>
             TryPushed();
             // 播放特效
             PlayerFSM.instance.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position));
+            if (other.CompareTag("Spike") || other.CompareTag("MovingSpike") || other.CompareTag("Boomerang") || other.CompareTag("EnemyArrow"))
+                AudioManager.instance.Play(attackSpikeSfxSound);
         }
     }
 
@@ -142,7 +150,8 @@ public class PlayerAttack : Singleton<PlayerAttack>
             if (!other.CompareTag("Enemy"))
                 continue;
 
-            other.GetComponent<EnemyFSM>().Attacked(attackDamages[attackDamagesIdx], attackDirection[currentAttack] * attackForce);
+            other.GetComponent<EnemyFSM>().Attacked(attackDamages[attackDamagesIdx],
+                attackDirection[currentAttack] * attackForce);
             if (!hasAttackedEnemy) // 第一个打到的敌人 
             {
                 m.PlayAttackEffect(other.bounds.ClosestPoint(currentAttack.transform.position)); // 在第一个打到的敌人上播放特效

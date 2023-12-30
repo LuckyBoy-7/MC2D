@@ -16,6 +16,8 @@ public class WitchArrow : MonoBehaviour
     private BoxCollider2D box;
     public Action onShootDone;
 
+    public AudioClip shootSfxSound;
+
     private void Awake()
     {
         box = GetComponent<BoxCollider2D>();
@@ -51,6 +53,7 @@ public class WitchArrow : MonoBehaviour
         transform.rotation =
             Quaternion.LookRotation(Vector3.forward, Quaternion.Euler(0, 0, 90) * (playerPos - transform.position));
         transform.DOMove(targetPos, reachDuration);
+        AudioManager.instance.Play(shootSfxSound);
         yield return new WaitForSeconds(reachDuration);
         //
         onShootDone?.Invoke();

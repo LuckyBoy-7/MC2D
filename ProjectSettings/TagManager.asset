@@ -21,6 +21,7 @@ TagManager:
   - OneWaySlab
   - Damageable
   - IronBars
+  - Boomerang
   layers:
   - Default
   - TransparentFX

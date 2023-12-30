@@ -165,6 +165,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: IronBars
       objectReference: {fileID: 0}
+    - target: {fileID: 5480458553268437593, guid: 86db9e976dab7d142ad583f6122dd737, type: 3}
+      propertyPath: closeSfxSound
+      value: 
+      objectReference: {fileID: 8300000, guid: 0f0b9772b867a2f4db371747889e7529, type: 3}
     - target: {fileID: 5480458553268437594, guid: 86db9e976dab7d142ad583f6122dd737, type: 3}
       propertyPath: m_RootOrder
       value: 0

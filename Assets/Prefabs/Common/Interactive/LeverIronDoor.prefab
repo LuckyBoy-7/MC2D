@@ -159,7 +159,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lever: {fileID: 5140135037218182388}
   leverRotateDuration: 0.1
-  ironDoor: {fileID: 5140135037328401587}
   onAttacked:
     m_PersistentCalls:
       m_Calls:
@@ -175,6 +174,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  openSfxSound: {fileID: 8300000, guid: 532da74531a74704c9a5096cc6f05ec2, type: 3}
 --- !u!1 &5140135036932103706
 GameObject:
   m_ObjectHideFlags: 0
@@ -246,7 +246,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 1598004183
-  m_SortingLayer: 4
+  m_SortingLayer: 9
   m_SortingOrder: 1
   m_Sprite: {fileID: 21300000, guid: 6c150849a50d3694a987d99cf81cb030, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -330,7 +330,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 1598004183
-  m_SortingLayer: 4
+  m_SortingLayer: 9
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: 61d7afa07915efb4b9ef124f8b79625a, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -445,6 +445,7 @@ MonoBehaviour:
   door: {fileID: 5140135036544039654}
   doorOpenDuration: 0.1
   dir: 1
+  openSfxSound: {fileID: 8300000, guid: e78e97cdf3efc1c45a20316090e0e3df, type: 3}
 --- !u!61 &5140135037328401580
 BoxCollider2D:
   m_ObjectHideFlags: 0

@@ -18,7 +18,9 @@ public class DialogueUI : Singleton<DialogueUI>
     public CanvasGroup canvasGroup;
     public GameObject dialoguePanel;
     public Action onDialogueOver;
-
+    
+    public AudioClip[] chatSfxSound;
+    
     private void Update()
     {
         if (Input.GetKeyDown(PlayerFSM.instance.jumpKey))
@@ -45,6 +47,7 @@ public class DialogueUI : Singleton<DialogueUI>
         yield return OpenPanel();
             foreach (var content in dialogue_SO.contents)
         {
+            AudioManager.instance.Play(chatSfxSound);
             yield return ShowCharOneByOne(content);
             while (!Input.GetKeyDown(PlayerFSM.instance.jumpKey))
                 yield return null;

@@ -126,3 +126,4 @@ MonoBehaviour:
   rotateDuration: 1
   rotateSpeed: 50
   pushedForce: 3
+  deathSfxSound: {fileID: 8300000, guid: d5660960ede0c5347bc74c25fc6de3f8, type: 3}

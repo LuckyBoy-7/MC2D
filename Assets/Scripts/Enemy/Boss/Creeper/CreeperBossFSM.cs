@@ -27,6 +27,7 @@ public class CreeperBossFSM : GroundEnemyFSM
     public float chargeForceTime;
     public float crushAheadDist;
     public float crushAheadDuration;
+    public AudioClip crushSfxSound;
     [Header("Vomit")] [Range(0, 1)] public float vomitTriggerThreshold = 0.8f; // 触发时的血量百分比
     public BoxCollider2D vomitDetectArea;
 
@@ -170,9 +171,10 @@ public class CreeperBossCrush : IState
         s.Append(m.rigidbody.DOMoveX(m.rigidbody.position.x - m.facingDirection * m.crushJumpBackDist,
             m.crushJumpBackDuration));
         s.AppendInterval(m.chargeForceTime);
+        s.AppendCallback(() => AudioManager.instance.Play(m.crushSfxSound));
         s.Append(m.rigidbody.DOMoveX(m.rigidbody.position.x + m.facingDirection * m.crushAheadDist,
             m.crushAheadDuration));
-        s.AppendCallback((() => m.TransitionState(StateType.Move)));
+        s.AppendCallback(() => m.TransitionState(StateType.Move));
     }
 
     public void OnUpdate()
@@ -308,8 +310,6 @@ public class CreeperBossJump : IState
         m.jumpCooldownExpireTime = Time.time + m.jumpCooldown;
     }
 }
-
-
 public class CreeperBossWideExplosion : IState
 {
     private CreeperBossFSM m;

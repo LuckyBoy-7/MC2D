@@ -137,3 +137,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   collectedEffect: {fileID: 1311816691231359010, guid: 45fa09ff888b2364fa46da71ea0d5e8a, type: 3}
+  collectedSfxSound: {fileID: 8300000, guid: 19154654f1b05d84892ab87e44164d2e, type: 3}

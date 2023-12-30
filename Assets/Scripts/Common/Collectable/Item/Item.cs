@@ -14,6 +14,8 @@ public class Item : MonoBehaviour
     private Rigidbody2D rigidbody;
 
     private bool isInArea;
+    
+    public AudioClip collectedSfxSound;
 
     private void Awake()
     {
@@ -31,6 +33,7 @@ public class Item : MonoBehaviour
         {
             HintUI.instance.FadeOut();
             PlayerFSM.instance.UnlockAbility(abilityType);
+            AudioManager.instance.Play(collectedSfxSound);
             Destroy(gameObject);
         }
     }

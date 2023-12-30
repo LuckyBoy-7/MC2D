@@ -11,6 +11,8 @@ public class IronBar : MonoBehaviour
     public float moveDistance;
     public float moveDuration;
     private Vector2 origPos;
+    
+    public AudioClip closeSfxSound;
 
     public void Start()
     {
@@ -20,6 +22,7 @@ public class IronBar : MonoBehaviour
     public void Close()
     {
         transform.DOMoveY(transform.position.y + moveDistance, moveDuration);
+        AudioManager.instance.Play(closeSfxSound);
     }
 
     public void Open()

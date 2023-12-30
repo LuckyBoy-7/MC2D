@@ -204,12 +204,19 @@ MonoBehaviour:
   canBeKnockedBack: 1
   emeraldEmitterPrefab: {fileID: 7434508363890164307, guid: 5135224466e9b204ea19ad01e00c1bda, type: 3}
   ownEmeraldNumber: 12
-  maxHealthPoint: 4
+  maxHealthPoint: 6
   healthPoint: 4
   hurtMask: {fileID: 5682789929443055295}
   startInvincibleTime: 0.1
   startInvincibleExpireTime: 0
   deathParticle: {fileID: 2211971193389742121, guid: 4ab24fb44f2ac6a489e979dc1ec3d91e, type: 3}
+  hurtSfxSound:
+  - {fileID: 8300000, guid: 4c3b6794de67102489e759890dd743e2, type: 3}
+  - {fileID: 8300000, guid: fc26935b7d62bff44a0484edf5b2a9a1, type: 3}
+  deathSfxSound:
+  - {fileID: 8300000, guid: 0c16b2e4505c4df4cb58f277769cb3bc, type: 3}
+  - {fileID: 8300000, guid: 496c021fc13866248af60cd5fd7aee08, type: 3}
+  alertSfxSound: []
   rigidbody: {fileID: 5682789929868170709}
   xVelocityChangeSpeed: 6
   yVelocityChangeSpeed: 6
@@ -233,6 +240,10 @@ MonoBehaviour:
   shootSpeed: 15
   spikePrefab: {fileID: 5736600961686746396, guid: 1bdcd03f1186e1b4d8bb4bd0f2ea688f, type: 3}
   spikeWeapon: {fileID: 5682789930611227691}
+  attackSfxSound:
+  - {fileID: 8300000, guid: 4db00c3ffd0b34847ab4bb05d244c348, type: 3}
+  - {fileID: 8300000, guid: afeb01b65f578234c90e806db0ea17b6, type: 3}
+  - {fileID: 8300000, guid: c22b0c30557514e4cbdba416e7b1a846, type: 3}
 --- !u!50 &5682789929868170709
 Rigidbody2D:
   serializedVersion: 4

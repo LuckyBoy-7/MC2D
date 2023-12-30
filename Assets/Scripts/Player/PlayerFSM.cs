@@ -30,10 +30,12 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public bool hasHealAbility;
 
     [Header("Currency")] public int curEmeraldNumber;
+    public AudioClip[] emeraldSuckSfxSound;
     [Header("Collectable")] public int strawberryNumber;
     [Header("Health")] public int maxHealthPoint;
     public int healthPoint;
     public int extraHealthPoint;
+    public AudioClip[] healSfxSound;
 
     [Header("CameraConfiner")] public CinemachineConfiner2D cinemachineConfiner2D;
     [Header("LookDown")] public float lookDownKeyHoldTime;
@@ -48,6 +50,8 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public float moveChangeSpeed;
     public float moveHorizontalExtraForce;
     public float moveVerticalExtraForce;
+    public AudioClip[] moveSfxSound;
+    public float moveSfxSoundSpeed;
     [Header("Idle")] public float dampingSpeed;
     [Header("Jump")] public float jumpAfloatMaxTime;
     public float jumpAfloatMinTime;
@@ -62,6 +66,8 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public float jumpBufferExpireTime = -1;
     public float wolfJumpBufferTime;
     public float wolfJumpBufferExpireTime;
+    public AudioClip jumpSfxSound;
+    public AudioClip doubleJumpSfxSound;
     [Header("Fall")] public float maxFallingSpeed;
     [Header("Dash")] public bool canDash;
     public float dashSpeed;
@@ -70,7 +76,9 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public float dashBufferExpireTime;
     public float dashCoolDown;
     public float dashCoolDownExpireTime;
+    public AudioClip dashSfxSound;
     [Header("WallSlide")] public float wallSlideSpeed;
+    public AudioClip wallSlideSfxSound;
     [Header("WallJump")] public Vector2 wallJumpForce;
     public float wallJumpMoveChangeSpeed;
     public float wallWolfJumpBufferTime;
@@ -98,6 +106,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public float invincibleExpireTime;
 
     public bool isFirstTakeHurt = true;
+    public AudioClip hurtSfxSound;
 
     [Header("Death")] public PlayerDeathParticle deathParticlePrefab;
 
@@ -119,6 +128,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public float spellArrowKnockBackForce;
     public float spellArrowMoveChangeSpeed;
     public float frozeFrameTime;
+    public AudioClip releaseArrowSfxSound;
 
     [Header("Drop")] public float dropWindupDeltaCompensation;
     public float dropWindupTime;
@@ -129,11 +139,16 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public PlayerDropPrefab dropPrefab;
     public int dropDamage;
     public float dropDamageTimeGap;
+    public AudioClip dropPrepareSfxSound;
+    public float dropPrepareSfxSoundSpeed;
+    public AudioClip dropDashSfxSound;
+    public AudioClip dropLandSfxSound;
 
     [Header("Roar")] public PlayerRoarPrefab roarPrefab;
     public int roarDamage;
     public float roarDamageTimeGap;
     public float roarOverTimePercent = 0.8f;
+    public AudioClip roarSfxSound;
 
     [Header("SuperDash")] public SpriteRenderer spikePrefab;
     public int oneSideSpikeCount;
@@ -144,6 +159,12 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public float spikePopUpTimeGap;
     public float superDashMoveChangeSpeed;
     public float superDashSpeed;
+    public AudioClip superDashChargeSfxSound;
+    public AudioClip superDashReadySfxSound;
+    public AudioClip superDashBurstSfxSound;
+    public AudioClip superDashLoopSfxSound;
+    public AudioClip superDashBrakeSfxSound;
+    public AudioClip superDashHittingWallSfxSound;
 
     [Header("Key")] public KeyCode leftKey = KeyCode.J;
     public KeyCode rightKey = KeyCode.L;
@@ -170,7 +191,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
     public void UnlockAbility(AbilityType type)
     {
         hasAbilityDic[type] = true;
-        GuideManager.instance.Show(type);
+        GuideUI.instance.Show(type);
         PlayerInfoUI.instance.UnlockInfo(type);
         Villager.instance.UnlockDialogue(type);
     }
@@ -318,6 +339,7 @@ public class PlayerFSM : SingletonFSM<PlayerFSM>
         {
             curEmeraldNumber += 1;
             EmeraldUI.instance.UpdatePlayerEmeraldUI();
+            AudioManager.instance.Play(emeraldSuckSfxSound);
             Destroy(other.gameObject);
         }
     }
@@ -701,6 +723,7 @@ public class PlayerIdle : IState
 public class PlayerRun : IState
 {
     private PlayerFSM m;
+    private AudioSource sfxSound;
 
     public PlayerRun(PlayerFSM m)
     {
@@ -709,6 +732,7 @@ public class PlayerRun : IState
 
     public void OnEnter()
     {
+        sfxSound = AudioManager.instance.GetAudioSource(m.moveSfxSound, m.moveSfxSoundSpeed);
     }
 
     public void OnUpdate()
@@ -722,7 +746,6 @@ public class PlayerRun : IState
             m.TransitionState(StateType.Fall);
         else if (m.dashTrigger)
             m.TransitionState(StateType.Dash);
-
         else if (m.spellTrigger)
             m.TransitionState(StateType.Spell);
         else if (m.recoverTrigger)
@@ -738,6 +761,7 @@ public class PlayerRun : IState
 
     public void OnExit()
     {
+        Object.Destroy(sfxSound);
     }
 }
 
@@ -754,6 +778,7 @@ public class PlayerHurt : IState
     {
         m.invincibleExpireTime = Time.time + m.invincibleTime;
         m.rigidbody.velocity = m.hurtDirection * m.hurtForce;
+        AudioManager.instance.Play(m.hurtSfxSound);
     }
 
     public void OnUpdate()
@@ -788,6 +813,7 @@ public class PlayerJump : IState
         m.rigidbody.velocity = new Vector2(m.rigidbody.velocity.x, m.firstJumpForce);
         m.jumpBufferExpireTime = -1; // 重置，否则如果从跳跃到落地的时间<bufferTime，则跳跃会被触发两次 
         m.wolfJumpBufferExpireTime = -1;
+        AudioManager.instance.Play(m.jumpSfxSound);
     }
 
     public void OnUpdate()
@@ -847,8 +873,8 @@ public class PlayerWallJump : IState
         m.rigidbody.velocity = new Vector2(m.facingDirection.x * m.wallJumpForce.x, m.wallJumpForce.y);
         m.jumpBufferExpireTime = -1; // 重置，否则如果从跳跃到落地的时间<bufferTime，则跳跃会被触发两次 
         m.wallWolfJumpBufferExpireTime = -1;
+        AudioManager.instance.Play(m.jumpSfxSound);
     }
-
 
     public void OnUpdate()
     {
@@ -892,6 +918,7 @@ public class PlayerWallJump : IState
 public class PlayerWallSlide : IState
 {
     private PlayerFSM m;
+    private AudioSource slide;
 
     public PlayerWallSlide(PlayerFSM m)
     {
@@ -904,6 +931,8 @@ public class PlayerWallSlide : IState
         m.canDash = true;
         m.canDoubleJump = true;
         m.ReverseFacingDirection();
+
+        slide = AudioManager.instance.GetAudioSource(m.wallSlideSfxSound);
     }
 
     public void OnUpdate()
@@ -930,6 +959,7 @@ public class PlayerWallSlide : IState
     public void OnExit()
     {
         m.rigidbody.gravityScale = m.gravityScaleBackup;
+        Object.Destroy(slide);
     }
 }
 
@@ -996,6 +1026,7 @@ public class PlayerDash : IState
         m.canDash = false;
         m.rigidbody.velocity = new Vector2(m.facingDirection.x * m.dashSpeed, 0);
         m.rigidbody.gravityScale = 0;
+        AudioManager.instance.Play(m.dashSfxSound);
     }
 
     public void OnUpdate()
@@ -1080,6 +1111,7 @@ public class PlayerRoar : IState
         roarPrefab = PlayerFSM.Instantiate(m.roarPrefab, PlayerFSM.instance.transform.position, Quaternion.identity);
         roarPrefab.transform.position += Vector3.up * 0.5f;
         anim = roarPrefab.GetComponent<Animator>();
+        AudioManager.instance.Play(m.roarSfxSound);
     }
 
     public void OnUpdate()
@@ -1106,9 +1138,12 @@ public class PlayerRoar : IState
 public class PlayerDrop : IState
 {
     private PlayerFSM m;
-    private float elapse;
     private bool isFirstOnGround;
     private PlayerDropPrefab dropPrefab;
+    private Coroutine dropCoroutine;
+    private bool isDropping;
+
+    private AudioSource dash;
 
     public PlayerDrop(PlayerFSM m)
     {
@@ -1119,8 +1154,18 @@ public class PlayerDrop : IState
     {
         m.rigidbody.velocity = Vector2.up * m.windupForce;
         m.rigidbody.gravityScale = 0;
-        if (m.isOnGround)
-            elapse += m.dropWindupDeltaCompensation;
+        dropCoroutine = m.StartCoroutine(Drop());
+    }
+
+    private IEnumerator Drop()
+    {
+        isDropping = false;
+        AudioManager.instance.Play(m.dropPrepareSfxSound, m.dropPrepareSfxSoundSpeed);
+        yield return new WaitForSeconds(m.dropWindupTime);
+        isDropping = true;
+        m.relativeInvincible = true;
+        // 开始下砸
+        dash = AudioManager.instance.GetAudioSource(m.dropDashSfxSound);
     }
 
     public void OnUpdate()
@@ -1132,11 +1177,8 @@ public class PlayerDrop : IState
             return;
         }
 
-        elapse += Time.deltaTime;
-        if (elapse < m.dropWindupTime)
+        if (!isDropping)
             return;
-        m.relativeInvincible = true;
-        // 开始下砸
         m.rigidbody.velocity = Vector2.down * m.dropSpeed;
         UpdateCollisionWithTrapDoor();
 
@@ -1147,6 +1189,8 @@ public class PlayerDrop : IState
             dropPrefab = PlayerFSM.Instantiate(m.dropPrefab, m.transform);
             dropPrefab.transform.position += Vector3.down * 0.5f;
             m.invincibleExpireTime = Time.time + m.dropInvincibleTime;
+            Object.Destroy(dash);
+            AudioManager.instance.Play(m.dropLandSfxSound);
         }
     }
 
@@ -1168,9 +1212,12 @@ public class PlayerDrop : IState
 
     public void OnExit()
     {
-        elapse = 0;
         m.rigidbody.gravityScale = m.gravityScaleBackup;
         isFirstOnGround = false;
+        if (dropCoroutine != null)
+            m.StopCoroutine(dropCoroutine);
+        if (dash)
+            Object.Destroy(dash);
     }
 }
 
@@ -1193,6 +1240,7 @@ public class PlayerReleaseArrow : IState
 
         m.rigidbody.velocity = new Vector2(-m.facingDirection.x * m.spellArrowKnockBackForce, 0);
         Time.timeScale = 0.1f;
+        AudioManager.instance.Play(m.releaseArrowSfxSound);
     }
 
     public void OnUpdate()
@@ -1242,8 +1290,8 @@ public class PlayerDoubleJump : IState
         // m.rigidbody.AddForce(Vector2.up * doubleJumpForce, ForceMode2D.Impulse);
         m.jumpBufferExpireTime = -1; // 重置，否则如果从跳跃到落地的时间<bufferTime，则跳跃会被触发两次 
         m.canDoubleJump = false;
+        AudioManager.instance.Play(m.doubleJumpSfxSound);
     }
-
 
     public void OnUpdate()
     {
@@ -1286,6 +1334,7 @@ public class PlayerRecover : IState
 {
     private PlayerFSM m;
     private AnimatorStateInfo info;
+    private AudioSource heal;
 
     public PlayerRecover(PlayerFSM m)
     {
@@ -1294,11 +1343,12 @@ public class PlayerRecover : IState
 
     public void OnEnter()
     {
-        Debug.Log(123);
+        // Debug.Log(123);
         m.recoverProcessAnim.speed = m.recoverSpeed;
         m.recoverBurstAnim.speed = m.recoverSpeed;
         m.recoverProcessAnim.Play("RecoverProcess");
         m.rigidbody.velocity = Vector2.zero;
+        heal = AudioManager.instance.GetAudioSource(m.healSfxSound);
     }
 
     public void OnUpdate()
@@ -1328,6 +1378,7 @@ public class PlayerRecover : IState
     public void OnExit()
     {
         m.canRecover = false;
+        Object.Destroy(heal);
     }
 }
 
@@ -1356,6 +1407,10 @@ public class PlayerSuperDash : IState
 
     private List<GameObject> spikes = new();
 
+    private AudioSource charge;
+    private AudioSource ready;
+    private AudioSource dash;
+
     public PlayerSuperDash(PlayerFSM m)
     {
         this.m = m;
@@ -1371,33 +1426,41 @@ public class PlayerSuperDash : IState
         isOver = false;
         isShowingSpike = false;
         m.rigidbody.gravityScale = 0;
+        charge = AudioManager.instance.GetAudioSource(m.superDashChargeSfxSound);
     }
 
     public void OnUpdate()
     {
         readyElapse += Time.deltaTime;
-        // if (readyElapse > m.superDashWindupTime && readyElapse - Time.deltaTime < m.superDashWindupTime)
-        //     Debug.Log("Ready");
         isReady = readyElapse >= superDashWindupTime;
         if (!isReady)
         {
             m.rigidbody.velocity = Vector2.zero;
-
-            if (Input.GetKeyUp(m.superDashKey))
+            if (Input.GetKeyUp(m.superDashKey)) // 还没蓄力好就松手了
             {
                 m.TransitionState(m.preStateType);
             }
 
-            if (!isShowingSpike)
+            if (!isShowingSpike) // 刚开始还没点击的时候
                 m.StartCoroutine(TryShowSpike());
         }
-        else if (!isDashing)
+        else if (!isDashing) // 还在charge或ready阶段
         {
+            // 刚进来
+            if (ready == null)
+            {
+                Object.Destroy(charge);
+                ready = AudioManager.instance.GetAudioSource(m.superDashReadySfxSound);
+            }
+
             if (Input.GetKeyUp(m.superDashKey))
             {
                 m.rigidbody.velocity = new Vector2(m.facingDirection.x * m.superDashSpeed, 0);
                 spikes.ForEach(Object.Destroy);
                 isDashing = true;
+                Object.Destroy(ready);
+                AudioManager.instance.Play(m.superDashBurstSfxSound);
+                dash = AudioManager.instance.GetAudioSource(m.superDashLoopSfxSound);
             }
         }
         else if (isDashing)
@@ -1405,10 +1468,12 @@ public class PlayerSuperDash : IState
             if (Input.GetKeyUp(m.jumpKey) || Input.GetKeyUp(m.dashKey) || Input.GetKeyUp(m.superDashKey))
             {
                 isOver = true;
+                AudioManager.instance.Play(m.superDashBrakeSfxSound);
             }
             else if (m.isHittingWall)
             {
                 m.TransitionState(StateType.WallSlide);
+                AudioManager.instance.Play(m.superDashHittingWallSfxSound);
             }
         }
     }
@@ -1486,5 +1551,12 @@ public class PlayerSuperDash : IState
         spikes.ForEach((spike) => m.StopAllCoroutines());
         spikes.ForEach(Object.Destroy); // 可能还没冲刺就被打断了
         m.rigidbody.gravityScale = m.gravityScaleBackup;
+
+        if (charge)
+            Object.Destroy(charge);
+        if (ready)
+            Object.Destroy(ready);
+        if (dash)
+            Object.Destroy(dash);
     }
 }

@@ -132,6 +132,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   hintTransform: {fileID: 904868927752256589}
   hintContent: "\u4F11\u606F"
+  setSfxSound: {fileID: 8300000, guid: 613dc3f31313ee64bb3e7576bf6b4f87, type: 3}
 --- !u!61 &904868928196578667
 BoxCollider2D:
   m_ObjectHideFlags: 0

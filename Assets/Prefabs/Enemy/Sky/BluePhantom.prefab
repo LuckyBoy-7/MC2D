@@ -256,6 +256,15 @@ MonoBehaviour:
   startInvincibleTime: 0.1
   startInvincibleExpireTime: 0
   deathParticle: {fileID: 2211971193389742121, guid: 4ab24fb44f2ac6a489e979dc1ec3d91e, type: 3}
+  hurtSfxSound:
+  - {fileID: 8300000, guid: 88af9169662d66b4ea40652c6044e864, type: 3}
+  - {fileID: 8300000, guid: 52974d9096ce33543b33fa6fdcb6d5eb, type: 3}
+  - {fileID: 8300000, guid: 036b3602dd84f6947acc3a9d38ec8652, type: 3}
+  deathSfxSound:
+  - {fileID: 8300000, guid: 201d96e89b0c4b3478533a085eaed038, type: 3}
+  - {fileID: 8300000, guid: d651b4ce37d530342a112f236584f985, type: 3}
+  - {fileID: 8300000, guid: 5bc4b5326ba1b944ab2c20b1d92c4692, type: 3}
+  alertSfxSound: []
   rigidbody: {fileID: 6063745611704998404}
   xVelocityChangeSpeed: 100
   yVelocityChangeSpeed: 100
@@ -277,6 +286,6 @@ MonoBehaviour:
   moveSpeed: 3
   isSelfControlMovement: 0
   boomerangPrefab: {fileID: -6959232660764057012, guid: 11a1e85ced57c1b408e6387aca272972, type: 3}
-  boomerangThrowForce: 2
-  boomerangPullForce: 8
-  randomPullRadius: 6
+  boomerangThrowForce: 2.5
+  boomerangPullForce: 12
+  randomPullRadius: 3

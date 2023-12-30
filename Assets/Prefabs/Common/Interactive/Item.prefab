@@ -216,10 +216,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e34017613db55441b31a6d7f90f6bfb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  abilityType: 10
+  abilityType: 9
   hintPoint: {fileID: 3961902719233967425}
   hintContent: "\u62FE\u53D6"
   defaultPushedForce: 6
+  collectedSfxSound: {fileID: 8300000, guid: a7c423c15df6fe44894524ca42293382, type: 3}
 --- !u!50 &3961902718645288747
 Rigidbody2D:
   serializedVersion: 4

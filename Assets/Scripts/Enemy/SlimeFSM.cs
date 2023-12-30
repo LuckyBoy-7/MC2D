@@ -23,6 +23,8 @@ public class SlimeFSM : GroundEnemyFSM
 
     public bool canBeSucked => Time.time > beSuckedProtectionExpireTime;
 
+    public AudioClip[] jumpSfxSound;
+
 
     protected override void Start()
     {
@@ -168,6 +170,7 @@ public class SlimeAttack : IState
         // if (PlayerFSM.instance.isOnGround)  // player在地上时才补偿向上的力
         dir += m.jumpForceYCompensation * Vector3.up;
         m.rigidbody.AddForce(dir * m.jumpForce, ForceMode2D.Impulse);
+        AudioManager.instance.Play(m.jumpSfxSound);
     }
 
     public void OnFixedUpdate()

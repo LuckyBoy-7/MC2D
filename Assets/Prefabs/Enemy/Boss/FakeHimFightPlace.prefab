@@ -490,6 +490,13 @@ MonoBehaviour:
   startInvincibleTime: 0.1
   startInvincibleExpireTime: 0
   deathParticle: {fileID: 2211971193389742121, guid: 4ab24fb44f2ac6a489e979dc1ec3d91e, type: 3}
+  hurtSfxSound:
+  - {fileID: 8300000, guid: 4acb5061e2b592f49970105c35530899, type: 3}
+  - {fileID: 8300000, guid: 2f255318b0b13764c99c72c3c7f6e479, type: 3}
+  - {fileID: 8300000, guid: 94873e17cc656924caa816277280ab76, type: 3}
+  - {fileID: 8300000, guid: 7eb486161901c484fa81859dd45f5d6e, type: 3}
+  deathSfxSound: []
+  alertSfxSound: []
   rigidbody: {fileID: 3887104437679321914}
   xVelocityChangeSpeed: 100
   yVelocityChangeSpeed: 100
@@ -521,6 +528,7 @@ MonoBehaviour:
   groundCrushChargeForceTime: 0.2
   groundCrushAheadDist: 12
   groundCrushAheadDuration: 0.7
+  crushSfxSound: {fileID: 8300000, guid: c651386cecf5f874e8d5ed222c130a3b, type: 3}
   airCrushTriggerThreshold: 1
   airCrushCooldown: 7
   airCrushCooldownExpireTime: -1
@@ -538,6 +546,7 @@ MonoBehaviour:
   throwDuration: 0.6
   boomerangRotateNumber: 6
   boomerangRotateDuration: 0.3
+  throwSfxSound: {fileID: 8300000, guid: f91d6a9ced1bde240a97c3f75f66a5f0, type: 3}
   lashTriggerThreshold: 0.458
   lashCooldown: 12
   lashCooldownExpireTime: -1
@@ -546,6 +555,7 @@ MonoBehaviour:
   lashJumpMaxHeightAbovePlayer: 5
   lashJumpForce: 2
   lashJumpDuration: 1.3
+  lashSfxSound: {fileID: 8300000, guid: cd59365c9a551f8469f359aa2455351a, type: 3}
   stepBackTriggerThreshold: 0.957
   stepBackDetectArea: {fileID: 3070757039549652140}
   stepBackCooldown: 3
@@ -824,6 +834,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveDistance: -2.8
   moveDuration: 0.5
+  closeSfxSound: {fileID: 8300000, guid: 0f0b9772b867a2f4db371747889e7529, type: 3}
 --- !u!1 &7391257212133197357
 GameObject:
   m_ObjectHideFlags: 0
@@ -1068,6 +1079,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveDistance: -2.8
   moveDuration: 0.5
+  closeSfxSound: {fileID: 8300000, guid: 0f0b9772b867a2f4db371747889e7529, type: 3}
 --- !u!1 &7391257212279009656
 GameObject:
   m_ObjectHideFlags: 0

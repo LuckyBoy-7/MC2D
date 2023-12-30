@@ -629,9 +629,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ddbd3ebc911a44246b622ea0ec823c15, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  shakeTime: 1
+  shakeTime: 0.8
   rotateDuration: 0.5
   flipRemainTime: 2
+  flipSfxSound: {fileID: 8300000, guid: 39fd1f8969b6eb44d8106094dc2329d3, type: 3}
+  flipBackSfxSound: {fileID: 8300000, guid: fc8b672ccf976d64a931d3c085c2ff20, type: 3}
 --- !u!1 &6969689034153563900
 GameObject:
   m_ObjectHideFlags: 0

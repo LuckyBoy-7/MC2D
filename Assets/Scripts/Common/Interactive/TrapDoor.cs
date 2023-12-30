@@ -15,6 +15,8 @@ public class TrapDoor : MonoBehaviour
     public float shakeMagnitude;
     private Vector2 origPos;
     private BoxCollider2D collider;
+    
+    public AudioClip openSfxSound;
 
     private void Awake()
     {
@@ -29,6 +31,7 @@ public class TrapDoor : MonoBehaviour
     public void Attacked()
     {
         door.DORotate(new Vector3(0, 0, 0), doorOpenDuration);
+        AudioManager.instance.Play(openSfxSound);
         Destroy(collider);
     }
 
